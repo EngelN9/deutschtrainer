@@ -1,0 +1,23 @@
+{
+  "name": "@deutschtrainer/learning-engine",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@deutschtrainer/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@jest/globals": "29.7.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,35 @@
+node_modules/
+.pnpm-store/
+
+# App builds
+.expo/
+.expo-shared/
+dist/
+build/
+.next/
+out/
+coverage/
+work/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Supabase local runtime
+supabase/.branches/
+supabase/.temp/

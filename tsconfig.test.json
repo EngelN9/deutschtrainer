@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "types": ["jest", "node"],
+    "paths": {
+      "@deutschtrainer/ai-schemas": ["packages/ai-schemas/src/index.ts"],
+      "@deutschtrainer/grading": ["packages/grading/src/index.ts"],
+      "@deutschtrainer/learning-engine": ["packages/learning-engine/src/index.ts"],
+      "@deutschtrainer/shared-types": ["packages/shared-types/src/index.ts"],
+      "@deutschtrainer/validation": ["packages/validation/src/index.ts"]
+    }
+  }
+}

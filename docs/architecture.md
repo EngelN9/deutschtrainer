@@ -1,0 +1,194 @@
+# Architecture
+
+## 1. Monorepo 結構
+
+建議採用規格要求的 monorepo，讓 mobile、admin、api 與共用契約同版控管：
+
+```text
+apps/
+  mobile/              # Expo + React Native + Expo Router
+  admin/               # Next.js 管理後台
+  api/                 # Node.js API 或 Supabase Edge Functions 共用入口
+packages/
+  shared-types/        # 跨 app 使用的 TypeScript domain types
+  validation/          # Zod schemas 與 request/response contracts
+  ui/                  # 跨平台 UI primitives，避免業務邏輯
+  grading/             # 固定題型評分與答案正規化
+  learning-engine/     # 掌握度與複習排程
+  ai-schemas/          # AI JSON Schema 與解析器
+  ai-prompts/          # 版本化 prompt，不散落在程式碼中
+  database/            # typed DB helpers、repository interfaces
+  config/              # ESLint、TSConfig、Prettier、Jest 共用設定
+supabase/
+  migrations/
+  seed/
+  functions/
+docs/
+tests/
+```
+
+目前 Phase 0 只建立骨架與文件，不建立大量 App 頁面。
+
+## 2. 技術選型
+
+| 層級    | 技術                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------ |
+| Mobile  | React Native, Expo, TypeScript, Expo Router, React Hook Form, Zod, TanStack Query, Zustand |
+| Admin   | Next.js, TypeScript, React, Supabase, Zod, TanStack Query                                  |
+| Backend | Supabase PostgreSQL, Supabase Auth, Supabase Storage, RLS, Edge Functions 或 Node.js API   |
+| AI      | OpenAI Responses API, Structured Outputs, JSON Schema, Speech-to-Text, Text-to-Speech      |
+| Testing | Jest, React Native Testing Library, integration tests, Maestro 或 Detox                    |
+
+TypeScript strict mode 必須啟用。UI 元件不得直接呼叫資料庫；資料存取需透過 repository、query hook 或 API client。
+
+## 3. 邊界
+
+### Mobile App
+
+- 負責 UI、離線快取、表單驗證、狀態呈現與 API 呼叫。
+- 不保存 OpenAI API key 或 Supabase service role key。
+- 不直接查詢資料庫。
+- 固定題型可本地評分，但最終 Attempt 同步至後端。
+
+### Admin Web
+
+- 負責內容建立、審核、發布、版本、音訊與統計管理。
+- 管理頁面必須通過 role 檢查。
+- AI 生成草稿只能建立 draft 或 pending_review。
+
+### Backend
+
+- 負責 Auth、RLS、課程查詢、attempt、progress、review queue、AI 呼叫、音訊服務、成本紀錄、rate limit、audit log。
+- 所有 AI 回傳需通過 JSON Schema、Zod、CEFR、禁止內容與完整性檢查。
+
+## 4. 資料流
+
+```mermaid
+flowchart LR
+  Mobile["Mobile App"] --> API["API / Edge Functions"]
+  Admin["Admin Web"] --> API
+  API --> DB["Supabase PostgreSQL"]
+  API --> Storage["Supabase Storage"]
+  API --> AI["OpenAI API"]
+  API --> Logs["AI Usage Logs / Audit Logs"]
+  DB --> API
+  Storage --> API
+```
+
+固定題型流程：
+
+1. Mobile 載入 lesson 與 exercises。
+2. 使用者作答。
+3. grading package 先產生本地結果。
+4. Mobile 送出 attempt。
+5. Backend 驗證 request、重新評分或核對結果、寫入 attempt、error_records、skill_mastery、review_queue。
+
+AI 題型流程：
+
+1. Mobile 送出自由回答或作文。
+2. Backend 建立 idempotency key 與 rate limit 檢查。
+3. Backend 呼叫 OpenAI Responses API。
+4. Backend 執行 JSON Schema、Zod、CEFR、安全與完整性驗證。
+5. Backend 寫入 ai_feedback、ai_usage_logs、error_records、review_queue。
+6. Mobile 顯示繁體中文回饋與 retry/fallback 狀態。
+
+## 5. API 契約
+
+所有 API 需定義 request schema、response schema、權限、錯誤碼、rate limit、cache、idempotency。
+
+| Method | Path                        | Request Schema                 | Response Schema                 | 權限                             | Rate limit         | Cache            | Idempotency |
+| ------ | --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | ------------------ | ---------------- | ----------- |
+| GET    | /courses                    | CourseListRequest              | CourseListResponse              | public published                 | 120/min            | yes              | no          |
+| GET    | /courses/:courseId          | CourseDetailRequest            | CourseDetailResponse            | public published or editor draft | 120/min            | yes              | no          |
+| GET    | /lessons/:lessonId          | LessonDetailRequest            | LessonDetailResponse            | public published or editor draft | 120/min            | yes              | no          |
+| POST   | /attempts                   | SubmitAttemptRequest           | SubmitAttemptResponse           | learner self                     | 60/min             | no               | yes         |
+| GET    | /users/me/progress          | ProgressRequest                | ProgressResponse                | learner self                     | 60/min             | no               | no          |
+| GET    | /users/me/reviews           | ReviewQueueRequest             | ReviewQueueResponse             | learner self                     | 60/min             | no               | no          |
+| POST   | /reviews/:reviewId/complete | CompleteReviewRequest          | CompleteReviewResponse          | learner self                     | 60/min             | no               | yes         |
+| POST   | /ai/evaluate-response       | EvaluateResponseRequest        | EvaluateResponseResponse        | learner self                     | 20/day free tier   | no               | yes         |
+| POST   | /ai/evaluate-writing        | EvaluateWritingRequest         | EvaluateWritingResponse         | learner self                     | 10/day free tier   | no               | yes         |
+| POST   | /ai/generate-practice       | GeneratePracticeRequest        | GeneratePracticeResponse        | editor or backend review flow    | 20/hour            | no               | yes         |
+| POST   | /audio/text-to-speech       | TextToSpeechRequest            | TextToSpeechResponse            | learner self or editor           | 60/day free tier   | yes by text hash | yes         |
+| POST   | /audio/transcribe           | TranscribeRequest              | TranscribeResponse              | learner self                     | 30/day free tier   | no               | yes         |
+| POST   | /conversations              | CreateConversationRequest      | CreateConversationResponse      | learner self                     | 20/day free tier   | no               | yes         |
+| POST   | /conversations/:id/messages | SendConversationMessageRequest | SendConversationMessageResponse | learner self                     | scenario max turns | no               | yes         |
+
+統一錯誤格式：
+
+```json
+{
+  "error": {
+    "code": "AI_RESPONSE_INVALID",
+    "message": "無法解析 AI 回應。",
+    "retryable": true,
+    "requestId": "req_..."
+  }
+}
+```
+
+錯誤碼至少包含 VALIDATION_ERROR、UNAUTHORIZED、FORBIDDEN、NOT_FOUND、RATE_LIMITED、NETWORK_ERROR、DATABASE_ERROR、AI_TIMEOUT、AI_RESPONSE_INVALID、AUDIO_UPLOAD_FAILED、CONTENT_NOT_PUBLISHED。
+
+## 6. 離線與同步
+
+第一版支援：
+
+- 已下載課程離線閱讀。
+- 固定題型離線作答。
+- 本地保存 pending attempts。
+- 連線恢復後以 idempotency key 同步。
+
+離線不支援 AI 批改、AI 對話、STT、即時題目生成。同步需避免重複 attempt，並保留衝突狀態供重試。
+
+## 7. 狀態與資料存取
+
+- TanStack Query 管理 server state、loading、empty、error、retry。
+- Zustand 管理 session-adjacent UI state，例如 onboarding progress、theme、download queue。
+- React Hook Form + Zod 管理表單。
+- API client 只呼叫 backend；不得直接從 UI 呼叫 Supabase table。
+- DB row type、API DTO、UI ViewModel 分離。
+
+## 8. 環境設定
+
+預期環境變數：
+
+- EXPO_PUBLIC_API_BASE_URL
+- EXPO_PUBLIC_SUPABASE_URL
+- EXPO_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- OPENAI_API_KEY
+- AI_DAILY_FREE_LIMIT
+- STORAGE_AUDIO_BUCKET
+- APP_ENV
+
+只有 public-safe 變數可進入 mobile bundle。service role key 與 OpenAI key 僅存在 backend runtime。
+
+## 9. 主要 TypeScript 模型
+
+`packages/shared-types` 至少建立下列 domain model，不得直接把資料庫 row 型別當作 UI ViewModel：
+
+- UserProfile
+- UserPreferences
+- Course
+- Unit
+- Lesson
+- Activity
+- Skill
+- GrammarTopic
+- VocabularyItem
+- Exercise
+- ExerciseOption
+- ExerciseAnswer
+- Attempt
+- AttemptAnswer
+- ErrorRecord
+- SkillMastery
+- ReviewItem
+- WritingSubmission
+- AIFeedback
+- ConversationScenario
+- ConversationSession
+- SpeakingSubmission
+- AudioAsset
+- ContentVersion
+
+`packages/validation` 至少建立每個 API 的 request 與 response Zod Schema。命名採 `<Operation>RequestSchema`、`<Operation>ResponseSchema`，對應 TypeScript 型別 `<Operation>Request`、`<Operation>Response`。
