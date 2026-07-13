@@ -166,6 +166,15 @@
 - 每次修改都有版本。
 - 使用者可比較兩個版本。
 
+目前狀態：Pass。
+
+- B1-C2 各有一個已審核題目，公開欄位與後端評分規則分表保存。
+- 第一稿先保存再批改，僅提供行內錯誤、十項評分與修改任務，不顯示完整範文。
+- 第二稿起顯示受保護的可信範文，並記錄重複錯誤與字詞 diff。
+- 最多十版、current-version 衝突、字數、idempotency 與 first/second pass 規則由 service-only RPC 強制執行。
+- App 支援任選兩版比較、失敗版本重試、作文錯誤分析與 owner hard delete。
+- 詳見 `docs/phase-6-writing.md`。
+
 ## Phase 7：音訊及口說
 
 交付：

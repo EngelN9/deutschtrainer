@@ -3,12 +3,16 @@ import {
   apiErrorResponseSchema,
   evaluateResponseRequestSchema,
   evaluateResponseResponseSchema,
+  evaluateWritingRequestSchema,
+  evaluateWritingResponseSchema,
 } from "@deutschtrainer/validation";
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
+import type { WritingService } from "./writing/types";
 
 export interface ApiHandlerOptions {
   evaluationService: EvaluationService;
+  writingService: WritingService;
   aiConfigured: boolean;
   requestId?: () => string;
 }
@@ -46,6 +50,28 @@ export function createApiHandler(options: ApiHandlerOptions) {
 
         const result = await options.evaluationService.evaluate(accessToken, parsed.data);
         return jsonResponse(evaluateResponseResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/ai/evaluate-writing") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const body = await readJsonBody(request);
+        const parsed = evaluateWritingRequestSchema.safeParse(body);
+        if (!parsed.success) {
+          throw new ApiError(
+            "VALIDATION_ERROR",
+            parsed.error.issues[0]?.message ?? "作文批改要求格式不正確。",
+            400,
+            false,
+          );
+        }
+
+        const result = await options.writingService.evaluate(accessToken, parsed.data);
+        return jsonResponse(evaluateWritingResponseSchema.parse(result), 200);
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }

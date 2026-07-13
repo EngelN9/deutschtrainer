@@ -8,6 +8,7 @@ export interface ApiConfig {
   inputCostPerMillion: number;
   outputCostPerMillion: number;
   dailyFreeLimit: number;
+  writingDailyFreeLimit: number;
   fakeEvaluationMode: boolean;
 }
 
@@ -22,6 +23,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     inputCostPerMillion: readNonNegativeNumber(env.OPENAI_INPUT_COST_PER_MILLION, 1),
     outputCostPerMillion: readNonNegativeNumber(env.OPENAI_OUTPUT_COST_PER_MILLION, 6),
     dailyFreeLimit: readPositiveInteger(env.AI_DAILY_FREE_LIMIT, 20),
+    writingDailyFreeLimit: readPositiveInteger(env.AI_WRITING_DAILY_FREE_LIMIT, 10),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
   };
 }

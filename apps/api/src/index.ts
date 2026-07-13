@@ -20,3 +20,16 @@ export {
   UnavailableEvaluationProvider,
 } from "./evaluation/openAiEvaluationProvider";
 export { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
+export { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
+export {
+  WritingEvaluationService,
+  countGermanWords,
+  createWritingDiff,
+  validateWritingFeedback,
+} from "./writing/writingService";
+export {
+  DeterministicWritingProvider,
+  OpenAiWritingProvider,
+  UnavailableWritingProvider,
+  WritingProviderError,
+} from "./writing/openAiWritingProvider";

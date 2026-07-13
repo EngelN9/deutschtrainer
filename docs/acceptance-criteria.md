@@ -93,3 +93,21 @@
 - authenticated 使用者不可直接執行 `record_ai_attempt`，所有 AI 寫入只經後端 service role。
 - 固定 provider 測試涵蓋 schema 不合法後重試、timeout、未設定 AI、快取及 24 小時額度。
 - Playwright 強制中斷一次網路請求後，App 保留原回答、顯示繁中錯誤並可成功重試。
+
+## 8. Phase 6 驗收
+
+- 作文原文不得被後續修改覆蓋。
+- 每次修改建立獨立、依序且最多十個版本。
+- 行內錯誤位置必須精確對應原文 UTF-16 offset。
+- 第一稿不得顯示完整參考版本；第二稿起必須顯示可信參考版本。
+- 回饋包含十項分數、繁中說明、修改任務與重複錯誤。
+- 使用者可任選兩版比較，並可刪除自己的作文資料。
+- 其他使用者與匿名使用者不可讀取作文、版本或評分規則。
+
+目前結果：Pass。
+
+- 本機整合實測第一稿 62 分、第二稿 88 分、idempotent replay、兩版原文與 add/remove diff。
+- 匿名可讀已發布題目但評分規則回傳 401；第二位使用者讀到零筆 submission/version。
+- authenticated 直接執行 service-only RPC 回傳 404。
+- owner delete 後原文、版本與 AI feedback 為零筆，只保留不含原文的兩筆用量 metadata。
+- 瀏覽器完成第一稿、行內錯誤、重寫、第二稿範文與版本比較；桌面及 390 px 無水平頁面溢出。

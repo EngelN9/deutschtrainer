@@ -6,8 +6,9 @@ Node backend for authenticated AI evaluation. It is the only runtime allowed to 
 
 - `GET /health`: service and AI-provider readiness.
 - `POST /ai/evaluate-response`: AI grading for published `translation` and `free_response` exercises.
+- `POST /ai/evaluate-writing`: versioned long-form writing evaluation with inline feedback.
 
-The evaluation endpoint requires a Supabase bearer token. It resolves all trusted exercise context server-side, validates Structured Output, applies quota/cache/idempotency rules, and records accepted results through the service-only `record_ai_attempt` RPC.
+Both evaluation endpoints require a Supabase bearer token and resolve trusted grading context server-side. Writing saves an immutable version before model work, validates UTF-16 inline offsets and ten rubric dimensions, and records accepted feedback through service-only RPCs.
 
 ## Run
 
@@ -17,7 +18,7 @@ Create the repository root `.env` from `.env.example`, provide `SUPABASE_URL`, `
 pnpm dev:api
 ```
 
-The default URL is `http://localhost:8787`. Without an OpenAI key, evaluation returns a non-persisted fallback. `AI_EVALUATION_FAKE_MODE=true` selects a deterministic local fixture and must not be enabled in production.
+The default URL is `http://localhost:8787`. Without an OpenAI key, exercise evaluation returns a non-persisted fallback; writing returns a fallback while retaining the submitted version for retry. `AI_EVALUATION_FAKE_MODE=true` selects deterministic local fixtures and must not be enabled in production.
 
 ## Verify
 
@@ -25,6 +26,9 @@ The default URL is `http://localhost:8787`. Without an OpenAI key, evaluation re
 pnpm --filter @deutschtrainer/api typecheck
 pnpm test
 pnpm --filter @deutschtrainer/api verify:local
+pnpm --filter @deutschtrainer/api verify:writing:local
 ```
 
 `verify:local` requires a running local Supabase stack, a running API, and `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the current shell. It creates and removes temporary users while checking evaluation, replay, cache, persistence, RLS, protected answers, and RPC permissions.
+
+`verify:writing:local` additionally checks first- and second-pass feedback, immutable text versions, stored diffs, protected prompt rules, cross-user RLS, direct-RPC denial, and user deletion behavior.

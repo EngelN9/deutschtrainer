@@ -80,7 +80,7 @@ export type Database = {
       };
       ai_feedback: {
         Row: {
-          attempt_id: string;
+          attempt_id: string | null;
           cache_key: string;
           cached_from_id: string | null;
           created_at: string;
@@ -98,7 +98,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          attempt_id: string;
+          attempt_id?: string | null;
           cache_key: string;
           cached_from_id?: string | null;
           created_at?: string;
@@ -116,7 +116,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          attempt_id?: string;
+          attempt_id?: string | null;
           cache_key?: string;
           cached_from_id?: string | null;
           created_at?: string;
@@ -1399,6 +1399,257 @@ export type Database = {
         };
         Relationships: [];
       };
+      writing_prompt_rules: {
+        Row: {
+          created_at: string;
+          grading_notes_zh_tw: string;
+          id: string;
+          prompt_id: string;
+          reference_outline_json: Json;
+          reference_version_de: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          grading_notes_zh_tw: string;
+          id?: string;
+          prompt_id: string;
+          reference_outline_json?: Json;
+          reference_version_de: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          grading_notes_zh_tw?: string;
+          id?: string;
+          prompt_id?: string;
+          reference_outline_json?: Json;
+          reference_version_de?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_prompt_rules_prompt_id_fkey";
+            columns: ["prompt_id"];
+            isOneToOne: true;
+            referencedRelation: "writing_prompts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_prompts: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          estimated_minutes: number;
+          id: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          maximum_words: number;
+          minimum_words: number;
+          prompt_de: string;
+          prompt_zh_tw: string;
+          requirements_json: Json;
+          review_status: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          status: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          updated_at: string;
+          version: number;
+          writing_type: Database["public"]["Enums"]["writing_type"];
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          estimated_minutes: number;
+          id?: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          maximum_words: number;
+          minimum_words: number;
+          prompt_de: string;
+          prompt_zh_tw: string;
+          requirements_json?: Json;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          updated_at?: string;
+          version?: number;
+          writing_type: Database["public"]["Enums"]["writing_type"];
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          estimated_minutes?: number;
+          id?: string;
+          lesson_id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          maximum_words?: number;
+          minimum_words?: number;
+          prompt_de?: string;
+          prompt_zh_tw?: string;
+          requirements_json?: Json;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids?: string[];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw?: string;
+          updated_at?: string;
+          version?: number;
+          writing_type?: Database["public"]["Enums"]["writing_type"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_prompts_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_submissions: {
+        Row: {
+          created_at: string;
+          current_version_id: string | null;
+          id: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          prompt_id: string;
+          status: Database["public"]["Enums"]["writing_submission_status"];
+          updated_at: string;
+          user_id: string;
+          writing_type: Database["public"]["Enums"]["writing_type"];
+        };
+        Insert: {
+          created_at?: string;
+          current_version_id?: string | null;
+          id?: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          prompt_id: string;
+          status?: Database["public"]["Enums"]["writing_submission_status"];
+          updated_at?: string;
+          user_id: string;
+          writing_type: Database["public"]["Enums"]["writing_type"];
+        };
+        Update: {
+          created_at?: string;
+          current_version_id?: string | null;
+          id?: string;
+          lesson_id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          prompt_id?: string;
+          status?: Database["public"]["Enums"]["writing_submission_status"];
+          updated_at?: string;
+          user_id?: string;
+          writing_type?: Database["public"]["Enums"]["writing_type"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_submissions_current_version_fk";
+            columns: ["current_version_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submissions_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submissions_prompt_id_fkey";
+            columns: ["prompt_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_prompts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      writing_versions: {
+        Row: {
+          ai_feedback_id: string | null;
+          created_at: string;
+          diff_json: Json;
+          id: string;
+          idempotency_key: string;
+          previous_version_id: string | null;
+          submission_id: string;
+          text_de: string;
+          updated_at: string;
+          user_id: string;
+          version_number: number;
+          word_count: number;
+        };
+        Insert: {
+          ai_feedback_id?: string | null;
+          created_at?: string;
+          diff_json?: Json;
+          id?: string;
+          idempotency_key: string;
+          previous_version_id?: string | null;
+          submission_id: string;
+          text_de: string;
+          updated_at?: string;
+          user_id: string;
+          version_number: number;
+          word_count: number;
+        };
+        Update: {
+          ai_feedback_id?: string | null;
+          created_at?: string;
+          diff_json?: Json;
+          id?: string;
+          idempotency_key?: string;
+          previous_version_id?: string | null;
+          submission_id?: string;
+          text_de?: string;
+          updated_at?: string;
+          user_id?: string;
+          version_number?: number;
+          word_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_versions_ai_feedback_id_fkey";
+            columns: ["ai_feedback_id"];
+            isOneToOne: true;
+            referencedRelation: "ai_feedback";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_versions_previous_version_id_fkey";
+            columns: ["previous_version_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_versions_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_versions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1409,7 +1660,28 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"];
       };
       current_profile_id: { Args: never; Returns: string };
+      delete_own_writing_submission: {
+        Args: { p_submission_id: string };
+        Returns: boolean;
+      };
       is_content_team: { Args: never; Returns: boolean };
+      mark_writing_evaluation_failed: {
+        Args: { p_user_id: string; p_version_id: string };
+        Returns: undefined;
+      };
+      prepare_writing_version: {
+        Args: {
+          p_diff_json: Json;
+          p_expected_current_version_id: string;
+          p_idempotency_key: string;
+          p_prompt_id: string;
+          p_submission_id: string;
+          p_text_de: string;
+          p_user_id: string;
+          p_word_count: number;
+        };
+        Returns: Json;
+      };
       record_ai_attempt: {
         Args: {
           p_cache_key: string;
@@ -1443,6 +1715,18 @@ export type Database = {
           p_review_id?: string;
           p_score: number;
           p_used_hint: boolean;
+        };
+        Returns: Json;
+      };
+      record_writing_feedback: {
+        Args: {
+          p_feedback_json: Json;
+          p_model: string;
+          p_prompt_id: string;
+          p_prompt_version: string;
+          p_schema_version: string;
+          p_user_id: string;
+          p_version_id: string;
         };
         Returns: Json;
       };
@@ -1523,6 +1807,28 @@ export type Database = {
         | "pronunciation"
         | "exam_preparation";
       source_type: "human" | "ai_generated" | "ai_assisted";
+      writing_submission_status:
+        "evaluating" | "revision_requested" | "completed" | "evaluation_failed";
+      writing_type:
+        | "informal_email"
+        | "formal_email"
+        | "experience_description"
+        | "opinion"
+        | "complaint_letter"
+        | "advantages_disadvantages"
+        | "argumentative_essay"
+        | "forum_post"
+        | "summary"
+        | "formal_report"
+        | "academic_argument"
+        | "source_integration"
+        | "structured_review"
+        | "advanced_essay"
+        | "style_transformation"
+        | "critical_review"
+        | "professional_editing"
+        | "advanced_synthesis"
+        | "rhetorical_revision";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2269,6 +2575,33 @@ export const Constants = {
         "exam_preparation",
       ],
       source_type: ["human", "ai_generated", "ai_assisted"],
+      writing_submission_status: [
+        "evaluating",
+        "revision_requested",
+        "completed",
+        "evaluation_failed",
+      ],
+      writing_type: [
+        "informal_email",
+        "formal_email",
+        "experience_description",
+        "opinion",
+        "complaint_letter",
+        "advantages_disadvantages",
+        "argumentative_essay",
+        "forum_post",
+        "summary",
+        "formal_report",
+        "academic_argument",
+        "source_integration",
+        "structured_review",
+        "advanced_essay",
+        "style_transformation",
+        "critical_review",
+        "professional_editing",
+        "advanced_synthesis",
+        "rhetorical_revision",
+      ],
     },
   },
   storage: {

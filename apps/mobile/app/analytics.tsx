@@ -1,7 +1,15 @@
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import { calculateLearningAnalytics, getMasteryBand } from "@deutschtrainer/learning-engine";
-import { BarChart3, BookCheck, Clock3, Target, TriangleAlert } from "lucide-react-native";
+import type { ErrorType } from "@deutschtrainer/shared-types";
+import {
+  BarChart3,
+  BookCheck,
+  Clock3,
+  FilePenLine,
+  Target,
+  TriangleAlert,
+} from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
@@ -11,10 +19,13 @@ import { MainNavigation } from "../src/components/MainNavigation";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
+import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
+import { errorTypeLabel } from "../src/features/writing/writingLabels";
 
 export default function AnalyticsScreen() {
   const router = useRouter();
   const recordsQuery = useLearningRecords();
+  const writingQuery = useWritingWorkspace();
   const analytics = recordsQuery.data ? calculateLearningAnalytics(recordsQuery.data) : undefined;
   const weakestSkills = recordsQuery.data?.mastery
     .toSorted((left, right) => left.masteryScore - right.masteryScore)
@@ -23,6 +34,15 @@ export default function AnalyticsScreen() {
     1,
     ...(analytics?.dailyActivity.map((day) => day.attemptCount) ?? []),
   );
+  const writingErrorCounts = new Map<ErrorType, number>();
+  for (const error of writingQuery.data?.submissions.flatMap((submission) =>
+    submission.versions.flatMap((version) => version.feedback?.inlineErrors ?? []),
+  ) ?? []) {
+    writingErrorCounts.set(error.type, (writingErrorCounts.get(error.type) ?? 0) + 1);
+  }
+  const commonWritingErrors = [...writingErrorCounts.entries()]
+    .toSorted((left, right) => right[1] - left[1])
+    .slice(0, 5);
 
   return (
     <AuthGate mode="protected">
@@ -95,6 +115,27 @@ export default function AnalyticsScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeading}>
+                <FilePenLine color={colorTokens.accent} size={20} />
+                <Text style={styles.sectionTitle}>作文常見錯誤</Text>
+              </View>
+              {writingQuery.isLoading ? (
+                <Text style={styles.emptyText}>正在整理作文錯誤...</Text>
+              ) : commonWritingErrors.length > 0 ? (
+                <View style={styles.writingErrorList}>
+                  {commonWritingErrors.map(([type, count]) => (
+                    <View key={type} style={styles.writingErrorRow}>
+                      <Text style={styles.writingErrorName}>{errorTypeLabel(type)}</Text>
+                      <Text style={styles.writingErrorCount}>{count} 次</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>完成作文批改後，重複出現的錯誤會顯示在這裡。</Text>
+              )}
             </View>
 
             <View style={styles.section}>
@@ -303,5 +344,28 @@ const styles = StyleSheet.create({
     color: colorTokens.text,
     fontSize: 17,
     fontWeight: "800",
+  },
+  writingErrorCount: {
+    color: colorTokens.accent,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  writingErrorList: {
+    borderTopColor: colorTokens.border,
+    borderTopWidth: 1,
+  },
+  writingErrorName: {
+    color: colorTokens.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  writingErrorRow: {
+    alignItems: "center",
+    borderBottomColor: colorTokens.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 48,
+    paddingVertical: spacingTokens.sm,
   },
 });

@@ -166,7 +166,7 @@ export interface WritingFeedback {
   >;
   strengths: string[];
   revisionTasks: string[];
-  referenceVersion?: string;
+  referenceVersion: string | null;
   repeatedErrorTypes: ErrorType[];
   requiresHumanReview: boolean;
 }
@@ -174,9 +174,11 @@ export interface WritingFeedback {
 
 限制：
 
-- first_pass 不得回傳完整 referenceVersion。
-- second_pass 可回傳 referenceVersion。
-- 所有 explanation 使用繁體中文。
+- 第一版的 `referenceVersion` 必須為 `null`。
+- 第二版起必須回傳後端受保護的完整 referenceVersion。
+- offset 使用 JavaScript UTF-16 `[startOffset,endOffset)` 且 original 必須逐字相符、依序且不可重疊。
+- 所有 explanation、strengths 與 revisionTasks 使用繁體中文。
+- repeatedErrorTypes 必須精確等於前一版與本版行內錯誤的交集。
 
 ## 5. GeneratedPracticeSet.v1
 

@@ -80,6 +80,45 @@ export const ERROR_TYPES = [
 export type ErrorType = (typeof ERROR_TYPES)[number];
 export type ErrorSeverity = "minor" | "moderate" | "major" | "critical";
 
+export const WRITING_TYPES = [
+  "informal_email",
+  "formal_email",
+  "experience_description",
+  "opinion",
+  "complaint_letter",
+  "advantages_disadvantages",
+  "argumentative_essay",
+  "forum_post",
+  "summary",
+  "formal_report",
+  "academic_argument",
+  "source_integration",
+  "structured_review",
+  "advanced_essay",
+  "style_transformation",
+  "critical_review",
+  "professional_editing",
+  "advanced_synthesis",
+  "rhetorical_revision",
+] as const;
+export type WritingType = (typeof WRITING_TYPES)[number];
+
+export const WRITING_RUBRIC_DIMENSIONS = [
+  "taskCompletion",
+  "grammar",
+  "vocabulary",
+  "coherence",
+  "cohesion",
+  "register",
+  "argumentation",
+  "style",
+  "accuracy",
+  "idiomaticity",
+] as const;
+export type WritingRubricDimension = (typeof WRITING_RUBRIC_DIMENSIONS)[number];
+export type WritingSubmissionStatus =
+  "evaluating" | "revision_requested" | "completed" | "evaluation_failed";
+
 export interface UserProfile {
   id: string;
   authUserId: string;
@@ -485,9 +524,47 @@ export interface WritingSubmission {
   id: string;
   userId: string;
   lessonId: string;
+  promptId: string;
   level: CefrLevel;
-  writingType: string;
+  writingType: WritingType;
+  status: WritingSubmissionStatus;
   currentVersionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WritingPrompt {
+  id: string;
+  lessonId: string;
+  level: CefrLevel;
+  writingType: WritingType;
+  titleZhTw: string;
+  promptDe: string;
+  promptZhTw: string;
+  requirementsZhTw: string[];
+  minimumWords: number;
+  maximumWords: number;
+  estimatedMinutes: number;
+  skillIds: string[];
+  version: number;
+}
+
+export interface WritingDiffChange {
+  kind: "unchanged" | "added" | "removed";
+  value: string;
+}
+
+export interface WritingVersion {
+  id: string;
+  submissionId: string;
+  previousVersionId?: string;
+  versionNumber: number;
+  textDe: string;
+  wordCount: number;
+  diff: WritingDiffChange[];
+  idempotencyKey: string;
+  feedbackId?: string;
+  createdAt: string;
 }
 
 export interface AIFeedback {
