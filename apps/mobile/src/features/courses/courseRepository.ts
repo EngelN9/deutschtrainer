@@ -1,5 +1,14 @@
-import type { CourseCatalog, FixedExercise, LessonContent } from "@deutschtrainer/shared-types";
 import {
+  AI_EVALUATED_EXERCISE_TYPES,
+  FIXED_EXERCISE_TYPES,
+  type AiEvaluatedExercise,
+  type CourseCatalog,
+  type FixedExercise,
+  type LessonContent,
+  type LessonExercise,
+} from "@deutschtrainer/shared-types";
+import {
+  aiEvaluatedExerciseSchema,
   courseCatalogSchema,
   fixedExerciseSchema,
   gradingPolicySchema,
@@ -40,10 +49,18 @@ export function findLesson(catalog: CourseCatalog, lessonId: string): LessonCont
     .find((lesson) => lesson.id === lessonId);
 }
 
-export function getLessonExercises(lesson: LessonContent): FixedExercise[] {
+export function getLessonExercises(lesson: LessonContent): LessonExercise[] {
   return lesson.activities
     .toSorted((left, right) => left.orderIndex - right.orderIndex)
     .flatMap((activity) => activity.exercises);
+}
+
+export function isFixedExercise(exercise: LessonExercise): exercise is FixedExercise {
+  return (FIXED_EXERCISE_TYPES as readonly string[]).includes(exercise.type);
+}
+
+export function isAiEvaluatedExercise(exercise: LessonExercise): exercise is AiEvaluatedExercise {
+  return (AI_EVALUATED_EXERCISE_TYPES as readonly string[]).includes(exercise.type);
 }
 
 export function findExerciseContext(catalog: CourseCatalog, exerciseId: string) {
@@ -105,7 +122,7 @@ async function fetchSupabaseCatalog(): Promise<CourseCatalog> {
   );
   const exercisesByActivity = groupBy(
     (exercisesResult.data ?? []).map((row) =>
-      mapFixedExercise(row, optionsByExercise.get(row.id) ?? [], answersByExercise.get(row.id)),
+      mapLessonExercise(row, optionsByExercise.get(row.id) ?? [], answersByExercise.get(row.id)),
     ),
     (exercise) => exercise.activityId,
   );
@@ -168,18 +185,12 @@ async function fetchSupabaseCatalog(): Promise<CourseCatalog> {
   return catalog as CourseCatalog;
 }
 
-function mapFixedExercise(
+function mapLessonExercise(
   row: ExerciseRow,
   optionRows: ExerciseOptionRow[],
   answerRow?: ExerciseAnswerRow,
-): { activityId: string; exercise: FixedExercise; orderIndex: number } {
-  if (!answerRow) {
-    throw new Error(`題目 ${row.id} 缺少標準答案。`);
-  }
-
+): { activityId: string; exercise: LessonExercise; orderIndex: number } {
   const payload = asObject(row.payload_json);
-  const answer = asObject(answerRow.answer_json);
-  const policy = gradingPolicySchema.parse(answerRow.grading_policy_json);
   const options = optionRows
     .toSorted((left, right) => left.order_index - right.order_index)
     .map((option) => ({
@@ -205,6 +216,34 @@ function mapFixedExercise(
     reviewStatus: row.review_status,
     version: row.version,
   };
+
+  if (row.type === "translation" || row.type === "free_response") {
+    const promptZhTw = readString(payload.promptZhTw);
+    const candidate = {
+      ...base,
+      ...(promptZhTw ? { promptZhTw } : {}),
+      responsePlaceholderZhTw: readString(payload.responsePlaceholderZhTw) || "請輸入你的德語回答",
+      minimumCharacters: readInteger(payload.minimumCharacters, 10),
+      maximumCharacters: readInteger(payload.maximumCharacters, 800),
+    };
+
+    return {
+      activityId: row.activity_id,
+      exercise: aiEvaluatedExerciseSchema.parse(candidate) as AiEvaluatedExercise,
+      orderIndex: row.order_index,
+    };
+  }
+
+  if (!(FIXED_EXERCISE_TYPES as readonly string[]).includes(row.type)) {
+    throw new Error(`題目 ${row.id} 的題型尚未支援。`);
+  }
+
+  if (!answerRow) {
+    throw new Error(`題目 ${row.id} 缺少標準答案。`);
+  }
+
+  const answer = asObject(answerRow.answer_json);
+  const policy = gradingPolicySchema.parse(answerRow.grading_policy_json);
   let candidate: unknown;
 
   switch (row.type) {
@@ -259,6 +298,14 @@ function mapFixedExercise(
     exercise: fixedExerciseSchema.parse(candidate) as FixedExercise,
     orderIndex: row.order_index,
   };
+}
+
+function readString(value: Json | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
+function readInteger(value: Json | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isInteger(value) ? value : fallback;
 }
 
 function asObject(value: Json): Record<string, Json | undefined> {

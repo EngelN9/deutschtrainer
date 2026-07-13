@@ -2,17 +2,25 @@
   "name": "@deutschtrainer/api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "dev": "node --watch src/dev-server.mjs",
-    "typecheck": "tsc --noEmit"
+    "dev": "tsx watch src/dev-server.ts",
+    "typecheck": "tsc --noEmit",
+    "verify:local": "tsx scripts/verify-local-e2e.ts"
   },
   "dependencies": {
+    "@deutschtrainer/ai-prompts": "workspace:*",
+    "@deutschtrainer/ai-schemas": "workspace:*",
+    "@deutschtrainer/shared-types": "workspace:*",
     "@deutschtrainer/validation": "workspace:*",
+    "@supabase/supabase-js": "2.110.2",
+    "openai": "6.46.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "tsx": "4.20.6",
     "typescript": "5.9.3"
   }
 }

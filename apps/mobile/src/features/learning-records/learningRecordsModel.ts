@@ -3,7 +3,7 @@ import { calculateNextMastery, scheduleReview } from "@deutschtrainer/learning-e
 import type {
   Attempt,
   ErrorRecord,
-  FixedExercise,
+  LessonExercise,
   LearningRecordSnapshot,
   LessonProgressRecord,
   ReviewItem,
@@ -13,7 +13,7 @@ import type {
 export interface LearningAttemptInput {
   userId: string;
   lessonId: string;
-  exercise: FixedExercise;
+  exercise: LessonExercise;
   answer: unknown;
   gradingResult: GradingResult;
   submittedAt: string;

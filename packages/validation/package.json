@@ -2,6 +2,7 @@
   "name": "@deutschtrainer/validation",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -14,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@deutschtrainer/ai-schemas": "workspace:*",
     "@deutschtrainer/shared-types": "workspace:*",
     "zod": "4.4.3"
   },

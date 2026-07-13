@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import {
   apiErrorResponseSchema,
+  evaluateResponseRequestSchema,
   fixedExerciseSchema,
   learningRecordSnapshotSchema,
   onboardingRequestSchema,
@@ -100,5 +101,19 @@ describe("validation schemas", () => {
     });
 
     expect(parsed.attempts[0]?.lessonId).toBe("7201fcca-f0c9-9bb7-218a-192849e5f84d");
+  });
+
+  it("accepts PostgreSQL UUIDs in an AI evaluation request", () => {
+    const parsed = evaluateResponseRequestSchema.parse({
+      exerciseId: "ce5a2fd6-18ef-95ba-f141-3530ba85a56a",
+      responseDe: "Obwohl es regnet, fahre ich zur Arbeit.",
+      durationMs: 12_000,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "phase5-evaluation-test",
+      reviewId: "7201fcca-f0c9-9bb7-218a-192849e5f84d",
+    });
+
+    expect(parsed.exerciseId).toBe("ce5a2fd6-18ef-95ba-f141-3530ba85a56a");
   });
 });

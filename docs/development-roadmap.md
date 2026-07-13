@@ -142,6 +142,14 @@
 - 使用者看到繁體中文解釋。
 - AI 金鑰不出現在前端。
 
+驗收結果：Pass。
+
+- `translation` 與 `free_response` 共用受保護的 `POST /ai/evaluate-response` 流程。
+- Structured Outputs 後仍執行 Zod、技能關聯、CEFR、一致性及禁止內容檢查，失敗最多重試一次。
+- learner-scoped cache、24 小時 20 次額度、token、latency 與估算成本均由後端處理。
+- AI 回饋、Attempt、ErrorRecord、Mastery、ReviewQueue 與 LessonProgress 由 service-role-only RPC 原子寫入。
+- Playwright 已驗證斷線保留回答、重試成功、繁中回饋，以及 390 px 手機版無水平溢出。
+
 ## Phase 6：作文
 
 交付：

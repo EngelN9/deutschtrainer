@@ -9,3 +9,14 @@ export function getApiHealth(): ApiHealth {
     service: "deutschtrainer-api",
   };
 }
+
+export { createApiHandler } from "./app";
+export { readApiConfig } from "./config";
+export { ResponseEvaluationService, validateFeedback } from "./evaluation/evaluationService";
+export {
+  DeterministicEvaluationProvider,
+  EvaluationProviderError,
+  OpenAiEvaluationProvider,
+  UnavailableEvaluationProvider,
+} from "./evaluation/openAiEvaluationProvider";
+export { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
