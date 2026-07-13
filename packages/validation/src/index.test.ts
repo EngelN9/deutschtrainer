@@ -7,6 +7,9 @@ import {
   learningRecordSnapshotSchema,
   onboardingRequestSchema,
   submitAttemptRequestSchema,
+  submitDictationRequestSchema,
+  textToSpeechRequestSchema,
+  transcribeRequestSchema,
 } from "./index";
 
 describe("validation schemas", () => {
@@ -124,6 +127,42 @@ describe("validation schemas", () => {
       textDe: "Sehr geehrte Frau Berger, ich kann nächste Woche leider nicht teilnehmen.",
       durationMs: 30_000,
       idempotencyKey: "short",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts asset-based TTS requests without accepting arbitrary text", () => {
+    const parsed = textToSpeechRequestSchema.parse({
+      listeningAssetId: "ced48daf-53ab-d040-93ea-85190838c379",
+      voice: "marin",
+      idempotencyKey: "phase7-tts-test-key",
+    });
+
+    expect(parsed).not.toHaveProperty("text");
+  });
+
+  it("rejects speaking storage paths outside an auth-user UUID folder", () => {
+    const result = transcribeRequestSchema.safeParse({
+      speakingPromptId: "ced48daf-53ab-d040-93ea-85190838c379",
+      storagePath: "shared/recording.webm",
+      mimeType: "audio/webm",
+      durationMs: 12_000,
+      idempotencyKey: "phase7-speaking-test",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty dictation submissions before protected scoring", () => {
+    const result = submitDictationRequestSchema.safeParse({
+      listeningAssetId: "ced48daf-53ab-d040-93ea-85190838c379",
+      sessionKey: "phase7-listening-session",
+      textDe: "   ",
+      comprehensionAnswer: "a",
+      playCount: 1,
+      usedSlowSpeed: false,
+      idempotencyKey: "phase7-listening-submit",
     });
 
     expect(result.success).toBe(false);

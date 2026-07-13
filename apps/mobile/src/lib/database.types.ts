@@ -1,31 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       activities: {
@@ -331,6 +306,69 @@ export type Database = {
           {
             foreignKeyName: "attempts_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audio_assets: {
+        Row: {
+          cache_key: string | null;
+          content_type: string;
+          created_at: string;
+          duration_ms: number;
+          id: string;
+          license: string;
+          listening_asset_id: string | null;
+          model: string | null;
+          owner_user_id: string | null;
+          source_type: Database["public"]["Enums"]["audio_source_type"];
+          storage_bucket: string;
+          storage_path: string;
+          voice: string | null;
+        };
+        Insert: {
+          cache_key?: string | null;
+          content_type: string;
+          created_at?: string;
+          duration_ms?: number;
+          id?: string;
+          license: string;
+          listening_asset_id?: string | null;
+          model?: string | null;
+          owner_user_id?: string | null;
+          source_type: Database["public"]["Enums"]["audio_source_type"];
+          storage_bucket: string;
+          storage_path: string;
+          voice?: string | null;
+        };
+        Update: {
+          cache_key?: string | null;
+          content_type?: string;
+          created_at?: string;
+          duration_ms?: number;
+          id?: string;
+          license?: string;
+          listening_asset_id?: string | null;
+          model?: string | null;
+          owner_user_id?: string | null;
+          source_type?: Database["public"]["Enums"]["audio_source_type"];
+          storage_bucket?: string;
+          storage_path?: string;
+          voice?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audio_assets_listening_asset_id_fkey";
+            columns: ["listening_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "listening_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audio_assets_owner_user_id_fkey";
+            columns: ["owner_user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -931,6 +969,187 @@ export type Database = {
           },
         ];
       };
+      listening_asset_content: {
+        Row: {
+          asset_id: string;
+          comprehension_correct_option: string;
+          created_at: string;
+          transcript_de: string;
+          tts_instructions: string;
+          updated_at: string;
+        };
+        Insert: {
+          asset_id: string;
+          comprehension_correct_option: string;
+          created_at?: string;
+          transcript_de: string;
+          tts_instructions?: string;
+          updated_at?: string;
+        };
+        Update: {
+          asset_id?: string;
+          comprehension_correct_option?: string;
+          created_at?: string;
+          transcript_de?: string;
+          tts_instructions?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listening_asset_content_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: true;
+            referencedRelation: "listening_assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      listening_assets: {
+        Row: {
+          comprehension_options_json: Json;
+          comprehension_question_zh_tw: string;
+          created_at: string;
+          deleted_at: string | null;
+          description_zh_tw: string;
+          estimated_seconds: number;
+          id: string;
+          keyword_hints_json: Json;
+          kind: Database["public"]["Enums"]["listening_kind"];
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          review_status: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          source_type: Database["public"]["Enums"]["source_type"];
+          status: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          tts_voice: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          comprehension_options_json?: Json;
+          comprehension_question_zh_tw: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw: string;
+          estimated_seconds: number;
+          id?: string;
+          keyword_hints_json?: Json;
+          kind: Database["public"]["Enums"]["listening_kind"];
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          tts_voice?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          comprehension_options_json?: Json;
+          comprehension_question_zh_tw?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw?: string;
+          estimated_seconds?: number;
+          id?: string;
+          keyword_hints_json?: Json;
+          kind?: Database["public"]["Enums"]["listening_kind"];
+          lesson_id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids?: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw?: string;
+          tts_voice?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listening_assets_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      listening_attempts: {
+        Row: {
+          comprehension_answer: string | null;
+          comprehension_correct: boolean | null;
+          created_at: string;
+          dictation_score: number | null;
+          dictation_text: string | null;
+          difficult_words: string[];
+          id: string;
+          idempotency_key: string | null;
+          listening_asset_id: string;
+          play_count: number;
+          session_key: string;
+          status: string;
+          transcript_viewed: boolean;
+          updated_at: string;
+          used_slow_speed: boolean;
+          user_id: string;
+        };
+        Insert: {
+          comprehension_answer?: string | null;
+          comprehension_correct?: boolean | null;
+          created_at?: string;
+          dictation_score?: number | null;
+          dictation_text?: string | null;
+          difficult_words?: string[];
+          id?: string;
+          idempotency_key?: string | null;
+          listening_asset_id: string;
+          play_count?: number;
+          session_key: string;
+          status?: string;
+          transcript_viewed?: boolean;
+          updated_at?: string;
+          used_slow_speed?: boolean;
+          user_id: string;
+        };
+        Update: {
+          comprehension_answer?: string | null;
+          comprehension_correct?: boolean | null;
+          created_at?: string;
+          dictation_score?: number | null;
+          dictation_text?: string | null;
+          difficult_words?: string[];
+          id?: string;
+          idempotency_key?: string | null;
+          listening_asset_id?: string;
+          play_count?: number;
+          session_key?: string;
+          status?: string;
+          transcript_viewed?: boolean;
+          updated_at?: string;
+          used_slow_speed?: boolean;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listening_attempts_listening_asset_id_fkey";
+            columns: ["listening_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "listening_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "listening_attempts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           auth_user_id: string;
@@ -1179,6 +1398,147 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      speaking_prompts: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          instruction_zh_tw: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          maximum_seconds: number;
+          review_status: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          source_type: Database["public"]["Enums"]["source_type"];
+          status: Database["public"]["Enums"]["content_status"];
+          target_de: string;
+          title_zh_tw: string;
+          translation_zh_tw: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          instruction_zh_tw: string;
+          lesson_id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          maximum_seconds?: number;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          target_de: string;
+          title_zh_tw: string;
+          translation_zh_tw: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          instruction_zh_tw?: string;
+          lesson_id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          maximum_seconds?: number;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids?: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          target_de?: string;
+          title_zh_tw?: string;
+          translation_zh_tw?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "speaking_prompts_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      speaking_submissions: {
+        Row: {
+          audio_asset_id: string;
+          comparison_json: Json;
+          created_at: string;
+          error_code: string | null;
+          feedback_json: Json | null;
+          id: string;
+          idempotency_key: string;
+          model: string | null;
+          speaking_prompt_id: string;
+          status: Database["public"]["Enums"]["speaking_submission_status"];
+          transcript_de: string | null;
+          updated_at: string;
+          user_id: string;
+          word_timings_json: Json;
+          words_per_minute: number | null;
+        };
+        Insert: {
+          audio_asset_id: string;
+          comparison_json?: Json;
+          created_at?: string;
+          error_code?: string | null;
+          feedback_json?: Json | null;
+          id?: string;
+          idempotency_key: string;
+          model?: string | null;
+          speaking_prompt_id: string;
+          status?: Database["public"]["Enums"]["speaking_submission_status"];
+          transcript_de?: string | null;
+          updated_at?: string;
+          user_id: string;
+          word_timings_json?: Json;
+          words_per_minute?: number | null;
+        };
+        Update: {
+          audio_asset_id?: string;
+          comparison_json?: Json;
+          created_at?: string;
+          error_code?: string | null;
+          feedback_json?: Json | null;
+          id?: string;
+          idempotency_key?: string;
+          model?: string | null;
+          speaking_prompt_id?: string;
+          status?: Database["public"]["Enums"]["speaking_submission_status"];
+          transcript_de?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          word_timings_json?: Json;
+          words_per_minute?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "speaking_submissions_audio_asset_id_fkey";
+            columns: ["audio_asset_id"];
+            isOneToOne: true;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "speaking_submissions_speaking_prompt_id_fkey";
+            columns: ["speaking_prompt_id"];
+            isOneToOne: false;
+            referencedRelation: "speaking_prompts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "speaking_submissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       units: {
         Row: {
@@ -1665,9 +2025,28 @@ export type Database = {
         Returns: boolean;
       };
       is_content_team: { Args: never; Returns: boolean };
+      mark_speaking_transcription_failed: {
+        Args: {
+          p_error_code: string;
+          p_submission_id: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       mark_writing_evaluation_failed: {
         Args: { p_user_id: string; p_version_id: string };
         Returns: undefined;
+      };
+      prepare_speaking_submission: {
+        Args: {
+          p_duration_ms: number;
+          p_idempotency_key: string;
+          p_mime_type: string;
+          p_speaking_prompt_id: string;
+          p_storage_path: string;
+          p_user_id: string;
+        };
+        Returns: Json;
       };
       prepare_writing_version: {
         Args: {
@@ -1718,6 +2097,45 @@ export type Database = {
         };
         Returns: Json;
       };
+      record_listening_activity: {
+        Args: {
+          p_listening_asset_id: string;
+          p_play_increment?: number;
+          p_session_key: string;
+          p_transcript_viewed?: boolean;
+          p_used_slow_speed?: boolean;
+        };
+        Returns: string;
+      };
+      record_listening_result: {
+        Args: {
+          p_comprehension_answer: string;
+          p_comprehension_correct: boolean;
+          p_dictation_score: number;
+          p_dictation_text: string;
+          p_difficult_words: string[];
+          p_idempotency_key: string;
+          p_listening_asset_id: string;
+          p_play_count: number;
+          p_session_key: string;
+          p_used_slow_speed: boolean;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      record_speaking_result: {
+        Args: {
+          p_comparison_json: Json;
+          p_feedback_json: Json;
+          p_model: string;
+          p_submission_id: string;
+          p_transcript_de: string;
+          p_user_id: string;
+          p_word_timings_json: Json;
+          p_words_per_minute: number;
+        };
+        Returns: undefined;
+      };
       record_writing_feedback: {
         Args: {
           p_feedback_json: Json;
@@ -1735,6 +2153,7 @@ export type Database = {
       activity_type: "instruction" | "practice" | "review" | "quiz" | "task";
       app_role: "learner" | "content_editor" | "reviewer" | "admin";
       attempt_mode: "lesson" | "review" | "practice" | "placement";
+      audio_source_type: "uploaded" | "generated" | "licensed";
       cefr_level: "B1" | "B2" | "C1" | "C2";
       content_status:
         "draft" | "pending_review" | "approved" | "published" | "rejected" | "archived";
@@ -1793,6 +2212,15 @@ export type Database = {
         | "mediation"
         | "oral_presentation";
       lesson_progress_status: "not_started" | "in_progress" | "completed";
+      listening_kind:
+        | "sentence"
+        | "dialogue"
+        | "announcement"
+        | "interview"
+        | "news"
+        | "lecture"
+        | "academic"
+        | "discussion";
       review_queue_status: "scheduled" | "completed" | "skipped" | "cancelled";
       review_status: "draft" | "pending_review" | "approved" | "rejected";
       skill_category:
@@ -1807,6 +2235,7 @@ export type Database = {
         | "pronunciation"
         | "exam_preparation";
       source_type: "human" | "ai_generated" | "ai_assisted";
+      speaking_submission_status: "transcribing" | "completed" | "transcription_failed";
       writing_submission_status:
         "evaluating" | "revision_requested" | "completed" | "evaluation_failed";
       writing_type:
@@ -2493,14 +2922,12 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       activity_type: ["instruction", "practice", "review", "quiz", "task"],
       app_role: ["learner", "content_editor", "reviewer", "admin"],
       attempt_mode: ["lesson", "review", "practice", "placement"],
+      audio_source_type: ["uploaded", "generated", "licensed"],
       cefr_level: ["B1", "B2", "C1", "C2"],
       content_status: ["draft", "pending_review", "approved", "published", "rejected", "archived"],
       error_severity: ["minor", "moderate", "major", "critical"],
@@ -2560,6 +2987,16 @@ export const Constants = {
         "oral_presentation",
       ],
       lesson_progress_status: ["not_started", "in_progress", "completed"],
+      listening_kind: [
+        "sentence",
+        "dialogue",
+        "announcement",
+        "interview",
+        "news",
+        "lecture",
+        "academic",
+        "discussion",
+      ],
       review_queue_status: ["scheduled", "completed", "skipped", "cancelled"],
       review_status: ["draft", "pending_review", "approved", "rejected"],
       skill_category: [
@@ -2575,6 +3012,7 @@ export const Constants = {
         "exam_preparation",
       ],
       source_type: ["human", "ai_generated", "ai_assisted"],
+      speaking_submission_status: ["transcribing", "completed", "transcription_failed"],
       writing_submission_status: [
         "evaluating",
         "revision_requested",

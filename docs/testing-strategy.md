@@ -53,6 +53,8 @@
 - 建立複習項目。
 - 提交作文。
 - AI 回饋成功與失敗流程。
+- 取得私有 TTS 音訊、提交聽寫、上傳／轉錄／刪除錄音。
+- 以第二帳號驗證逐字稿、錄音、轉錄與刪除的隔離。
 
 應使用測試資料庫或 Supabase local，避免污染正式資料。
 
@@ -70,6 +72,9 @@
 8. 確認進度仍存在。
 9. 送出作文第一稿並確認沒有完整範文。
 10. 依行內錯誤重寫，確認第二稿範文與任選兩版比較。
+11. 播放正常與慢速音訊、提交聽寫並確認字詞差異。
+12. 拒絕麥克風權限並完成替代朗讀流程。
+13. 錄音、預聽、轉錄、查看限制聲明並刪除錄音。
 
 ## 6. AI 測試
 
@@ -115,3 +120,10 @@ pnpm test
 - `pnpm --filter @deutschtrainer/api verify:local` 使用兩個臨時 Supabase 使用者驗證批改、重播、快取、資料落庫、RLS 與 RPC 權限。
 - Playwright Web smoke test 強制中斷一次 `/ai/evaluate-response`，確認回答保留及重試，之後驗證完整繁中 AI 回饋。
 - 桌面及 390 px viewport 均檢查 `scrollWidth <= innerWidth + 1`。
+
+## 11. Phase 7 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:audio:local` 使用兩個臨時使用者驗證 TTS、signed URL、聽力遙測、聽寫冪等、private upload、STT、RLS 與 owner deletion。
+- deterministic audio provider 產生有效 WAV 與固定 word timings，不依賴真實 OpenAI 呼叫。
+- 單元測試驗證德語 word diff、長停頓、發音限制聲明、cache hit 與 unavailable-provider fallback。
+- Web 瀏覽器需巡檢桌面與 390 px viewport 的入口、聽力、口說權限替代及分析頁，並檢查無水平溢出。

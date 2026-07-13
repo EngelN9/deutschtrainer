@@ -12,6 +12,18 @@ export function getApiHealth(): ApiHealth {
 
 export { createApiHandler } from "./app";
 export { readApiConfig } from "./config";
+export {
+  AudioLearningService,
+  buildSpeakingFeedback,
+  scoreWordComparison,
+} from "./audio/audioService";
+export {
+  AudioProviderError,
+  DeterministicAudioProvider,
+  OpenAiAudioProvider,
+  UnavailableAudioProvider,
+} from "./audio/openAiAudioProvider";
+export { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
 export { ResponseEvaluationService, validateFeedback } from "./evaluation/evaluationService";
 export {
   DeterministicEvaluationProvider,

@@ -7,6 +7,8 @@ import {
   BookCheck,
   Clock3,
   FilePenLine,
+  Headphones,
+  Mic2,
   Target,
   TriangleAlert,
 } from "lucide-react-native";
@@ -21,11 +23,13 @@ import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
 import { errorTypeLabel } from "../src/features/writing/writingLabels";
+import { useAudioLearningWorkspace } from "../src/features/audio-learning/useAudioLearning";
 
 export default function AnalyticsScreen() {
   const router = useRouter();
   const recordsQuery = useLearningRecords();
   const writingQuery = useWritingWorkspace();
+  const audioQuery = useAudioLearningWorkspace();
   const analytics = recordsQuery.data ? calculateLearningAnalytics(recordsQuery.data) : undefined;
   const weakestSkills = recordsQuery.data?.mastery
     .toSorted((left, right) => left.masteryScore - right.masteryScore)
@@ -43,6 +47,26 @@ export default function AnalyticsScreen() {
   const commonWritingErrors = [...writingErrorCounts.entries()]
     .toSorted((left, right) => right[1] - left[1])
     .slice(0, 5);
+  const completedListening =
+    audioQuery.data?.listeningAttempts.filter((attempt) => attempt.status === "completed") ?? [];
+  const listeningAverage = average(
+    completedListening.flatMap((attempt) =>
+      attempt.dictationScore === undefined ? [] : [attempt.dictationScore],
+    ),
+  );
+  const comprehensionAccuracy = percentage(
+    completedListening.filter((attempt) => attempt.comprehensionCorrect).length,
+    completedListening.filter((attempt) => attempt.comprehensionCorrect !== undefined).length,
+  );
+  const completedSpeaking =
+    audioQuery.data?.speakingSubmissions.filter(
+      (submission) => submission.status === "completed" && submission.feedback,
+    ) ?? [];
+  const speakingAverage = average(
+    completedSpeaking.flatMap((submission) =>
+      submission.feedback ? [submission.feedback.contentScore] : [],
+    ),
+  );
 
   return (
     <AuthGate mode="protected">
@@ -115,6 +139,45 @@ export default function AnalyticsScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeading}>
+                <Headphones color={colorTokens.primary} size={20} />
+                <Text style={styles.sectionTitle}>聽說訓練</Text>
+              </View>
+              {audioQuery.isLoading ? (
+                <Text style={styles.emptyText}>正在整理聽說紀錄...</Text>
+              ) : audioQuery.isError ? (
+                <Text style={styles.emptyText}>聽說紀錄目前無法載入。</Text>
+              ) : completedListening.length + completedSpeaking.length > 0 ? (
+                <View style={styles.audioMetrics}>
+                  <View style={styles.audioMetricRow}>
+                    <Headphones color={colorTokens.primary} size={18} />
+                    <Text style={styles.audioMetricLabel}>聽寫平均</Text>
+                    <Text style={styles.audioMetricValue}>{listeningAverage} 分</Text>
+                  </View>
+                  <View style={styles.audioMetricRow}>
+                    <BookCheck color={colorTokens.teal} size={18} />
+                    <Text style={styles.audioMetricLabel}>理解題正確率</Text>
+                    <Text style={styles.audioMetricValue}>{comprehensionAccuracy}%</Text>
+                  </View>
+                  <View style={styles.audioMetricRow}>
+                    <Mic2 color={colorTokens.accent} size={18} />
+                    <Text style={styles.audioMetricLabel}>口說活動</Text>
+                    <Text style={styles.audioMetricValue}>
+                      {audioQuery.data?.speakingSubmissions.length ?? 0} 次
+                    </Text>
+                  </View>
+                  <View style={styles.audioMetricRow}>
+                    <Target color={colorTokens.accent} size={18} />
+                    <Text style={styles.audioMetricLabel}>口說內容平均</Text>
+                    <Text style={styles.audioMetricValue}>{speakingAverage} 分</Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>完成聽寫或錄音後，聽說指標會顯示在這裡。</Text>
+              )}
             </View>
 
             <View style={styles.section}>
@@ -222,7 +285,28 @@ function masteryBandLabel(band: string): string {
   return labels[band] ?? "持續累積";
 }
 
+function average(values: number[]): number {
+  return values.length === 0
+    ? 0
+    : Math.round(values.reduce((total, value) => total + value, 0) / values.length);
+}
+
+function percentage(value: number, total: number): number {
+  return total === 0 ? 0 : Math.round((value / total) * 100);
+}
+
 const styles = StyleSheet.create({
+  audioMetricLabel: { color: colorTokens.text, flex: 1, fontSize: 14, fontWeight: "700" },
+  audioMetricRow: {
+    alignItems: "center",
+    borderBottomColor: colorTokens.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: spacingTokens.sm,
+    minHeight: 50,
+  },
+  audioMetrics: { borderTopColor: colorTokens.border, borderTopWidth: 1 },
+  audioMetricValue: { color: colorTokens.primary, fontSize: 14, fontWeight: "900" },
   averageScore: {
     color: colorTokens.mutedText,
     fontSize: 13,

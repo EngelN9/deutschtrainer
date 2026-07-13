@@ -111,3 +111,21 @@
 - authenticated 直接執行 service-only RPC 回傳 404。
 - owner delete 後原文、版本與 AI feedback 為零筆，只保留不含原文的兩筆用量 metadata。
 - 瀏覽器完成第一稿、行內錯誤、重寫、第二稿範文與版本比較；桌面及 390 px 無水平頁面溢出。
+
+## 9. Phase 7 驗收
+
+- 聽力教材的德語逐字稿、繁中翻譯與理解題不得隨公開 metadata 洩漏。
+- TTS 只能以已發布的受信任教材 ID 產生，並以 private storage、短效 signed URL 與 cache 提供。
+- 使用者可完成播放、慢速播放、dictation、理解題及主動揭示逐字稿。
+- 口說錄音必須取得權限；拒絕或失敗時仍可使用文字 fallback。
+- STT 回饋須包含逐字稿、目標文字差異、內容分數、語速、停頓與繁中建議，且不得宣稱是精確發音評分。
+- 錄音、signed URL、逐字稿、回饋與刪除操作必須限制為 owner；刪除後 storage 與資料庫不得保留原始錄音。
+- TTS/STT 必須納入 idempotency、rolling quota、usage log、provider retry 與安全降級。
+
+目前結果：Pass with device follow-up。
+
+- 本機整合實測匿名逐字稿存取為 401、TTS cache hit、dictation 100 分及 idempotent replay。
+- 第二位使用者無法取得 signed URL、submission、audio metadata 或刪除錄音；owner delete 後 storage 物件已移除。
+- deterministic STT 已驗證 completed 狀態、文字差異、語速、停頓、繁中建議及「不是精確發音評分」免責聲明。
+- Phase 5、Phase 6 整合測試回歸通過；Expo Doctor 20/20，production web export 與 HTTP smoke test 通過。
+- iOS/Android 實機的麥克風權限、錄音品質、背景切換與裝置播放仍需在發行前完成 device matrix 驗證。

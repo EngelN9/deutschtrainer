@@ -2,6 +2,13 @@ import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "no
 import { loadEnvFile } from "node:process";
 import { fileURLToPath } from "node:url";
 import { createApiHandler } from "./app";
+import { AudioLearningService } from "./audio/audioService";
+import {
+  DeterministicAudioProvider,
+  OpenAiAudioProvider,
+  UnavailableAudioProvider,
+} from "./audio/openAiAudioProvider";
+import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
 import { readApiConfig } from "./config";
 import { ResponseEvaluationService } from "./evaluation/evaluationService";
 import {
@@ -71,10 +78,31 @@ const writingService = new WritingEvaluationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
+const audioRepository = new SupabaseAudioRepository(
+  config.supabaseUrl,
+  config.supabaseServiceRoleKey,
+);
+const audioProvider = config.fakeEvaluationMode
+  ? new DeterministicAudioProvider()
+  : config.openAiApiKey
+    ? new OpenAiAudioProvider({
+        apiKey: config.openAiApiKey,
+        ttsModel: config.openAiTtsModel,
+        transcriptionModel: config.openAiTranscriptionModel,
+        timeoutMs: config.openAiTimeoutMs,
+      })
+    : new UnavailableAudioProvider(config.openAiTtsModel, config.openAiTranscriptionModel);
+const audioService = new AudioLearningService({
+  repository: audioRepository,
+  provider: audioProvider,
+  dailyTtsLimit: config.audioTtsDailyFreeLimit,
+  dailyTranscriptionLimit: config.audioTranscriptionDailyFreeLimit,
+});
 const handleRequest = createApiHandler({
   evaluationService,
   writingService,
-  aiConfigured: provider.configured && writingProvider.configured,
+  audioService,
+  aiConfigured: provider.configured && writingProvider.configured && audioProvider.configured,
 });
 
 const server = createServer(async (incoming, outgoing) => {
