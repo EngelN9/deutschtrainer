@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { aiEvaluationFeedbackSchema } from "@deutschtrainer/ai-schemas";
+import { aiEvaluationFeedbackSchema, writingFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import {
   AI_EVALUATED_EXERCISE_TYPES,
   ERROR_TYPES,
@@ -7,12 +7,14 @@ import {
   FIXED_EXERCISE_TYPES,
   SKILL_CATEGORIES,
   SUPPORTED_LEVELS,
+  WRITING_TYPES,
 } from "@deutschtrainer/shared-types";
 
 export const cefrLevelSchema = z.enum(SUPPORTED_LEVELS);
 export const exerciseTypeSchema = z.enum(EXERCISE_TYPES);
 export const fixedExerciseTypeSchema = z.enum(FIXED_EXERCISE_TYPES);
 export const skillCategorySchema = z.enum(SKILL_CATEGORIES);
+export const writingTypeSchema = z.enum(WRITING_TYPES);
 export const databaseUuidSchema = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
@@ -480,14 +482,101 @@ export const evaluateResponseResponseSchema = z.object({
 });
 export type EvaluateResponseResponse = z.infer<typeof evaluateResponseResponseSchema>;
 
-export const evaluateWritingRequestSchema = z.object({
-  submissionId: z.string().uuid(),
+export const writingPromptSchema = z.object({
+  id: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
   level: cefrLevelSchema,
-  writingType: z.string().min(1),
-  textDe: z.string().min(1).max(6000),
-  pass: z.enum(["first_pass", "second_pass"]),
-  idempotencyKey: z.string().min(12),
+  writingType: writingTypeSchema,
+  titleZhTw: z.string().min(1),
+  promptDe: z.string().min(1),
+  promptZhTw: z.string().min(1),
+  requirementsZhTw: z.array(z.string().min(1)).min(1).max(10),
+  minimumWords: z.number().int().min(20).max(2000),
+  maximumWords: z.number().int().min(20).max(2000),
+  estimatedMinutes: z.number().int().min(1).max(240),
+  skillIds: z.array(z.string().min(1)).min(1),
+  version: z.number().int().positive(),
 });
+export type WritingPromptData = z.infer<typeof writingPromptSchema>;
+
+export const writingDiffChangeSchema = z.object({
+  kind: z.enum(["unchanged", "added", "removed"]),
+  value: z.string().min(1),
+});
+
+export const writingVersionSchema = z.object({
+  id: databaseUuidSchema,
+  submissionId: databaseUuidSchema,
+  previousVersionId: databaseUuidSchema.optional(),
+  versionNumber: z.number().int().positive(),
+  textDe: z.string().min(1).max(12000),
+  wordCount: z.number().int().nonnegative(),
+  diff: z.array(writingDiffChangeSchema),
+  idempotencyKey: z.string().min(12).max(200),
+  feedbackId: databaseUuidSchema.optional(),
+  feedback: writingFeedbackSchema.optional(),
+  createdAt: z.string().datetime({ offset: true }),
+});
+export type WritingVersionData = z.infer<typeof writingVersionSchema>;
+
+export const writingSubmissionSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  promptId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  writingType: writingTypeSchema,
+  status: z.enum(["evaluating", "revision_requested", "completed", "evaluation_failed"]),
+  currentVersionId: databaseUuidSchema.optional(),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+  versions: z.array(writingVersionSchema),
+});
+export type WritingSubmissionData = z.infer<typeof writingSubmissionSchema>;
+
+export const writingWorkspaceSchema = z.object({
+  prompts: z.array(writingPromptSchema),
+  submissions: z.array(writingSubmissionSchema),
+});
+export type WritingWorkspace = z.infer<typeof writingWorkspaceSchema>;
+
+export const evaluateWritingRequestSchema = z.object({
+  promptId: databaseUuidSchema,
+  submissionId: databaseUuidSchema.optional(),
+  textDe: z.string().trim().min(1).max(12000),
+  durationMs: z.number().int().min(0).max(14_400_000),
+  idempotencyKey: z.string().min(12).max(200),
+});
+export type EvaluateWritingRequest = z.infer<typeof evaluateWritingRequestSchema>;
+
+export const evaluateWritingResponseSchema = z.object({
+  requestId: z.string().min(1),
+  status: z.enum(["completed", "fallback"]),
+  submissionId: databaseUuidSchema,
+  versionId: databaseUuidSchema,
+  feedbackId: databaseUuidSchema.nullable(),
+  versionNumber: z.number().int().positive(),
+  feedback: writingFeedbackSchema.nullable(),
+  model: z.string().min(1),
+  retryable: z.boolean(),
+  idempotentReplay: z.boolean(),
+  fallbackReason: z
+    .enum([
+      "AI_NOT_CONFIGURED",
+      "AI_TIMEOUT",
+      "AI_RESPONSE_INVALID",
+      "NETWORK_ERROR",
+      "RATE_LIMITED",
+    ])
+    .nullable(),
+  usage: z.object({
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    estimatedCost: z.number().nonnegative(),
+    latencyMs: z.number().int().nonnegative(),
+  }),
+});
+export type EvaluateWritingResponse = z.infer<typeof evaluateWritingResponseSchema>;
 
 export const generatePracticeRequestSchema = z.object({
   level: cefrLevelSchema,

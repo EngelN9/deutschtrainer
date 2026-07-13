@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
   apiErrorResponseSchema,
   evaluateResponseRequestSchema,
+  evaluateWritingRequestSchema,
   fixedExerciseSchema,
   learningRecordSnapshotSchema,
   onboardingRequestSchema,
@@ -115,5 +116,16 @@ describe("validation schemas", () => {
     });
 
     expect(parsed.exerciseId).toBe("ce5a2fd6-18ef-95ba-f141-3530ba85a56a");
+  });
+
+  it("validates a server-trusted writing request and rejects short replay keys", () => {
+    const result = evaluateWritingRequestSchema.safeParse({
+      promptId: "ced48daf-53ab-d040-93ea-85190838c379",
+      textDe: "Sehr geehrte Frau Berger, ich kann nächste Woche leider nicht teilnehmen.",
+      durationMs: 30_000,
+      idempotencyKey: "short",
+    });
+
+    expect(result.success).toBe(false);
   });
 });

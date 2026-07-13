@@ -1,6 +1,6 @@
 # Supabase Local Development
 
-Phase 1 includes local Supabase configuration and a foundation migration for user profiles, preferences, role checks, feature flags, and audit logs.
+The local stack includes migrations through Phase 6: identity, course content, learning records, AI grading, and versioned writing.
 
 Run locally after installing the Supabase CLI:
 
@@ -9,4 +9,4 @@ supabase start
 supabase db reset
 ```
 
-The full course, exercise, review, AI, writing, listening, and speaking schema remains documented in `docs/database-schema.md` and will be implemented incrementally in later phases.
+The remaining listening, speaking, conversation, and administration schema is documented in `docs/database-schema.md` and will be implemented incrementally in later phases.

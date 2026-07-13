@@ -20,6 +20,10 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 - AI-graded translation and free-response exercises.
 - Traditional Chinese linguistic error diagnosis, corrections, strengths, and next steps.
 - Preserved answers and retry UI when AI evaluation is unavailable.
+- B1-C2 writing center with published prompts and word limits.
+- Immutable writing versions, UTF-16 inline error highlights, ten rubric scores, and revision tasks.
+- First-pass self-revision, second-pass reference text, arbitrary two-version comparison, and recoverable failed evaluations.
+- Common writing-error counts in learning analytics and owner-only writing deletion.
 
 ## Run
 
@@ -32,4 +36,4 @@ Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `supabase
 
 AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=supabase`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
-Versioned long-form writing, audio, and speaking are intentionally deferred to later phases.
+Audio and speaking are intentionally deferred to later phases.

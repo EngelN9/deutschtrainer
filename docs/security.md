@@ -28,7 +28,8 @@
 - attempts/progress/reviews：只允許 owner 讀取，寫入集中於驗證身分與內容關聯的 transaction RPC。
 - AI feedback/usage：只允許 owner 讀取；`record_ai_attempt` 僅 service role 可執行，learner 不可繞過 API 寫入分數。
 - exercise_answers：固定題的已發布答案可供 client grading；translation/free_response 參考答案僅後端可讀。
-- writing/speaking/conversation：只允許 owner；必要審核需使用去識別化內容。
+- writing：published prompt 公開讀；prompt rules 僅 service role；submission/version 只允許 owner 讀取，準備、批改與失敗狀態只經 service-role RPC 寫入。
+- speaking/conversation：只允許 owner；必要審核需使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
 - audit_logs：admin only。
 
@@ -47,6 +48,8 @@
 - AI 輸出需通過 schema、Zod、程度與禁止內容檢查。
 - AI 回饋頁需說明 AI 可能出錯。
 - 後端依 `exerciseId` 讀取 target level、allowed skills 與參考答案，不信任 client 傳入的評分上下文。
+- 作文後端依 `promptId` 讀取 level、writing type、allowed skills、grading notes 與 reference；不信任 client 傳入評分上下文。
+- 作文行內 offset、原文字串、skill、rubric 一致性、first/second pass reference 與 repeated errors 均經業務驗證。
 - 快取 key 包含 learner、exercise/version、正規化回答、prompt/version 與 schema/version，避免跨使用者回饋洩漏。
 
 ## 6. Rate Limit
@@ -63,6 +66,7 @@
 
 - 作文、錄音、轉錄與對話屬於使用者內容。
 - 使用者可刪除錄音與作文。
+- `delete_own_writing_submission` hard-delete 作文原文、版本與 AI feedback；不含原文的 cost/usage metadata 依稽核需求保留。
 - 帳號刪除需刪除或匿名化個人資料、學習紀錄與使用者上傳內容。
 - AI logs 保存成本與狀態，避免保存完整敏感內容。
 - audio_assets 需記錄來源與授權。

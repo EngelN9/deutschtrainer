@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
-import { aiEvaluationFeedbackSchema, createAiEvaluationFeedbackJsonSchema } from "./index";
+import {
+  aiEvaluationFeedbackSchema,
+  createAiEvaluationFeedbackJsonSchema,
+  createWritingFeedbackJsonSchema,
+  writingFeedbackSchema,
+} from "./index";
 
 describe("AI schemas", () => {
   it("validates structured AI evaluation feedback", () => {
@@ -42,5 +47,60 @@ describe("AI schemas", () => {
     const errorProperties = item.properties as Record<string, Record<string, unknown>>;
 
     expect(errorProperties.relatedSkillId?.enum).toEqual(["B2.argumentation.counterargument"]);
+  });
+
+  it("validates all ten writing rubrics and UTF-16 inline offsets", () => {
+    const result = writingFeedbackSchema.parse({
+      score: 72,
+      cefrLevelEstimate: "B1",
+      rubricScores: {
+        taskCompletion: 80,
+        grammar: 60,
+        vocabulary: 72,
+        coherence: 75,
+        cohesion: 70,
+        register: 78,
+        argumentation: 65,
+        style: 70,
+        accuracy: 62,
+        idiomaticity: 68,
+      },
+      inlineErrors: [
+        {
+          type: "word_order",
+          severity: "major",
+          original: "weil ich muss arbeiten",
+          correction: "weil ich arbeiten muss",
+          explanationZhTw: "weil 從句的變位動詞應放在句尾。",
+          relatedSkillId: "B1.writing.formal_email",
+          grammarTopicId: null,
+          vocabularyId: null,
+          startOffset: 20,
+          endOffset: 43,
+        },
+      ],
+      strengths: ["任務目的清楚。"],
+      revisionTasks: ["修正從句語序。"],
+      referenceVersion: null,
+      repeatedErrorTypes: [],
+      requiresHumanReview: false,
+    });
+
+    expect(Object.keys(result.rubricScores)).toHaveLength(10);
+    expect(result.inlineErrors[0]?.endOffset).toBe(43);
+  });
+
+  it("limits writing Structured Outputs to the prompt skills", () => {
+    const schema = createWritingFeedbackJsonSchema(["B1.writing.formal_email"]);
+    const properties = schema.properties as Record<string, Record<string, unknown>>;
+    const errors = properties.inlineErrors;
+    expect(errors).toBeDefined();
+    if (!errors) {
+      throw new Error("inlineErrors schema is required");
+    }
+    const item = errors.items as Record<string, unknown>;
+    const errorProperties = item.properties as Record<string, Record<string, unknown>>;
+
+    expect(errorProperties.relatedSkillId?.enum).toEqual(["B1.writing.formal_email"]);
   });
 });

@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "tsx watch src/dev-server.ts",
     "typecheck": "tsc --noEmit",
-    "verify:local": "tsx scripts/verify-local-e2e.ts"
+    "verify:local": "tsx scripts/verify-local-e2e.ts",
+    "verify:writing:local": "tsx scripts/verify-writing-e2e.ts"
   },
   "dependencies": {
     "@deutschtrainer/ai-prompts": "workspace:*",
@@ -16,6 +17,7 @@
     "@deutschtrainer/shared-types": "workspace:*",
     "@deutschtrainer/validation": "workspace:*",
     "@supabase/supabase-js": "2.110.2",
+    "diff": "9.0.0",
     "openai": "6.46.0",
     "zod": "4.4.3"
   },

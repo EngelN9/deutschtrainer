@@ -10,6 +10,13 @@ import {
   UnavailableEvaluationProvider,
 } from "./evaluation/openAiEvaluationProvider";
 import { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
+import { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
+import { WritingEvaluationService } from "./writing/writingService";
+import {
+  DeterministicWritingProvider,
+  OpenAiWritingProvider,
+  UnavailableWritingProvider,
+} from "./writing/openAiWritingProvider";
 
 try {
   loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
@@ -44,9 +51,30 @@ const evaluationService = new ResponseEvaluationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
+const writingRepository = new SupabaseWritingRepository(
+  config.supabaseUrl,
+  config.supabaseServiceRoleKey,
+);
+const writingProvider = config.fakeEvaluationMode
+  ? new DeterministicWritingProvider()
+  : config.openAiApiKey
+    ? new OpenAiWritingProvider({
+        apiKey: config.openAiApiKey,
+        model: config.openAiModel,
+        timeoutMs: config.openAiTimeoutMs,
+      })
+    : new UnavailableWritingProvider(config.openAiModel);
+const writingService = new WritingEvaluationService({
+  repository: writingRepository,
+  provider: writingProvider,
+  dailyLimit: config.writingDailyFreeLimit,
+  inputCostPerMillion: config.inputCostPerMillion,
+  outputCostPerMillion: config.outputCostPerMillion,
+});
 const handleRequest = createApiHandler({
   evaluationService,
-  aiConfigured: provider.configured,
+  writingService,
+  aiConfigured: provider.configured && writingProvider.configured,
 });
 
 const server = createServer(async (incoming, outgoing) => {

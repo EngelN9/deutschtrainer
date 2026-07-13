@@ -119,31 +119,155 @@ export function createAiEvaluationFeedbackJsonSchema(
   return schema;
 }
 
-export const writingFeedbackSchema = z.object({
-  score: z.number().int().min(0).max(100),
-  cefrLevelEstimate: z.enum(SUPPORTED_LEVELS),
-  rubricScores: z.object({
-    taskCompletion: z.number().min(0).max(100),
-    grammar: z.number().min(0).max(100),
-    vocabulary: z.number().min(0).max(100),
-    coherence: z.number().min(0).max(100),
-    cohesion: z.number().min(0).max(100),
-    register: z.number().min(0).max(100),
-    argumentation: z.number().min(0).max(100),
-    style: z.number().min(0).max(100),
-    accuracy: z.number().min(0).max(100),
-    idiomaticity: z.number().min(0).max(100),
-  }),
-  inlineErrors: z.array(
-    aiErrorItemSchema.extend({
-      startOffset: z.number().int().nonnegative(),
-      endOffset: z.number().int().nonnegative(),
-    }),
-  ),
-  strengths: z.array(z.string()),
-  revisionTasks: z.array(z.string()),
-  referenceVersion: z.string().optional(),
-  repeatedErrorTypes: z.array(z.enum(ERROR_TYPES)),
-  requiresHumanReview: z.boolean(),
-});
+export const writingFeedbackSchema = z
+  .object({
+    score: z.number().int().min(0).max(100),
+    cefrLevelEstimate: z.enum(SUPPORTED_LEVELS),
+    rubricScores: z
+      .object({
+        taskCompletion: z.number().int().min(0).max(100),
+        grammar: z.number().int().min(0).max(100),
+        vocabulary: z.number().int().min(0).max(100),
+        coherence: z.number().int().min(0).max(100),
+        cohesion: z.number().int().min(0).max(100),
+        register: z.number().int().min(0).max(100),
+        argumentation: z.number().int().min(0).max(100),
+        style: z.number().int().min(0).max(100),
+        accuracy: z.number().int().min(0).max(100),
+        idiomaticity: z.number().int().min(0).max(100),
+      })
+      .strict(),
+    inlineErrors: z
+      .array(
+        aiErrorItemSchema
+          .extend({
+            startOffset: z.number().int().nonnegative(),
+            endOffset: z.number().int().positive(),
+          })
+          .strict(),
+      )
+      .max(50),
+    strengths: z.array(z.string().min(1)).max(10),
+    revisionTasks: z.array(z.string().min(1)).min(1).max(10),
+    referenceVersion: z.string().min(1).nullable(),
+    repeatedErrorTypes: z.array(z.enum(ERROR_TYPES)).max(20),
+    requiresHumanReview: z.boolean(),
+  })
+  .strict();
 export type WritingFeedback = z.infer<typeof writingFeedbackSchema>;
+
+export const writingFeedbackJsonSchema = {
+  type: "object",
+  properties: {
+    score: { type: "integer", minimum: 0, maximum: 100 },
+    cefrLevelEstimate: { type: "string", enum: [...SUPPORTED_LEVELS] },
+    rubricScores: {
+      type: "object",
+      properties: {
+        taskCompletion: { type: "integer", minimum: 0, maximum: 100 },
+        grammar: { type: "integer", minimum: 0, maximum: 100 },
+        vocabulary: { type: "integer", minimum: 0, maximum: 100 },
+        coherence: { type: "integer", minimum: 0, maximum: 100 },
+        cohesion: { type: "integer", minimum: 0, maximum: 100 },
+        register: { type: "integer", minimum: 0, maximum: 100 },
+        argumentation: { type: "integer", minimum: 0, maximum: 100 },
+        style: { type: "integer", minimum: 0, maximum: 100 },
+        accuracy: { type: "integer", minimum: 0, maximum: 100 },
+        idiomaticity: { type: "integer", minimum: 0, maximum: 100 },
+      },
+      required: [
+        "taskCompletion",
+        "grammar",
+        "vocabulary",
+        "coherence",
+        "cohesion",
+        "register",
+        "argumentation",
+        "style",
+        "accuracy",
+        "idiomaticity",
+      ],
+      additionalProperties: false,
+    },
+    inlineErrors: {
+      type: "array",
+      maxItems: 50,
+      items: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: [...ERROR_TYPES] },
+          severity: {
+            type: "string",
+            enum: ["minor", "moderate", "major", "critical"],
+          },
+          original: { type: "string", minLength: 1 },
+          correction: { type: "string", minLength: 1 },
+          explanationZhTw: { type: "string", minLength: 1 },
+          relatedSkillId: { type: "string", minLength: 1 },
+          grammarTopicId: { type: ["string", "null"] },
+          vocabularyId: { type: ["string", "null"] },
+          startOffset: { type: "integer", minimum: 0 },
+          endOffset: { type: "integer", minimum: 1 },
+        },
+        required: [
+          "type",
+          "severity",
+          "original",
+          "correction",
+          "explanationZhTw",
+          "relatedSkillId",
+          "grammarTopicId",
+          "vocabularyId",
+          "startOffset",
+          "endOffset",
+        ],
+        additionalProperties: false,
+      },
+    },
+    strengths: {
+      type: "array",
+      maxItems: 10,
+      items: { type: "string", minLength: 1 },
+    },
+    revisionTasks: {
+      type: "array",
+      minItems: 1,
+      maxItems: 10,
+      items: { type: "string", minLength: 1 },
+    },
+    referenceVersion: { type: ["string", "null"] },
+    repeatedErrorTypes: {
+      type: "array",
+      maxItems: 20,
+      items: { type: "string", enum: [...ERROR_TYPES] },
+    },
+    requiresHumanReview: { type: "boolean" },
+  },
+  required: [
+    "score",
+    "cefrLevelEstimate",
+    "rubricScores",
+    "inlineErrors",
+    "strengths",
+    "revisionTasks",
+    "referenceVersion",
+    "repeatedErrorTypes",
+    "requiresHumanReview",
+  ],
+  additionalProperties: false,
+} as const;
+
+export function createWritingFeedbackJsonSchema(
+  allowedSkillIds: readonly string[],
+): Record<string, unknown> {
+  const schema = structuredClone(writingFeedbackJsonSchema) as Record<string, unknown>;
+  const properties = schema.properties as Record<string, Record<string, unknown>>;
+  const inlineErrors = properties.inlineErrors;
+  if (!inlineErrors) {
+    throw new Error("Writing feedback JSON Schema is missing inlineErrors.");
+  }
+  const errorItem = inlineErrors.items as Record<string, unknown>;
+  const errorProperties = errorItem.properties as Record<string, Record<string, unknown>>;
+  errorProperties.relatedSkillId = { type: "string", enum: [...allowedSkillIds] };
+  return schema;
+}

@@ -111,10 +111,11 @@ STT：
 - TTS 失敗：顯示文字稿並允許稍後重試。
 - STT 失敗：允許重新錄音或改用文字作答。
 
-## 9. Phase 5 實作狀態
+## 9. Phase 5-6 實作狀態
 
 - `translation` 與 `free_response` 已完成。
 - 預設模型為 server-configurable `gpt-5.6-luna`。
 - 每次 provider attempt 記錄 tokens、latency、success、errorCode 與估算成本。
 - AI 題參考答案只允許 service role 讀取。
-- 作文、TTS、STT 與對話仍屬後續階段。
+- 作文已完成 save-before-provider、十項 rubric、UTF-16 行內錯誤、first/second pass reference、版本 diff、10/day rolling quota、重試與 owner delete。
+- TTS、STT 與對話仍屬後續階段。

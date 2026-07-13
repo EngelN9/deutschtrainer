@@ -86,7 +86,7 @@ Completed on 2026-07-13:
 
 ## Known Limits
 
-- Long-form versioned writing and inline offsets are Phase 6 work.
+- Long-form versioned writing and inline offsets are now delivered in Phase 6; see `docs/phase-6-writing.md`.
 - `requiresHumanReview` is shown to the learner, but the reviewer queue and admin review workflow are not yet implemented.
 - The deterministic provider is a test fixture, not a production grading model.
 - Model name and pricing defaults can change; deployment configuration must be reviewed before production cost reporting is treated as authoritative.

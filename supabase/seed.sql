@@ -139,6 +139,7 @@ set
 drop table if exists public._phase3_exercise_seed;
 drop table if exists public._phase3_lesson_seed;
 drop table if exists public._phase5_ai_exercise_seed;
+drop table if exists public._phase6_writing_prompt_seed;
 
 create table public._phase3_lesson_seed (
   slug text primary key,
@@ -1141,9 +1142,170 @@ set
   version = excluded.version,
   updated_at = now();
 
+create table public._phase6_writing_prompt_seed (
+  slug text primary key,
+  lesson_slug text not null,
+  level public.cefr_level not null,
+  writing_type public.writing_type not null,
+  title_zh_tw text not null,
+  prompt_de text not null,
+  prompt_zh_tw text not null,
+  requirements_json jsonb not null,
+  minimum_words integer not null,
+  maximum_words integer not null,
+  estimated_minutes integer not null,
+  skill_ids text[] not null,
+  grading_notes_zh_tw text not null,
+  reference_outline_json jsonb not null,
+  reference_version_de text not null
+);
+
+insert into public._phase6_writing_prompt_seed values
+  (
+    'b1-kurs-termin',
+    'b1-bewerbung',
+    'B1',
+    'formal_email',
+    '更改德語課程日期',
+    'Sie besuchen einen Deutschkurs. Wegen Ihrer Arbeit können Sie nächste Woche nicht am Unterricht teilnehmen. Schreiben Sie an Frau Berger von der Sprachschule und bitten Sie um eine Lösung.',
+    '你正在參加德語課程，但因工作無法出席下週課程。請寫信給語言學校的 Berger 女士，說明原因並提出解決方式。',
+    '["使用正式稱謂與結尾", "說明無法出席的原因", "詢問是否能補課或取得教材", "提出一個可行的替代方案"]',
+    60,
+    140,
+    20,
+    array['B1.writing.formal_email', 'B1.register.formal'],
+    '重點檢查正式信件格式、weil 從句語序、請求是否禮貌，以及四項任務是否完整。',
+    '["正式稱謂", "說明缺席與原因", "禮貌詢問補課或教材", "提出替代日期", "正式結尾"]',
+    'Sehr geehrte Frau Berger, leider kann ich nächste Woche nicht am Deutschkurs teilnehmen, weil ich beruflich verreisen muss. Könnten Sie mir bitte mitteilen, ob ich den Unterricht an einem anderen Termin nachholen kann? Falls das nicht möglich ist, würde ich mich über die Arbeitsblätter und Informationen zu den Hausaufgaben freuen. Ab dem darauffolgenden Montag bin ich wieder verfügbar. Vielen Dank für Ihre Hilfe. Mit freundlichen Grüßen, Lin Chen'
+  ),
+  (
+    'b2-vier-tage-woche',
+    'b2-argumente',
+    'B2',
+    'argumentative_essay',
+    '每週工作四天是否可行',
+    'Ein Unternehmen möchte die Vier-Tage-Woche einführen. Verfassen Sie einen argumentativen Text für das interne Forum. Wägen Sie Vorteile und Nachteile ab und formulieren Sie eine begründete Empfehlung.',
+    '某公司考慮導入每週工作四天。請為內部論壇撰寫論證文章，權衡利弊並提出有理由的建議。',
+    '["提出清楚立場", "至少說明兩項優點與兩項缺點", "回應一項可能的反方意見", "以具體條件提出結論"]',
+    120,
+    220,
+    35,
+    array['B2.argumentation.counterargument', 'B2.writing.cohesion'],
+    '評估論點是否平衡、讓步與反駁是否成立、篇章連接是否清楚，以及語域是否適合公司內部論壇。',
+    '["議題與立場", "生產力與員工福祉的優點", "人力配置與客戶服務的風險", "回應成本疑慮", "附條件的建議"]',
+    'Die Vier-Tage-Woche kann die Motivation erhöhen und Fehlzeiten reduzieren. Beschäftigte gewinnen mehr Erholungszeit, während Unternehmen als Arbeitgeber attraktiver werden. Allerdings lässt sich nicht jede Tätigkeit ohne Weiteres auf vier Tage verteilen. Besonders im Kundendienst können längere Wartezeiten entstehen, außerdem droht bei unverändertem Arbeitsumfang eine höhere tägliche Belastung. Dagegen lässt sich einwenden, dass bessere Abläufe einen Teil dieser Probleme ausgleichen. Das überzeugt jedoch nur, wenn Teams ausreichend Personal und klare Prioritäten erhalten. Ich empfehle daher ein sechsmonatiges Pilotprojekt in geeigneten Abteilungen. Produktivität, Überstunden und Kundenzufriedenheit sollten dabei transparent gemessen werden. Erst auf dieser Grundlage sollte das Unternehmen über eine dauerhafte Einführung entscheiden.'
+  ),
+  (
+    'c1-digitale-lehre',
+    'c1-zusammenfassung',
+    'C1',
+    'source_integration',
+    '整合數位教學研究觀點',
+    'Zwei Untersuchungen zur digitalen Hochschullehre kommen zu unterschiedlichen Ergebnissen: Studie A berichtet von höherer zeitlicher Flexibilität und vergleichbaren Prüfungsergebnissen. Studie B beobachtet bei Studienanfängern weniger Austausch und mehr Studienabbrüche. Verfassen Sie eine strukturierte Synthese, grenzen Sie die Aussagekraft ein und leiten Sie eine vorsichtige Empfehlung ab.',
+    '兩項數位大學教學研究得到不同結果：研究 A 指出時間彈性提高且考試結果相近；研究 B 觀察到新生交流減少、退學增加。請整合兩方觀點、說明證據限制，並提出審慎建議。',
+    '["中性區分兩項研究的主張", "整合一致與矛盾之處", "指出至少兩項證據限制", "避免把相關性寫成因果", "提出審慎且可執行的建議"]',
+    180,
+    320,
+    50,
+    array['C1.writing.academic_summary', 'C1.mediation.synthesis'],
+    '檢查中性轉述、資訊整合、研究限制、因果推論界線，以及學術篇章的精確銜接。',
+    '["共同研究問題", "研究 A 的結果", "研究 B 的結果", "方法與樣本限制", "綜合判斷與條件式建議"]',
+    'Die beiden Untersuchungen zeichnen kein einheitliches Bild der digitalen Hochschullehre. Studie A zufolge erhöht das Format die zeitliche Flexibilität, ohne dass sich die Prüfungsergebnisse wesentlich verschlechtern. Studie B verweist demgegenüber auf geringeren sozialen Austausch und eine höhere Abbruchquote unter Studienanfängern. Die Befunde widersprechen einander nur teilweise, da sie unterschiedliche Zielgrößen und Studierendengruppen betreffen. Ihre Aussagekraft bleibt zudem begrenzt: Weder die Größe und Zusammensetzung der Stichproben noch mögliche Unterschiede zwischen Fachrichtungen werden genannt. Aus den beobachteten Zusammenhängen lässt sich daher kein eindeutiger Kausalschluss ableiten. Sinnvoll erscheint ein hybrides Modell, das flexible digitale Phasen mit verbindlichen Präsenzangeboten für Beratung und Zusammenarbeit verbindet. Begleitend sollten Lernerfolg, Teilhabe und Studienabbrüche differenziert nach Studienphase untersucht werden. Eine allgemeine Umstellung wäre erst dann vertretbar, wenn belastbarere und über mehrere Semester erhobene Daten vorliegen.'
+  ),
+  (
+    'c2-reform-kommentar',
+    'c2-ironie',
+    'C2',
+    'critical_review',
+    '評論改革論述的修辭策略',
+    'Ein Kommentar bezeichnet eine gescheiterte Verwaltungsreform als "Meisterstück der Effizienz", wechselt anschließend von nüchterner Analyse zu salopper Polemik und endet mit einem scheinbar versöhnlichen Lob. Analysieren und bewerten Sie die rhetorische Wirkung. Formulieren Sie außerdem eine präzisere Alternative für den Schlussabschnitt.',
+    '一篇評論把失敗的行政改革稱為「效率傑作」，之後從冷靜分析突然轉為口語化論戰，最後以看似和解的讚美收尾。請分析並評價其修辭效果，並為結尾段落提出更精準的改寫。',
+    '["解釋反諷如何由語境產生", "分析語域轉換的效果與風險", "區分作者立場與字面陳述", "評價論證是否因修辭而受損", "提供符合原意但更精準的結尾改寫"]',
+    220,
+    400,
+    65,
+    array['C2.pragmatics.irony', 'C2.register.flexible_shift'],
+    '評估語用推論、反諷與隱含立場的辨識是否精確，並檢查改寫能否保留批判力度而避免空泛或不必要的語域跳動。',
+    '["辨識字面與實際評價的落差", "分析從分析到論戰的語域轉換", "說明假性讚美的語用功能", "衡量修辭對可信度的影響", "提出風格一致的替代結尾"]',
+    'Die Bezeichnung der Reform als "Meisterstück der Effizienz" ist nur vordergründig ein Lob. Im Kontext des dokumentierten Scheiterns aktiviert sie eine ironische Lesart und macht die Distanz des Autors unmissverständlich. Der anschließende Wechsel von analytischer Sachlichkeit zu salopper Polemik erhöht zwar kurzfristig die Schlagkraft, schwächt jedoch die zuvor aufgebaute argumentative Autorität. Auch das versöhnlich klingende Schlusslob funktioniert als Implikatur: Es bestätigt nicht die Reform, sondern führt die offizielle Selbstdarstellung vor. Diese rhetorische Verdichtung ist wirkungsvoll, sofern das Publikum die geteilten Hintergrundannahmen erkennt; andernfalls droht die Kritik als bloße Herabsetzung zu erscheinen. Präziser ließe sich schließen: Die Reform hat einzelne Verfahren sichtbar gemacht, ihr zentrales Effizienzversprechen jedoch nicht eingelöst. Eine belastbare Neubewertung setzt transparente Kennzahlen, klar benannte Verantwortlichkeiten und überprüfbare Fristen voraus. So bleibt die Kritik pointiert, ohne den analytischen Maßstab zugunsten einer bloßen Pointe aufzugeben.'
+  );
+
+insert into public.writing_prompts (
+  id,
+  lesson_id,
+  level,
+  writing_type,
+  title_zh_tw,
+  prompt_de,
+  prompt_zh_tw,
+  requirements_json,
+  minimum_words,
+  maximum_words,
+  estimated_minutes,
+  skill_ids,
+  review_status,
+  status,
+  version
+)
+select
+  md5('deutschtrainer:writing-prompt:' || slug)::uuid,
+  md5('deutschtrainer:lesson:' || lesson_slug)::uuid,
+  level,
+  writing_type,
+  title_zh_tw,
+  prompt_de,
+  prompt_zh_tw,
+  requirements_json,
+  minimum_words,
+  maximum_words,
+  estimated_minutes,
+  skill_ids,
+  'approved',
+  'published',
+  1
+from public._phase6_writing_prompt_seed
+on conflict (lesson_id, writing_type) do update
+set
+  level = excluded.level,
+  title_zh_tw = excluded.title_zh_tw,
+  prompt_de = excluded.prompt_de,
+  prompt_zh_tw = excluded.prompt_zh_tw,
+  requirements_json = excluded.requirements_json,
+  minimum_words = excluded.minimum_words,
+  maximum_words = excluded.maximum_words,
+  estimated_minutes = excluded.estimated_minutes,
+  skill_ids = excluded.skill_ids,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  updated_at = now(),
+  deleted_at = null;
+
+insert into public.writing_prompt_rules (
+  id,
+  prompt_id,
+  grading_notes_zh_tw,
+  reference_outline_json,
+  reference_version_de
+)
+select
+  md5('deutschtrainer:writing-rule:' || slug)::uuid,
+  md5('deutschtrainer:writing-prompt:' || slug)::uuid,
+  grading_notes_zh_tw,
+  reference_outline_json,
+  reference_version_de
+from public._phase6_writing_prompt_seed
+on conflict (prompt_id) do update
+set
+  grading_notes_zh_tw = excluded.grading_notes_zh_tw,
+  reference_outline_json = excluded.reference_outline_json,
+  reference_version_de = excluded.reference_version_de,
+  updated_at = now();
+
 drop table public._phase3_exercise_seed;
 drop table public._phase3_lesson_seed;
 drop table public._phase5_ai_exercise_seed;
+drop table public._phase6_writing_prompt_seed;
 
 end;
 $phase3_seed$;
