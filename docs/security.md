@@ -25,7 +25,7 @@
 
 - profiles：使用者可讀寫自己的 profile；admin 可管理角色。
 - course content：published 可公開讀；draft/pending_review/approved 僅內容角色。
-- attempts/progress/reviews：只允許 owner。
+- attempts/progress/reviews：只允許 owner 讀取，寫入集中於驗證身分與內容關聯的 transaction RPC。
 - writing/speaking/conversation：只允許 owner；必要審核需使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
 - audit_logs：admin only。

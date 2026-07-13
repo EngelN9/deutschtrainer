@@ -1,4 +1,10 @@
-import type { SkillMastery } from "@deutschtrainer/shared-types";
+import type {
+  LearningAnalytics,
+  LearningRecordSnapshot,
+  MasteryBand,
+  ReviewItem,
+  SkillMastery,
+} from "@deutschtrainer/shared-types";
 
 export interface AttemptSignal {
   isCorrect: boolean;
@@ -68,6 +74,104 @@ export function scheduleReview(
   }
 
   return { intervalDays: 7, priority: 40, reason: "correct_and_stable" };
+}
+
+export function getDueReviews(reviews: ReviewItem[], now = new Date()): ReviewItem[] {
+  const nowTime = now.getTime();
+
+  return reviews
+    .filter(
+      (review) =>
+        review.status === "scheduled" && new Date(review.scheduledAt).getTime() <= nowTime,
+    )
+    .sort(
+      (left, right) =>
+        right.priority - left.priority ||
+        new Date(left.scheduledAt).getTime() - new Date(right.scheduledAt).getTime(),
+    );
+}
+
+export function getMasteryBand(masteryScore: number): MasteryBand {
+  if (masteryScore < 40) {
+    return "not_mastered";
+  }
+  if (masteryScore < 60) {
+    return "initial_understanding";
+  }
+  if (masteryScore < 75) {
+    return "partially_mastered";
+  }
+  if (masteryScore < 90) {
+    return "stable_mastery";
+  }
+  return "high_mastery";
+}
+
+export function calculateLearningAnalytics(
+  snapshot: LearningRecordSnapshot,
+  now = new Date(),
+): LearningAnalytics {
+  const correctAttempts = snapshot.attempts.filter((attempt) => attempt.isCorrect).length;
+  const learningMinutes = Math.round(
+    snapshot.attempts.reduce((total, attempt) => total + attempt.durationMs, 0) / 60000,
+  );
+  const masteryTotal = snapshot.mastery.reduce((total, mastery) => total + mastery.masteryScore, 0);
+  const dailyActivity = createDailyActivity(snapshot, now);
+
+  return {
+    totalAttempts: snapshot.attempts.length,
+    correctAttempts,
+    accuracyPercent:
+      snapshot.attempts.length === 0
+        ? 0
+        : Math.round((correctAttempts / snapshot.attempts.length) * 100),
+    learningMinutes,
+    dueReviewCount: getDueReviews(snapshot.reviews, now).length,
+    errorCount: snapshot.errors.length,
+    masteredSkillCount: snapshot.mastery.filter((mastery) => mastery.masteryScore >= 75).length,
+    trackedSkillCount: snapshot.mastery.length,
+    averageMasteryScore:
+      snapshot.mastery.length === 0 ? 0 : Math.round(masteryTotal / snapshot.mastery.length),
+    dailyActivity,
+  };
+}
+
+function createDailyActivity(
+  snapshot: LearningRecordSnapshot,
+  now: Date,
+): LearningAnalytics["dailyActivity"] {
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (6 - index));
+    return {
+      date: toLocalDateKey(date),
+      attemptCount: 0,
+      durationMs: 0,
+    };
+  });
+  const daysByDate = new Map(days.map((day) => [day.date, day]));
+
+  for (const attempt of snapshot.attempts) {
+    const day = daysByDate.get(toLocalDateKey(new Date(attempt.submittedAt)));
+    if (day) {
+      day.attemptCount += 1;
+      day.durationMs += attempt.durationMs;
+    }
+  }
+
+  return days.map((day) => ({
+    date: day.date,
+    attemptCount: day.attemptCount,
+    learningMinutes: Math.round(day.durationMs / 60000),
+  }));
+}
+
+function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

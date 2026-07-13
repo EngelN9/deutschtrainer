@@ -1,13 +1,20 @@
 import type { ExerciseProgressResult, LessonProgressSnapshot } from "@deutschtrainer/shared-types";
+import {
+  createEmptyLearningRecordSnapshot,
+  recordLocalLearningAttempt,
+  type LearningAttemptInput,
+} from "../learning-records/learningRecordsModel";
 
 export interface UserLearningProgress {
   exerciseResults: Record<string, ExerciseProgressResult>;
   lessons: Record<string, LessonProgressSnapshot>;
+  learningRecords: ReturnType<typeof createEmptyLearningRecordSnapshot>;
 }
 
 export const emptyUserProgress: UserLearningProgress = {
   exerciseResults: {},
   lessons: {},
+  learningRecords: createEmptyLearningRecordSnapshot(),
 };
 
 interface RecordExerciseInput {
@@ -33,6 +40,7 @@ export function recordExerciseResult(
   const updatedAt = input.result.submittedAt;
 
   return {
+    ...current,
     exerciseResults: {
       ...current.exerciseResults,
       [input.result.exerciseId]: input.result,
@@ -71,7 +79,33 @@ export function resetLessonProgress(
     delete exerciseResults[exerciseId];
   }
 
-  return { exerciseResults, lessons };
+  return { ...current, exerciseResults, lessons };
+}
+
+export function recordLearningAttempt(
+  current: UserLearningProgress,
+  input: LearningAttemptInput & { exerciseIndex: number },
+): UserLearningProgress {
+  const normalized: UserLearningProgress = {
+    ...current,
+    learningRecords: current.learningRecords ?? createEmptyLearningRecordSnapshot(),
+  };
+  const withExerciseProgress = recordExerciseResult(normalized, {
+    exerciseIndex: input.exerciseIndex,
+    result: {
+      exerciseId: input.exercise.id,
+      lessonId: input.lessonId,
+      score: input.gradingResult.score,
+      isCorrect: input.gradingResult.isCorrect,
+      submittedAt: input.submittedAt,
+    },
+    totalExercises: input.totalExercises,
+  });
+
+  return {
+    ...withExerciseProgress,
+    learningRecords: recordLocalLearningAttempt(normalized.learningRecords, input),
+  };
 }
 
 export function getLessonCompletionPercent(

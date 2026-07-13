@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  ERROR_TYPES,
   EXERCISE_TYPES,
   FIXED_EXERCISE_TYPES,
   SKILL_CATEGORIES,
@@ -317,6 +318,94 @@ export const reviewQueueResponseSchema = z.object({
       priority: z.number().int().min(0),
     }),
   ),
+});
+
+export const attemptModeSchema = z.enum(["lesson", "review", "practice", "placement"]);
+export const errorTypeSchema = z.enum(ERROR_TYPES);
+export const errorSeveritySchema = z.enum(["minor", "moderate", "major", "critical"]);
+export const reviewQueueStatusSchema = z.enum(["scheduled", "completed", "skipped", "cancelled"]);
+export const lessonProgressStatusSchema = z.enum(["not_started", "in_progress", "completed"]);
+
+export const attemptSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  exerciseId: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  submittedAt: z.string().datetime({ offset: true }),
+  score: z.number().min(0).max(100),
+  isCorrect: z.boolean(),
+  durationMs: z.number().int().nonnegative(),
+  usedHint: z.boolean(),
+  mode: attemptModeSchema,
+  idempotencyKey: z.string().min(8).max(200),
+});
+
+export const errorRecordSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  attemptId: databaseUuidSchema,
+  exerciseId: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  skillId: databaseUuidSchema,
+  type: errorTypeSchema,
+  severity: errorSeveritySchema,
+  original: z.string(),
+  correction: z.string(),
+  explanationZhTw: z.string().min(1),
+  createdAt: z.string().datetime({ offset: true }),
+});
+
+export const skillMasterySchema = z.object({
+  userId: databaseUuidSchema,
+  skillId: databaseUuidSchema,
+  masteryScore: z.number().min(0).max(100),
+  confidenceScore: z.number().min(0).max(100),
+  attemptCount: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+  incorrectCount: z.number().int().nonnegative(),
+  hintCount: z.number().int().nonnegative(),
+  averageResponseTimeMs: z.number().nonnegative(),
+  lastPracticedAt: z.string().datetime({ offset: true }).optional(),
+  nextReviewAt: z.string().datetime({ offset: true }).optional(),
+  correctStreak: z.number().int().nonnegative(),
+  incorrectStreak: z.number().int().nonnegative(),
+  lastErrorTypes: z.array(errorTypeSchema),
+});
+
+export const reviewItemSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  skillId: databaseUuidSchema,
+  exerciseId: databaseUuidSchema,
+  priority: z.number().int().min(0).max(100),
+  scheduledAt: z.string().datetime({ offset: true }),
+  reason: z.string().min(1),
+  intervalDays: z.number().int().min(0).max(365),
+  easeFactor: z.number().min(1.3).max(3),
+  status: reviewQueueStatusSchema,
+  sourceAttemptId: databaseUuidSchema.optional(),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+});
+
+export const lessonProgressRecordSchema = z.object({
+  userId: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  status: lessonProgressStatusSchema,
+  completionPercent: z.number().min(0).max(100),
+  completedExerciseIds: z.array(databaseUuidSchema),
+  correctExerciseCount: z.number().int().nonnegative(),
+  attemptedExerciseCount: z.number().int().nonnegative(),
+  lastPracticedAt: z.string().datetime({ offset: true }).optional(),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+});
+
+export const learningRecordSnapshotSchema = z.object({
+  attempts: z.array(attemptSchema),
+  errors: z.array(errorRecordSchema),
+  mastery: z.array(skillMasterySchema),
+  reviews: z.array(reviewItemSchema),
+  lessonProgress: z.array(lessonProgressRecordSchema),
+  skillNames: z.record(databaseUuidSchema, z.string().min(1)),
 });
 
 export const completeReviewRequestSchema = z.object({

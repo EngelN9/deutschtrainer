@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
   apiErrorResponseSchema,
   fixedExerciseSchema,
+  learningRecordSnapshotSchema,
   onboardingRequestSchema,
   submitAttemptRequestSchema,
 } from "./index";
@@ -72,5 +73,32 @@ describe("validation schemas", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("accepts PostgreSQL UUIDs in a learning-record snapshot", () => {
+    const parsed = learningRecordSnapshotSchema.parse({
+      attempts: [
+        {
+          id: "cea085c4-11cd-4dcd-b852-70db65caaeb4",
+          userId: "1d377460-50a3-4c7b-97f6-5d0a6d72e5ce",
+          exerciseId: "bbd6554d-7c7f-0909-d72a-106769464259",
+          lessonId: "7201fcca-f0c9-9bb7-218a-192849e5f84d",
+          submittedAt: "2026-07-13T03:22:15.000+00:00",
+          score: 0,
+          isCorrect: false,
+          durationMs: 5000,
+          usedHint: false,
+          mode: "lesson",
+          idempotencyKey: "phase4-attempt-test",
+        },
+      ],
+      errors: [],
+      mastery: [],
+      reviews: [],
+      lessonProgress: [],
+      skillNames: {},
+    });
+
+    expect(parsed.attempts[0]?.lessonId).toBe("7201fcca-f0c9-9bb7-218a-192849e5f84d");
   });
 });

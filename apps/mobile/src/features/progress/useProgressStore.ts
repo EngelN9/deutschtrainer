@@ -1,23 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { ExerciseProgressResult } from "@deutschtrainer/shared-types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
   emptyUserProgress,
-  recordExerciseResult,
+  recordLearningAttempt,
   resetLessonProgress,
   type UserLearningProgress,
 } from "./progressModel";
+import type { LearningAttemptInput } from "../learning-records/learningRecordsModel";
 
 interface ProgressState {
   byUserId: Record<string, UserLearningProgress>;
   hasHydrated: boolean;
-  recordResult: (
-    userId: string,
-    result: ExerciseProgressResult,
-    totalExercises: number,
-    exerciseIndex: number,
-  ) => Promise<void>;
+  recordAttempt: (input: LearningAttemptInput & { exerciseIndex: number }) => Promise<void>;
   resetLesson: (userId: string, lessonId: string) => Promise<void>;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
@@ -27,16 +22,15 @@ export const useProgressStore = create<ProgressState>()(
     (set) => ({
       byUserId: {},
       hasHydrated: false,
-      recordResult: async (userId, result, totalExercises, exerciseIndex) => {
+      recordAttempt: async (input) => {
         let nextByUserId: Record<string, UserLearningProgress> = {};
         set((state) => {
           nextByUserId = {
             ...state.byUserId,
-            [userId]: recordExerciseResult(state.byUserId[userId] ?? emptyUserProgress, {
-              exerciseIndex,
-              result,
-              totalExercises,
-            }),
+            [input.userId]: recordLearningAttempt(
+              state.byUserId[input.userId] ?? emptyUserProgress,
+              input,
+            ),
           };
           return { byUserId: nextByUserId };
         });

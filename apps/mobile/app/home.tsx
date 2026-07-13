@@ -3,12 +3,14 @@ import { useRouter } from "expo-router";
 import { BookOpen, Clock3, LogOut, RotateCcw, Target } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { calculateLearningAnalytics } from "@deutschtrainer/learning-engine";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { getLessonExercises } from "../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
 import { getLessonCompletionPercent } from "../src/features/progress/progressModel";
 import { useProgressStore } from "../src/features/progress/useProgressStore";
+import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
 import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const currentLevel = useLearningSetupStore((state) => state.currentLevel);
   const targetLevel = useLearningSetupStore((state) => state.targetLevel);
   const catalogQuery = useCourseCatalog();
+  const learningRecordsQuery = useLearningRecords();
   const userProgress = useProgressStore((state) =>
     profile ? state.byUserId[profile.id] : undefined,
   );
@@ -34,17 +37,35 @@ export default function HomeScreen() {
     catalogQuery.data?.courses.flatMap((course) => course.units.flatMap((unit) => unit.lessons)) ??
     [];
   const preferredLessons = allLessons.filter((lesson) => lesson.level === currentLevel);
+  const learningRecords = learningRecordsQuery.data;
+  const analytics = learningRecords ? calculateLearningAnalytics(learningRecords) : undefined;
   const continueLesson =
-    preferredLessons.find((lesson) => !userProgress?.lessons[lesson.id]?.completedAt) ??
+    preferredLessons.find((lesson) => {
+      const remoteProgress = learningRecords?.lessonProgress.find(
+        (progress) => progress.lessonId === lesson.id,
+      );
+      return remoteProgress
+        ? remoteProgress.status !== "completed"
+        : !userProgress?.lessons[lesson.id]?.completedAt;
+    }) ??
     preferredLessons[0] ??
     allLessons[0];
   const exercises = continueLesson ? getLessonExercises(continueLesson) : [];
   const lessonProgress = continueLesson ? userProgress?.lessons[continueLesson.id] : undefined;
-  const percent = getLessonCompletionPercent(lessonProgress, exercises.length);
-  const today = new Date().toISOString().slice(0, 10);
-  const completedToday = Object.values(userProgress?.exerciseResults ?? {}).filter((result) =>
-    result.submittedAt.startsWith(today),
-  ).length;
+  const syncedLessonProgress = continueLesson
+    ? learningRecords?.lessonProgress.find((progress) => progress.lessonId === continueLesson.id)
+    : undefined;
+  const percent = syncedLessonProgress
+    ? Math.round(syncedLessonProgress.completionPercent)
+    : getLessonCompletionPercent(lessonProgress, exercises.length);
+  const today = localDateKey(new Date());
+  const completedToday =
+    learningRecords?.attempts.filter(
+      (attempt) => localDateKey(new Date(attempt.submittedAt)) === today,
+    ).length ?? 0;
+  const weakestSkill = learningRecords?.mastery.toSorted(
+    (left, right) => left.masteryScore - right.masteryScore,
+  )[0];
 
   return (
     <AuthGate mode="protected">
@@ -63,6 +84,7 @@ export default function HomeScreen() {
       >
         <MessageBanner message={errorMessage} tone="error" />
         <MessageBanner message={noticeMessage} tone="info" />
+        <MessageBanner message={learningRecordsQuery.error?.message ?? null} tone="error" />
         <View style={styles.goalBand}>
           <View style={styles.goalIcon}>
             <Target color="#FFFFFF" size={23} strokeWidth={2.4} />
@@ -123,10 +145,34 @@ export default function HomeScreen() {
             label="程度路徑"
             value={`${currentLevel} → ${targetLevel}`}
           />
-          <OverviewRow icon={RotateCcw} label="到期複習" value="0 項" />
-          <OverviewRow icon={Clock3} label="本週學習" value="進度建立中" />
-          <Text style={styles.overviewNote}>弱項技能與錯誤類型會在累積更多作答後顯示。</Text>
+          <OverviewRow
+            icon={RotateCcw}
+            label="到期複習"
+            value={analytics ? `${analytics.dueReviewCount} 項` : "同步中"}
+          />
+          <OverviewRow
+            icon={Clock3}
+            label="最近七天"
+            value={
+              analytics
+                ? `${analytics.dailyActivity.reduce((sum, day) => sum + day.learningMinutes, 0)} 分鐘`
+                : "同步中"
+            }
+          />
+          <Text style={styles.overviewNote}>
+            {weakestSkill
+              ? `目前優先加強：${learningRecords?.skillNames[weakestSkill.skillId] ?? "相關技能"}（${Math.round(weakestSkill.masteryScore)} 分）。`
+              : "完成第一題後，系統會開始辨識弱項技能。"}
+          </Text>
         </View>
+        {analytics && analytics.dueReviewCount > 0 ? (
+          <PrimaryButton
+            accessibilityLabel="開始今日到期複習"
+            onPress={() => router.push("/reviews" as Href)}
+          >
+            開始今日複習
+          </PrimaryButton>
+        ) : null}
         <PrimaryButton
           accessibilityLabel="開啟完整課程地圖"
           onPress={() => router.push("/courses")}
@@ -138,6 +184,13 @@ export default function HomeScreen() {
       </ContentScreen>
     </AuthGate>
   );
+}
+
+function localDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function OverviewRow({

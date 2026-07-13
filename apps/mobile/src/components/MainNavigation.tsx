@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import { usePathname, useRouter } from "expo-router";
-import { BookOpen, Home } from "lucide-react-native";
+import { BarChart3, BookOpen, Home, RotateCcw } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 
@@ -12,6 +12,8 @@ const items: Array<{
 }> = [
   { href: "/home", icon: Home, label: "首頁", path: "/home" },
   { href: "/courses", icon: BookOpen, label: "課程", path: "/courses" },
+  { href: "/reviews" as Href, icon: RotateCcw, label: "複習", path: "/reviews" },
+  { href: "/analytics" as Href, icon: BarChart3, label: "分析", path: "/analytics" },
 ];
 
 export function MainNavigation() {
@@ -57,15 +59,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     flex: 1,
-    flexDirection: "row",
-    gap: spacingTokens.sm,
+    gap: spacingTokens.xs,
     justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: spacingTokens.sm,
+    minHeight: 58,
+    minWidth: 0,
+    paddingHorizontal: spacingTokens.xs,
   },
   label: {
     color: colorTokens.mutedText,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700",
   },
   navigation: {

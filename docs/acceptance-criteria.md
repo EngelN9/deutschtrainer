@@ -69,6 +69,15 @@
 - 到期複習能正確顯示與完成。
 - 學習分析顯示技能掌握度與弱項。
 
+目前結果：Pass。
+
+- `record_fixed_attempt` 以單一交易寫入 Attempt、AttemptAnswer、SkillMastery、ErrorRecord、ReviewQueue 與 LessonProgress。
+- 相同 idempotency key 實際重送後仍只有一筆 Attempt。
+- 答錯後同日複習可見；完成複習後舊項目結案並建立下一個間隔。
+- RLS 實測第二位使用者無法讀取第一位使用者的 Attempt。
+- 錯題頁按 Attempt 合併相關技能，並將答案 ID 還原成可讀德語內容。
+- Playwright 已驗證桌面流程及 390 px 手機版面無水平溢出。
+
 ## 7. Phase 5 驗收
 
 - AI key 不出現在 mobile bundle。
