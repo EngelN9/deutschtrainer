@@ -13,6 +13,10 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 - Deterministic grading with partial credit where applicable.
 - Per-user lesson progress persisted with AsyncStorage.
 - `mock` and `supabase` content-source adapters with Zod validation.
+- Transactional Supabase attempts with idempotent retries.
+- Cross-device lesson progress and skill mastery.
+- Deterministic spaced-review queue and review-mode exercises.
+- Traditional Chinese error history and learning analytics.
 
 ## Run
 
@@ -23,4 +27,4 @@ pnpm start
 
 Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `supabase` after starting and seeding the local Supabase stack.
 
-AI grading, server attempts, cross-device progress, review queues, audio, and speaking are intentionally deferred to later phases.
+AI free-response grading, detailed linguistic error classification, audio, and speaking are intentionally deferred to later phases.

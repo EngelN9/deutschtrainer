@@ -103,6 +103,9 @@ importers:
       '@deutschtrainer/grading':
         specifier: workspace:*
         version: link:../../packages/grading
+      '@deutschtrainer/learning-engine':
+        specifier: workspace:*
+        version: link:../../packages/learning-engine
       '@deutschtrainer/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

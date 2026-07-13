@@ -46,6 +46,21 @@ export function getLessonExercises(lesson: LessonContent): FixedExercise[] {
     .flatMap((activity) => activity.exercises);
 }
 
+export function findExerciseContext(catalog: CourseCatalog, exerciseId: string) {
+  for (const course of catalog.courses) {
+    for (const unit of course.units) {
+      for (const lesson of unit.lessons) {
+        const exercise = getLessonExercises(lesson).find((entry) => entry.id === exerciseId);
+        if (exercise) {
+          return { course, unit, lesson, exercise };
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
+
 async function fetchSupabaseCatalog(): Promise<CourseCatalog> {
   const [
     coursesResult,

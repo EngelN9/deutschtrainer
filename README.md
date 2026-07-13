@@ -1,6 +1,6 @@
 # DeutschTrainer Monorepo
 
-DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers the project foundation, authentication/onboarding, course navigation, deterministic exercise grading, and local lesson progress.
+DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic exercise grading, cross-device learning records, skill mastery, spaced review, error history, and learning analytics.
 
 ## Workspace
 
@@ -65,6 +65,7 @@ Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, 
 - Phase 1: monorepo and tooling foundation complete.
 - Phase 2: auth, onboarding, and protected navigation complete.
 - Phase 3: course map, lessons, six deterministic exercise types, source switching, and per-user local progress complete.
-- Phase 4 onward: attempts, cross-device progress, mastery, review scheduling, AI evaluation, writing, audio, speaking, and admin workflows remain planned.
+- Phase 4: attempts, cross-device lesson progress, mastery, review scheduling, error history, and learning analytics complete.
+- Phase 5 onward: AI evaluation, detailed error classification, writing, audio, speaking, and admin workflows remain planned.
 
-See `docs/phase-3-courses-exercises.md` for Phase 3 details and known limits.
+See `docs/phase-4-learning-records.md` for the current data flow, verification evidence, and known limits.

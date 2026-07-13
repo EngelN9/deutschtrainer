@@ -362,6 +362,7 @@ export interface Attempt {
   isCorrect: boolean;
   durationMs: number;
   usedHint: boolean;
+  mode: "lesson" | "review" | "practice" | "placement";
   idempotencyKey: string;
 }
 
@@ -385,6 +386,7 @@ export interface ErrorRecord {
   original: string;
   correction: string;
   explanationZhTw: string;
+  createdAt: string;
 }
 
 export interface SkillMastery {
@@ -415,6 +417,55 @@ export interface ReviewItem {
   intervalDays: number;
   easeFactor: number;
   status: "scheduled" | "completed" | "skipped" | "cancelled";
+  sourceAttemptId?: string;
+  completedAt?: string;
+}
+
+export interface LessonProgressRecord {
+  userId: string;
+  lessonId: string;
+  status: "not_started" | "in_progress" | "completed";
+  completionPercent: number;
+  completedExerciseIds: string[];
+  correctExerciseCount: number;
+  attemptedExerciseCount: number;
+  lastPracticedAt?: string;
+  completedAt?: string;
+}
+
+export interface LearningRecordSnapshot {
+  attempts: Attempt[];
+  errors: ErrorRecord[];
+  mastery: SkillMastery[];
+  reviews: ReviewItem[];
+  lessonProgress: LessonProgressRecord[];
+  skillNames: Record<string, string>;
+}
+
+export type MasteryBand =
+  | "not_mastered"
+  | "initial_understanding"
+  | "partially_mastered"
+  | "stable_mastery"
+  | "high_mastery";
+
+export interface DailyLearningActivity {
+  date: string;
+  attemptCount: number;
+  learningMinutes: number;
+}
+
+export interface LearningAnalytics {
+  totalAttempts: number;
+  correctAttempts: number;
+  accuracyPercent: number;
+  learningMinutes: number;
+  dueReviewCount: number;
+  errorCount: number;
+  masteredSkillCount: number;
+  trackedSkillCount: number;
+  averageMasteryScore: number;
+  dailyActivity: DailyLearningActivity[];
 }
 
 export interface WritingSubmission {

@@ -110,11 +110,18 @@
 - 錯題頁。
 - 學習分析。
 
+目前狀態：
+
+- 已完成 Phase 4 learning-record foundation。
+- 詳見 `docs/phase-4-learning-records.md`。
+
 驗收：
 
 - 答題後自動更新技能掌握度。
 - 答錯後建立複習項目。
 - 到期複習可正確顯示。
+
+驗收結果：Pass。
 
 ## Phase 5：AI 批改
 

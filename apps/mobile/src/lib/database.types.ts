@@ -25,6 +25,43 @@ type FixedExerciseType =
   | "error_correction";
 type SourceType = "human" | "ai_generated" | "ai_assisted";
 type ReviewStatus = "draft" | "pending_review" | "approved" | "rejected";
+type AttemptMode = "lesson" | "review" | "practice" | "placement";
+type ReviewQueueStatus = "scheduled" | "completed" | "skipped" | "cancelled";
+type LessonProgressStatus = "not_started" | "in_progress" | "completed";
+type ErrorSeverity = "minor" | "moderate" | "major" | "critical";
+type ErrorType =
+  | "spelling"
+  | "capitalization"
+  | "punctuation"
+  | "article"
+  | "gender"
+  | "case"
+  | "declension"
+  | "adjective_ending"
+  | "verb_conjugation"
+  | "tense"
+  | "auxiliary"
+  | "word_order"
+  | "subordinate_clause"
+  | "preposition"
+  | "verb_preposition"
+  | "pronoun"
+  | "relative_clause"
+  | "passive_voice"
+  | "subjunctive"
+  | "collocation"
+  | "word_choice"
+  | "register"
+  | "coherence"
+  | "cohesion"
+  | "argumentation"
+  | "task_completion"
+  | "style"
+  | "idiomaticity"
+  | "redundancy"
+  | "ambiguity"
+  | "pronunciation"
+  | "fluency";
 
 interface ReadOnlyTable<Row extends Record<string, unknown>> {
   Row: Row;
@@ -143,6 +180,118 @@ interface ExerciseAnswerRow extends Record<string, unknown> {
   updated_at: string;
 }
 
+interface AttemptRow extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  exercise_id: string;
+  lesson_id: string;
+  submitted_at: string;
+  score: number;
+  is_correct: boolean;
+  duration_ms: number;
+  used_hint: boolean;
+  mode: AttemptMode;
+  idempotency_key: string;
+  created_at: string;
+}
+
+interface AttemptAnswerRow extends Record<string, unknown> {
+  id: string;
+  attempt_id: string;
+  exercise_id: string;
+  answer_json: Json;
+  normalized_answer_json: Json;
+  grading_result_json: Json;
+  created_at: string;
+}
+
+interface ErrorRecordRow extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  attempt_id: string;
+  exercise_id: string;
+  lesson_id: string;
+  skill_id: string;
+  grammar_topic_id: string | null;
+  vocabulary_id: string | null;
+  type: ErrorType;
+  severity: ErrorSeverity;
+  original: string;
+  correction: string;
+  explanation_zh_tw: string;
+  created_at: string;
+}
+
+interface SkillMasteryRow extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  mastery_score: number;
+  confidence_score: number;
+  attempt_count: number;
+  correct_count: number;
+  incorrect_count: number;
+  hint_count: number;
+  average_response_time_ms: number;
+  last_practiced_at: string | null;
+  next_review_at: string | null;
+  correct_streak: number;
+  incorrect_streak: number;
+  last_error_types: ErrorType[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface ReviewQueueRow extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  exercise_id: string;
+  source_attempt_id: string;
+  priority: number;
+  scheduled_at: string;
+  reason: string;
+  interval_days: number;
+  ease_factor: number;
+  status: ReviewQueueStatus;
+  completed_at: string | null;
+  completed_attempt_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface LessonProgressRow extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  status: LessonProgressStatus;
+  completion_percent: number;
+  completed_exercise_ids: string[];
+  correct_exercise_count: number;
+  attempted_exercise_count: number;
+  last_activity_id: string | null;
+  last_practiced_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SkillRow extends Record<string, unknown> {
+  id: string;
+  code: string;
+  name_zh_tw: string;
+  name_de: string;
+  description_zh_tw: string;
+  level: CefrLevel;
+  category: SkillCategory;
+  mastery_threshold: number;
+  prerequisite_skill_ids: string[];
+  review_policy_json: Json;
+  status: ContentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     CompositeTypes: Record<string, never>;
@@ -152,18 +301,44 @@ export interface Database {
       cefr_level: CefrLevel;
       content_status: ContentStatus;
       exercise_type: FixedExerciseType;
+      attempt_mode: AttemptMode;
+      error_severity: ErrorSeverity;
+      error_type: ErrorType;
+      lesson_progress_status: LessonProgressStatus;
+      review_queue_status: ReviewQueueStatus;
       review_status: ReviewStatus;
       skill_category: SkillCategory;
       source_type: SourceType;
     };
-    Functions: Record<string, never>;
+    Functions: {
+      record_fixed_attempt: {
+        Args: {
+          p_exercise_id: string;
+          p_answer_json: Json;
+          p_normalized_answer_json: Json;
+          p_grading_result_json: Json;
+          p_score: number;
+          p_is_correct: boolean;
+          p_duration_ms: number;
+          p_used_hint: boolean;
+          p_mode: AttemptMode;
+          p_idempotency_key: string;
+          p_review_id?: string | null;
+        };
+        Returns: Json;
+      };
+    };
     Tables: {
       activities: ReadOnlyTable<ActivityRow>;
+      attempt_answers: ReadOnlyTable<AttemptAnswerRow>;
+      attempts: ReadOnlyTable<AttemptRow>;
       courses: ReadOnlyTable<CourseRow>;
+      error_records: ReadOnlyTable<ErrorRecordRow>;
       exercise_answers: ReadOnlyTable<ExerciseAnswerRow>;
       exercise_options: ReadOnlyTable<ExerciseOptionRow>;
       exercises: ReadOnlyTable<ExerciseRow>;
       lessons: ReadOnlyTable<LessonRow>;
+      lesson_progress: ReadOnlyTable<LessonProgressRow>;
       profiles: {
         Row: {
           id: string;
@@ -191,6 +366,9 @@ export interface Database {
         Relationships: [];
       };
       units: ReadOnlyTable<UnitRow>;
+      review_queue: ReadOnlyTable<ReviewQueueRow>;
+      skills: ReadOnlyTable<SkillRow>;
+      skill_mastery: ReadOnlyTable<SkillMasteryRow>;
       user_levels: {
         Row: {
           id: string;

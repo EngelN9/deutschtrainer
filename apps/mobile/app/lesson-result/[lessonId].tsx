@@ -8,6 +8,7 @@ import { useAuthStore } from "../../src/features/auth/useAuthStore";
 import { findLesson, getLessonExercises } from "../../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../../src/features/courses/useCourseCatalog";
 import { useProgressStore } from "../../src/features/progress/useProgressStore";
+import { useLearningRecords } from "../../src/features/learning-records/useLearningRecords";
 import { ContentScreen } from "../../src/components/ContentScreen";
 import { PrimaryButton } from "../../src/components/PrimaryButton";
 import { ProgressBar } from "../../src/components/ProgressBar";
@@ -18,6 +19,7 @@ export default function LessonResultScreen() {
   const router = useRouter();
   const profile = useAuthStore((state) => state.profile);
   const catalogQuery = useCourseCatalog();
+  const learningRecordsQuery = useLearningRecords();
   const lesson = catalogQuery.data ? findLesson(catalogQuery.data, lessonId) : undefined;
   const exercises = lesson ? getLessonExercises(lesson) : [];
   const userProgress = useProgressStore((state) =>
@@ -25,7 +27,12 @@ export default function LessonResultScreen() {
   );
   const resetLesson = useProgressStore((state) => state.resetLesson);
   const results = exercises
-    .map((exercise) => userProgress?.exerciseResults[exercise.id])
+    .map(
+      (exercise) =>
+        learningRecordsQuery.data?.attempts.find(
+          (attempt) => attempt.lessonId === lessonId && attempt.exerciseId === exercise.id,
+        ) ?? userProgress?.exerciseResults[exercise.id],
+    )
     .filter((result) => result !== undefined);
   const averageScore = exercises.length
     ? Math.round(results.reduce((total, result) => total + result.score, 0) / exercises.length)
@@ -50,7 +57,7 @@ export default function LessonResultScreen() {
         showBack
         title="這堂課完成了"
       >
-        {catalogQuery.isLoading ? (
+        {catalogQuery.isLoading || learningRecordsQuery.isLoading ? (
           <StatePanel message="正在計算課堂結果..." state="loading" title="整理結果" />
         ) : !lesson ? (
           <StatePanel message="找不到這堂課的結果。" state="empty" title="結果不存在" />
@@ -73,7 +80,11 @@ export default function LessonResultScreen() {
             />
             <View style={styles.resultList}>
               {exercises.map((exercise, index) => {
-                const result = userProgress?.exerciseResults[exercise.id];
+                const result =
+                  learningRecordsQuery.data?.attempts.find(
+                    (attempt) =>
+                      attempt.lessonId === lessonId && attempt.exerciseId === exercise.id,
+                  ) ?? userProgress?.exerciseResults[exercise.id];
                 return (
                   <View key={exercise.id} style={styles.resultRow}>
                     <View style={styles.resultIndex}>
@@ -98,8 +109,8 @@ export default function LessonResultScreen() {
               <Text style={styles.noteTitle}>下一步</Text>
               <Text style={styles.noteText}>
                 {averageScore >= 80
-                  ? "這堂課的固定題型表現穩定，可以回到單元繼續下一課。"
-                  : "建議再練習一次；錯誤診斷與間隔複習會在後續階段加入。"}
+                  ? "這堂課的表現穩定；系統已依技能狀態安排後續記憶確認。"
+                  : "建議查看錯題說明；答錯的技能已加入到期複習。"}
               </Text>
             </View>
             <PrimaryButton

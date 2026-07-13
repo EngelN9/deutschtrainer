@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@deutschtrainer/grading": "workspace:*",
+    "@deutschtrainer/learning-engine": "workspace:*",
     "@deutschtrainer/shared-types": "workspace:*",
     "@deutschtrainer/ui": "workspace:*",
     "@deutschtrainer/validation": "workspace:*",
