@@ -2,6 +2,7 @@
 module.exports = {
   clearMocks: true,
   moduleNameMapper: {
+    "^@deutschtrainer/ai-prompts$": "<rootDir>/packages/ai-prompts/src/index.ts",
     "^@deutschtrainer/ai-schemas$": "<rootDir>/packages/ai-schemas/src/index.ts",
     "^@deutschtrainer/grading$": "<rootDir>/packages/grading/src/index.ts",
     "^@deutschtrainer/learning-engine$": "<rootDir>/packages/learning-engine/src/index.ts",

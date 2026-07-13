@@ -138,6 +138,7 @@ set
 
 drop table if exists public._phase3_exercise_seed;
 drop table if exists public._phase3_lesson_seed;
+drop table if exists public._phase5_ai_exercise_seed;
 
 create table public._phase3_lesson_seed (
   slug text primary key,
@@ -803,6 +804,178 @@ set
   explanation_zh_tw = excluded.explanation_zh_tw,
   updated_at = now();
 
+create table public._phase5_ai_exercise_seed (
+  slug text primary key,
+  lesson_slug text not null,
+  level public.cefr_level not null,
+  type public.exercise_type not null,
+  title text not null,
+  instruction_zh_tw text not null,
+  prompt_de text not null,
+  prompt_zh_tw text,
+  skill_ids text[] not null,
+  reference_answers_de text[] not null,
+  grading_notes_zh_tw text not null,
+  minimum_characters integer not null,
+  maximum_characters integer not null
+);
+
+insert into public._phase5_ai_exercise_seed values
+  (
+    'b1-gruende-ai-translation',
+    'b1-gruende',
+    'B1',
+    'translation',
+    '讓步句翻譯',
+    '將繁體中文句子翻譯成自然、完整的德語。',
+    'Übersetze den folgenden Satz ins Deutsche.',
+    '雖然今天下雨，我還是騎腳踏車上班。',
+    array['B1.word_order.subordinate_clause'],
+    array[
+      'Obwohl es heute regnet, fahre ich trotzdem mit dem Fahrrad zur Arbeit.',
+      'Obwohl es heute regnet, fahre ich mit dem Fahrrad zur Arbeit.'
+    ],
+    '重點檢查 obwohl 從句的動詞末位、主句語序及 trotzdem 是否使用自然。',
+    20,
+    300
+  ),
+  (
+    'b2-argumente-ai-response',
+    'b2-argumente',
+    'B2',
+    'free_response',
+    '遠距工作立場回應',
+    '以三至四句德語表達立場，提出理由並回應一項反方觀點。',
+    'Sollten Unternehmen ihren Beschäftigten mehr Homeoffice ermöglichen? Begründe deine Position und gehe auf ein Gegenargument ein.',
+    null,
+    array['B2.argumentation.counterargument', 'B2.writing.cohesion'],
+    array[
+      'Unternehmen sollten mehr Homeoffice ermöglichen, weil flexible Arbeitszeiten die Zufriedenheit erhöhen können. Zwar leidet manchmal der direkte Austausch, doch feste Präsenztage können dieses Problem ausgleichen.'
+    ],
+    '評估論點、反方回應、篇章連接及 B2 程度的正式清晰度，不要求與參考答案逐字相同。',
+    60,
+    800
+  ),
+  (
+    'c1-zusammenfassung-ai-response',
+    'c1-zusammenfassung',
+    'C1',
+    'free_response',
+    '研究結果摘要',
+    '用兩至三句中性德語摘要研究結果與限制。',
+    'Eine Studie meldet einen Zusammenhang zwischen flexiblem Arbeiten und höherer Produktivität. Die Stichprobe umfasst jedoch nur 120 Beschäftigte eines einzigen Unternehmens. Fasse Ergebnis und Einschränkung neutral zusammen.',
+    null,
+    array['C1.writing.academic_summary', 'C1.mediation.synthesis'],
+    array[
+      'Der Studie zufolge besteht ein Zusammenhang zwischen flexiblem Arbeiten und einer höheren Produktivität. Da lediglich 120 Beschäftigte eines Unternehmens untersucht wurden, ist die Übertragbarkeit der Ergebnisse jedoch eingeschränkt.'
+    ],
+    '重點檢查中性轉述、結果與限制的區分、資訊壓縮及 C1 篇章銜接。',
+    80,
+    900
+  ),
+  (
+    'c2-ironie-ai-translation',
+    'c2-ironie',
+    'C2',
+    'translation',
+    '含蓄反諷翻譯',
+    '翻譯為自然德語，保留原句含蓄而帶反諷的語氣。',
+    'Übertrage die feine Ironie ins Deutsche.',
+    '這項改革被宣傳成劃時代的突破，結果卻只是替舊問題換了個名字。',
+    array['C2.pragmatics.irony', 'C2.register.flexible_shift'],
+    array[
+      'Die Reform wurde als epochaler Durchbruch angepriesen, erwies sich letztlich jedoch nur als neuer Name für die alten Probleme.'
+    ],
+    '評估語氣、語域、反諷效果與語意精確度；可接受不同但自然的高階表達。',
+    35,
+    500
+  );
+
+insert into public.exercises (
+  id,
+  activity_id,
+  level,
+  type,
+  title,
+  instruction_zh_tw,
+  prompt_de,
+  payload_json,
+  skill_ids,
+  estimated_seconds,
+  difficulty,
+  source_type,
+  review_status,
+  status,
+  version,
+  order_index
+)
+select
+  md5('deutschtrainer:exercise:' || slug)::uuid,
+  md5('deutschtrainer:activity:' || lesson_slug)::uuid,
+  level,
+  type,
+  title,
+  instruction_zh_tw,
+  prompt_de,
+  jsonb_build_object(
+    'promptZhTw', prompt_zh_tw,
+    'responsePlaceholderZhTw', '請輸入你的德語回答',
+    'minimumCharacters', minimum_characters,
+    'maximumCharacters', maximum_characters
+  ),
+  skill_ids,
+  180,
+  case level when 'B1' then 2 when 'B2' then 3 when 'C1' then 4 else 5 end,
+  'human',
+  'approved',
+  'published',
+  1,
+  10
+from public._phase5_ai_exercise_seed
+on conflict (id) do update
+set
+  activity_id = excluded.activity_id,
+  level = excluded.level,
+  type = excluded.type,
+  title = excluded.title,
+  instruction_zh_tw = excluded.instruction_zh_tw,
+  prompt_de = excluded.prompt_de,
+  payload_json = excluded.payload_json,
+  skill_ids = excluded.skill_ids,
+  estimated_seconds = excluded.estimated_seconds,
+  difficulty = excluded.difficulty,
+  source_type = excluded.source_type,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  order_index = excluded.order_index,
+  updated_at = now(),
+  deleted_at = null;
+
+insert into public.exercise_answers (
+  id,
+  exercise_id,
+  answer_json,
+  grading_policy_json,
+  explanation_zh_tw
+)
+select
+  md5('deutschtrainer:answer:' || slug)::uuid,
+  md5('deutschtrainer:exercise:' || slug)::uuid,
+  jsonb_build_object(
+    'referenceAnswersDe', to_jsonb(reference_answers_de),
+    'gradingNotesZhTw', grading_notes_zh_tw
+  ),
+  '{}'::jsonb,
+  grading_notes_zh_tw
+from public._phase5_ai_exercise_seed
+on conflict (exercise_id) do update
+set
+  answer_json = excluded.answer_json,
+  grading_policy_json = excluded.grading_policy_json,
+  explanation_zh_tw = excluded.explanation_zh_tw,
+  updated_at = now();
+
 insert into public.skills (
   id,
   code,
@@ -970,6 +1143,7 @@ set
 
 drop table public._phase3_exercise_seed;
 drop table public._phase3_lesson_seed;
+drop table public._phase5_ai_exercise_seed;
 
 end;
 $phase3_seed$;

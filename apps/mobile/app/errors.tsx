@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { AlertCircle } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
-import type { FixedExercise } from "@deutschtrainer/shared-types";
+import type { LessonExercise } from "@deutschtrainer/shared-types";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { findExerciseContext } from "../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
@@ -112,7 +112,7 @@ export default function ErrorsScreen() {
   );
 }
 
-function formatStoredValue(value: string, exercise?: FixedExercise): string {
+function formatStoredValue(value: string, exercise?: LessonExercise): string {
   try {
     const parsed = JSON.parse(value) as unknown;
     return formatAnswerValue(parsed, exercise);
@@ -121,7 +121,7 @@ function formatStoredValue(value: string, exercise?: FixedExercise): string {
   }
 }
 
-function formatAnswerValue(value: unknown, exercise?: FixedExercise): string {
+function formatAnswerValue(value: unknown, exercise?: LessonExercise): string {
   if (typeof value === "string") {
     return resolveExerciseId(value, exercise) ?? value;
   }
@@ -148,7 +148,7 @@ function formatAnswerValue(value: unknown, exercise?: FixedExercise): string {
   return String(value);
 }
 
-function resolveExerciseId(value: string, exercise?: FixedExercise): string | undefined {
+function resolveExerciseId(value: string, exercise?: LessonExercise): string | undefined {
   if (!exercise) {
     return undefined;
   }

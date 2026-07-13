@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { aiEvaluationFeedbackSchema } from "./index";
+import { aiEvaluationFeedbackSchema, createAiEvaluationFeedbackJsonSchema } from "./index";
 
 describe("AI schemas", () => {
   it("validates structured AI evaluation feedback", () => {
@@ -16,6 +16,8 @@ describe("AI schemas", () => {
           correction: "obwohl die Maßnahme teuer ist",
           explanationZhTw: "obwohl 引導從句時，變位動詞應置於句尾。",
           relatedSkillId: "B1.word_order.subordinate_clause",
+          grammarTopicId: null,
+          vocabularyId: null,
         },
       ],
       strengths: ["論點清楚"],
@@ -26,5 +28,19 @@ describe("AI schemas", () => {
     });
 
     expect(result.errors[0]?.type).toBe("word_order");
+  });
+
+  it("limits Structured Outputs to the exercise skills", () => {
+    const schema = createAiEvaluationFeedbackJsonSchema(["B2.argumentation.counterargument"]);
+    const properties = schema.properties as Record<string, Record<string, unknown>>;
+    const errors = properties.errors;
+    expect(errors).toBeDefined();
+    if (!errors) {
+      throw new Error("errors schema is required");
+    }
+    const item = errors.items as Record<string, unknown>;
+    const errorProperties = item.properties as Record<string, Record<string, unknown>>;
+
+    expect(errorProperties.relatedSkillId?.enum).toEqual(["B2.argumentation.counterargument"]);
   });
 });

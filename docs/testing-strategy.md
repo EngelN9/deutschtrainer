@@ -106,3 +106,10 @@ pnpm test
 - B1、B2、C1、C2 均被資料模型、內容模型、AI schema 支援。
 - API、Exercise、DB、權限無明顯命名矛盾。
 - MVP 排除排行榜、付款與社交系統。
+
+## 10. Phase 5 可執行驗證
+
+- API service unit tests 使用固定 provider/repository，不依賴真實 OpenAI 呼叫。
+- `pnpm --filter @deutschtrainer/api verify:local` 使用兩個臨時 Supabase 使用者驗證批改、重播、快取、資料落庫、RLS 與 RPC 權限。
+- Playwright Web smoke test 強制中斷一次 `/ai/evaluate-response`，確認回答保留及重試，之後驗證完整繁中 AI 回饋。
+- 桌面及 390 px viewport 均檢查 `scrollWidth <= innerWidth + 1`。

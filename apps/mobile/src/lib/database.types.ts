@@ -1,431 +1,2279 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type CefrLevel = "B1" | "B2" | "C1" | "C2";
-type AppRole = "learner" | "content_editor" | "reviewer" | "admin";
-type ContentStatus =
-  "draft" | "pending_review" | "approved" | "published" | "rejected" | "archived";
-type SkillCategory =
-  | "vocabulary"
-  | "grammar"
-  | "reading"
-  | "listening"
-  | "writing"
-  | "speaking"
-  | "interaction"
-  | "mediation"
-  | "pronunciation"
-  | "exam_preparation";
-type ActivityType = "instruction" | "practice" | "review" | "quiz" | "task";
-type FixedExerciseType =
-  | "multiple_choice"
-  | "multiple_select"
-  | "fill_blank"
-  | "sentence_order"
-  | "matching"
-  | "error_correction";
-type SourceType = "human" | "ai_generated" | "ai_assisted";
-type ReviewStatus = "draft" | "pending_review" | "approved" | "rejected";
-type AttemptMode = "lesson" | "review" | "practice" | "placement";
-type ReviewQueueStatus = "scheduled" | "completed" | "skipped" | "cancelled";
-type LessonProgressStatus = "not_started" | "in_progress" | "completed";
-type ErrorSeverity = "minor" | "moderate" | "major" | "critical";
-type ErrorType =
-  | "spelling"
-  | "capitalization"
-  | "punctuation"
-  | "article"
-  | "gender"
-  | "case"
-  | "declension"
-  | "adjective_ending"
-  | "verb_conjugation"
-  | "tense"
-  | "auxiliary"
-  | "word_order"
-  | "subordinate_clause"
-  | "preposition"
-  | "verb_preposition"
-  | "pronoun"
-  | "relative_clause"
-  | "passive_voice"
-  | "subjunctive"
-  | "collocation"
-  | "word_choice"
-  | "register"
-  | "coherence"
-  | "cohesion"
-  | "argumentation"
-  | "task_completion"
-  | "style"
-  | "idiomaticity"
-  | "redundancy"
-  | "ambiguity"
-  | "pronunciation"
-  | "fluency";
-
-interface ReadOnlyTable<Row extends Record<string, unknown>> {
-  Row: Row;
-  Insert: Partial<Row>;
-  Update: Partial<Row>;
-  Relationships: [];
-}
-
-interface CourseRow extends Record<string, unknown> {
-  id: string;
-  level: CefrLevel;
-  title_zh_tw: string;
-  title_de: string;
-  description_zh_tw: string;
-  status: ContentStatus;
-  version: number;
-  published_at: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-interface UnitRow extends Record<string, unknown> {
-  id: string;
-  course_id: string;
-  title_zh_tw: string;
-  title_de: string;
-  description_zh_tw: string;
-  order_index: number;
-  status: ContentStatus;
-  version: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-interface LessonRow extends Record<string, unknown> {
-  id: string;
-  unit_id: string;
-  level: CefrLevel;
-  title_zh_tw: string;
-  title_de: string;
-  order_index: number;
-  estimated_minutes: number;
-  skill_categories: SkillCategory[];
-  prerequisite_skill_ids: string[];
-  learning_objectives: string[];
-  vocabulary_tags: string[];
-  grammar_tags: string[];
-  cefr_descriptor: string;
-  status: ContentStatus;
-  version: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-interface ActivityRow extends Record<string, unknown> {
-  id: string;
-  lesson_id: string;
-  type: ActivityType;
-  title_zh_tw: string;
-  order_index: number;
-  content_json: Json;
-  status: ContentStatus;
-  version: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-interface ExerciseRow extends Record<string, unknown> {
-  id: string;
-  activity_id: string;
-  level: CefrLevel;
-  type: FixedExerciseType;
-  title: string;
-  instruction_zh_tw: string;
-  prompt_de: string;
-  payload_json: Json;
-  skill_ids: string[];
-  grammar_topic_ids: string[];
-  vocabulary_ids: string[];
-  estimated_seconds: number;
-  difficulty: number;
-  source_type: SourceType;
-  review_status: ReviewStatus;
-  status: ContentStatus;
-  version: number;
-  order_index: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-interface ExerciseOptionRow extends Record<string, unknown> {
-  id: string;
-  exercise_id: string;
-  label: string;
-  text_de: string;
-  text_zh_tw: string | null;
-  order_index: number;
-  is_correct: boolean;
-  metadata_json: Json;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ExerciseAnswerRow extends Record<string, unknown> {
-  id: string;
-  exercise_id: string;
-  answer_json: Json;
-  grading_policy_json: Json;
-  explanation_zh_tw: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AttemptRow extends Record<string, unknown> {
-  id: string;
-  user_id: string;
-  exercise_id: string;
-  lesson_id: string;
-  submitted_at: string;
-  score: number;
-  is_correct: boolean;
-  duration_ms: number;
-  used_hint: boolean;
-  mode: AttemptMode;
-  idempotency_key: string;
-  created_at: string;
-}
-
-interface AttemptAnswerRow extends Record<string, unknown> {
-  id: string;
-  attempt_id: string;
-  exercise_id: string;
-  answer_json: Json;
-  normalized_answer_json: Json;
-  grading_result_json: Json;
-  created_at: string;
-}
-
-interface ErrorRecordRow extends Record<string, unknown> {
-  id: string;
-  user_id: string;
-  attempt_id: string;
-  exercise_id: string;
-  lesson_id: string;
-  skill_id: string;
-  grammar_topic_id: string | null;
-  vocabulary_id: string | null;
-  type: ErrorType;
-  severity: ErrorSeverity;
-  original: string;
-  correction: string;
-  explanation_zh_tw: string;
-  created_at: string;
-}
-
-interface SkillMasteryRow extends Record<string, unknown> {
-  id: string;
-  user_id: string;
-  skill_id: string;
-  mastery_score: number;
-  confidence_score: number;
-  attempt_count: number;
-  correct_count: number;
-  incorrect_count: number;
-  hint_count: number;
-  average_response_time_ms: number;
-  last_practiced_at: string | null;
-  next_review_at: string | null;
-  correct_streak: number;
-  incorrect_streak: number;
-  last_error_types: ErrorType[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface ReviewQueueRow extends Record<string, unknown> {
-  id: string;
-  user_id: string;
-  skill_id: string;
-  exercise_id: string;
-  source_attempt_id: string;
-  priority: number;
-  scheduled_at: string;
-  reason: string;
-  interval_days: number;
-  ease_factor: number;
-  status: ReviewQueueStatus;
-  completed_at: string | null;
-  completed_attempt_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface LessonProgressRow extends Record<string, unknown> {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  status: LessonProgressStatus;
-  completion_percent: number;
-  completed_exercise_ids: string[];
-  correct_exercise_count: number;
-  attempted_exercise_count: number;
-  last_activity_id: string | null;
-  last_practiced_at: string | null;
-  completed_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface SkillRow extends Record<string, unknown> {
-  id: string;
-  code: string;
-  name_zh_tw: string;
-  name_de: string;
-  description_zh_tw: string;
-  level: CefrLevel;
-  category: SkillCategory;
-  mastery_threshold: number;
-  prerequisite_skill_ids: string[];
-  review_policy_json: Json;
-  status: ContentStatus;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Database {
-  public: {
-    CompositeTypes: Record<string, never>;
-    Enums: {
-      activity_type: ActivityType;
-      app_role: AppRole;
-      cefr_level: CefrLevel;
-      content_status: ContentStatus;
-      exercise_type: FixedExerciseType;
-      attempt_mode: AttemptMode;
-      error_severity: ErrorSeverity;
-      error_type: ErrorType;
-      lesson_progress_status: LessonProgressStatus;
-      review_queue_status: ReviewQueueStatus;
-      review_status: ReviewStatus;
-      skill_category: SkillCategory;
-      source_type: SourceType;
+export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
     };
     Functions: {
-      record_fixed_attempt: {
+      graphql: {
         Args: {
-          p_exercise_id: string;
-          p_answer_json: Json;
-          p_normalized_answer_json: Json;
-          p_grading_result_json: Json;
-          p_score: number;
-          p_is_correct: boolean;
-          p_duration_ms: number;
-          p_used_hint: boolean;
-          p_mode: AttemptMode;
-          p_idempotency_key: string;
-          p_review_id?: string | null;
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
         };
         Returns: Json;
       };
     };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+  public: {
     Tables: {
-      activities: ReadOnlyTable<ActivityRow>;
-      attempt_answers: ReadOnlyTable<AttemptAnswerRow>;
-      attempts: ReadOnlyTable<AttemptRow>;
-      courses: ReadOnlyTable<CourseRow>;
-      error_records: ReadOnlyTable<ErrorRecordRow>;
-      exercise_answers: ReadOnlyTable<ExerciseAnswerRow>;
-      exercise_options: ReadOnlyTable<ExerciseOptionRow>;
-      exercises: ReadOnlyTable<ExerciseRow>;
-      lessons: ReadOnlyTable<LessonRow>;
-      lesson_progress: ReadOnlyTable<LessonProgressRow>;
-      profiles: {
+      activities: {
         Row: {
-          id: string;
-          auth_user_id: string;
-          display_name: string;
-          role: AppRole;
-          timezone: string;
-          onboarding_completed: boolean;
+          content_json: Json;
           created_at: string;
-          updated_at: string;
           deleted_at: string | null;
+          id: string;
+          lesson_id: string;
+          order_index: number;
+          status: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          type: Database["public"]["Enums"]["activity_type"];
+          updated_at: string;
+          version: number;
         };
         Insert: {
-          auth_user_id: string;
-          display_name?: string;
-          role?: AppRole;
-          timezone?: string;
-          onboarding_completed?: boolean;
+          content_json?: Json;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          lesson_id: string;
+          order_index: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw: string;
+          type: Database["public"]["Enums"]["activity_type"];
+          updated_at?: string;
+          version?: number;
         };
         Update: {
-          display_name?: string;
-          timezone?: string;
-          onboarding_completed?: boolean;
+          content_json?: Json;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          lesson_id?: string;
+          order_index?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_zh_tw?: string;
+          type?: Database["public"]["Enums"]["activity_type"];
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activities_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_feedback: {
+        Row: {
+          attempt_id: string;
+          cache_key: string;
+          cached_from_id: string | null;
+          created_at: string;
+          feature: string;
+          feedback_json: Json;
+          id: string;
+          idempotency_key: string;
+          model: string;
+          prompt_id: string;
+          prompt_version: string;
+          requires_human_review: boolean;
+          schema_version: string;
+          target_id: string;
+          target_type: string;
+          user_id: string;
+        };
+        Insert: {
+          attempt_id: string;
+          cache_key: string;
+          cached_from_id?: string | null;
+          created_at?: string;
+          feature: string;
+          feedback_json: Json;
+          id?: string;
+          idempotency_key: string;
+          model: string;
+          prompt_id: string;
+          prompt_version: string;
+          requires_human_review?: boolean;
+          schema_version: string;
+          target_id: string;
+          target_type: string;
+          user_id: string;
+        };
+        Update: {
+          attempt_id?: string;
+          cache_key?: string;
+          cached_from_id?: string | null;
+          created_at?: string;
+          feature?: string;
+          feedback_json?: Json;
+          id?: string;
+          idempotency_key?: string;
+          model?: string;
+          prompt_id?: string;
+          prompt_version?: string;
+          requires_human_review?: boolean;
+          schema_version?: string;
+          target_id?: string;
+          target_type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_attempt_id_fkey";
+            columns: ["attempt_id"];
+            isOneToOne: true;
+            referencedRelation: "attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_feedback_cached_from_id_fkey";
+            columns: ["cached_from_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_feedback";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_feedback_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_usage_logs: {
+        Row: {
+          cached: boolean;
+          created_at: string;
+          error_code: string | null;
+          estimated_cost: number;
+          feature: string;
+          id: string;
+          idempotency_key: string;
+          input_tokens: number;
+          latency_ms: number;
+          logical_request: boolean;
+          model: string;
+          output_tokens: number;
+          provider_attempt: number;
+          provider_request_id: string | null;
+          request_id: string;
+          success: boolean;
+          user_id: string;
+        };
+        Insert: {
+          cached?: boolean;
+          created_at?: string;
+          error_code?: string | null;
+          estimated_cost?: number;
+          feature: string;
+          id?: string;
+          idempotency_key: string;
+          input_tokens?: number;
+          latency_ms?: number;
+          logical_request?: boolean;
+          model: string;
+          output_tokens?: number;
+          provider_attempt: number;
+          provider_request_id?: string | null;
+          request_id: string;
+          success: boolean;
+          user_id: string;
+        };
+        Update: {
+          cached?: boolean;
+          created_at?: string;
+          error_code?: string | null;
+          estimated_cost?: number;
+          feature?: string;
+          id?: string;
+          idempotency_key?: string;
+          input_tokens?: number;
+          latency_ms?: number;
+          logical_request?: boolean;
+          model?: string;
+          output_tokens?: number;
+          provider_attempt?: number;
+          provider_request_id?: string | null;
+          request_id?: string;
+          success?: boolean;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_logs_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      attempt_answers: {
+        Row: {
+          answer_json: Json;
+          attempt_id: string;
+          created_at: string;
+          exercise_id: string;
+          grading_result_json: Json;
+          id: string;
+          normalized_answer_json: Json;
+        };
+        Insert: {
+          answer_json: Json;
+          attempt_id: string;
+          created_at?: string;
+          exercise_id: string;
+          grading_result_json: Json;
+          id?: string;
+          normalized_answer_json: Json;
+        };
+        Update: {
+          answer_json?: Json;
+          attempt_id?: string;
+          created_at?: string;
+          exercise_id?: string;
+          grading_result_json?: Json;
+          id?: string;
+          normalized_answer_json?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attempt_answers_attempt_id_fkey";
+            columns: ["attempt_id"];
+            isOneToOne: true;
+            referencedRelation: "attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attempt_answers_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      attempts: {
+        Row: {
+          created_at: string;
+          duration_ms: number;
+          exercise_id: string;
+          id: string;
+          idempotency_key: string;
+          is_correct: boolean;
+          lesson_id: string;
+          mode: Database["public"]["Enums"]["attempt_mode"];
+          score: number;
+          submitted_at: string;
+          used_hint: boolean;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          duration_ms: number;
+          exercise_id: string;
+          id?: string;
+          idempotency_key: string;
+          is_correct: boolean;
+          lesson_id: string;
+          mode?: Database["public"]["Enums"]["attempt_mode"];
+          score: number;
+          submitted_at?: string;
+          used_hint?: boolean;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          duration_ms?: number;
+          exercise_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          is_correct?: boolean;
+          lesson_id?: string;
+          mode?: Database["public"]["Enums"]["attempt_mode"];
+          score?: number;
+          submitted_at?: string;
+          used_hint?: boolean;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attempts_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attempts_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attempts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_logs: {
+        Row: {
+          action: string;
+          actor_user_id: string | null;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          ip_hash: string | null;
+          metadata_json: Json;
+          user_agent_hash: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_user_id?: string | null;
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          ip_hash?: string | null;
+          metadata_json?: Json;
+          user_agent_hash?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_user_id?: string | null;
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          ip_hash?: string | null;
+          metadata_json?: Json;
+          user_agent_hash?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_user_id_fkey";
+            columns: ["actor_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      courses: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          description_zh_tw: string;
+          id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          published_at: string | null;
+          status: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw: string;
+          id?: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          published_at?: string | null;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw?: string;
+          id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          published_at?: string | null;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de?: string;
+          title_zh_tw?: string;
+          updated_at?: string;
+          version?: number;
         };
         Relationships: [];
       };
-      units: ReadOnlyTable<UnitRow>;
-      review_queue: ReadOnlyTable<ReviewQueueRow>;
-      skills: ReadOnlyTable<SkillRow>;
-      skill_mastery: ReadOnlyTable<SkillMasteryRow>;
-      user_levels: {
+      error_records: {
         Row: {
-          id: string;
-          user_id: string;
-          current_level: CefrLevel;
-          target_level: CefrLevel;
-          placement_status: "not_started" | "in_progress" | "completed";
-          placement_result_json: Json;
+          attempt_id: string;
+          correction: string;
           created_at: string;
+          exercise_id: string;
+          explanation_zh_tw: string;
+          grammar_topic_id: string | null;
+          id: string;
+          lesson_id: string;
+          original: string;
+          severity: Database["public"]["Enums"]["error_severity"];
+          skill_id: string;
+          type: Database["public"]["Enums"]["error_type"];
+          user_id: string;
+          vocabulary_id: string | null;
+        };
+        Insert: {
+          attempt_id: string;
+          correction: string;
+          created_at?: string;
+          exercise_id: string;
+          explanation_zh_tw: string;
+          grammar_topic_id?: string | null;
+          id?: string;
+          lesson_id: string;
+          original: string;
+          severity: Database["public"]["Enums"]["error_severity"];
+          skill_id: string;
+          type?: Database["public"]["Enums"]["error_type"];
+          user_id: string;
+          vocabulary_id?: string | null;
+        };
+        Update: {
+          attempt_id?: string;
+          correction?: string;
+          created_at?: string;
+          exercise_id?: string;
+          explanation_zh_tw?: string;
+          grammar_topic_id?: string | null;
+          id?: string;
+          lesson_id?: string;
+          original?: string;
+          severity?: Database["public"]["Enums"]["error_severity"];
+          skill_id?: string;
+          type?: Database["public"]["Enums"]["error_type"];
+          user_id?: string;
+          vocabulary_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "error_records_attempt_id_fkey";
+            columns: ["attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_grammar_topic_id_fkey";
+            columns: ["grammar_topic_id"];
+            isOneToOne: false;
+            referencedRelation: "grammar_topics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_records_vocabulary_id_fkey";
+            columns: ["vocabulary_id"];
+            isOneToOne: false;
+            referencedRelation: "vocabulary";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exercise_answers: {
+        Row: {
+          answer_json: Json;
+          created_at: string;
+          exercise_id: string;
+          explanation_zh_tw: string;
+          grading_policy_json: Json;
+          id: string;
           updated_at: string;
         };
         Insert: {
-          user_id: string;
-          current_level: CefrLevel;
-          target_level: CefrLevel;
-          placement_status?: "not_started" | "in_progress" | "completed";
-          placement_result_json?: Json;
+          answer_json: Json;
+          created_at?: string;
+          exercise_id: string;
+          explanation_zh_tw?: string;
+          grading_policy_json?: Json;
+          id?: string;
+          updated_at?: string;
         };
         Update: {
-          current_level?: CefrLevel;
-          target_level?: CefrLevel;
-          placement_status?: "not_started" | "in_progress" | "completed";
-          placement_result_json?: Json;
+          answer_json?: Json;
+          created_at?: string;
+          exercise_id?: string;
+          explanation_zh_tw?: string;
+          grading_policy_json?: Json;
+          id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercise_answers_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: true;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exercise_options: {
+        Row: {
+          created_at: string;
+          exercise_id: string;
+          id: string;
+          is_correct: boolean;
+          label: string;
+          metadata_json: Json;
+          order_index: number;
+          text_de: string;
+          text_zh_tw: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          exercise_id: string;
+          id?: string;
+          is_correct?: boolean;
+          label: string;
+          metadata_json?: Json;
+          order_index: number;
+          text_de: string;
+          text_zh_tw?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          exercise_id?: string;
+          id?: string;
+          is_correct?: boolean;
+          label?: string;
+          metadata_json?: Json;
+          order_index?: number;
+          text_de?: string;
+          text_zh_tw?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercise_options_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exercises: {
+        Row: {
+          activity_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          difficulty: number;
+          estimated_seconds: number;
+          grammar_topic_ids: string[];
+          id: string;
+          instruction_zh_tw: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          order_index: number;
+          payload_json: Json;
+          prompt_de: string;
+          review_status: Database["public"]["Enums"]["review_status"];
+          skill_ids: string[];
+          source_type: Database["public"]["Enums"]["source_type"];
+          status: Database["public"]["Enums"]["content_status"];
+          title: string;
+          type: Database["public"]["Enums"]["exercise_type"];
+          updated_at: string;
+          version: number;
+          vocabulary_ids: string[];
+        };
+        Insert: {
+          activity_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          difficulty: number;
+          estimated_seconds: number;
+          grammar_topic_ids?: string[];
+          id?: string;
+          instruction_zh_tw: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          order_index: number;
+          payload_json?: Json;
+          prompt_de: string;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids?: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          title: string;
+          type: Database["public"]["Enums"]["exercise_type"];
+          updated_at?: string;
+          version?: number;
+          vocabulary_ids?: string[];
+        };
+        Update: {
+          activity_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          difficulty?: number;
+          estimated_seconds?: number;
+          grammar_topic_ids?: string[];
+          id?: string;
+          instruction_zh_tw?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          order_index?: number;
+          payload_json?: Json;
+          prompt_de?: string;
+          review_status?: Database["public"]["Enums"]["review_status"];
+          skill_ids?: string[];
+          source_type?: Database["public"]["Enums"]["source_type"];
+          status?: Database["public"]["Enums"]["content_status"];
+          title?: string;
+          type?: Database["public"]["Enums"]["exercise_type"];
+          updated_at?: string;
+          version?: number;
+          vocabulary_ids?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercises_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: false;
+            referencedRelation: "activities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feature_flags: {
+        Row: {
+          audience_json: Json;
+          created_at: string;
+          description: string;
+          enabled: boolean;
+          id: string;
+          key: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          audience_json?: Json;
+          created_at?: string;
+          description?: string;
+          enabled?: boolean;
+          id?: string;
+          key: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          audience_json?: Json;
+          created_at?: string;
+          description?: string;
+          enabled?: boolean;
+          id?: string;
+          key?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      grammar_topics: {
+        Row: {
+          code: string;
+          common_mistakes_json: Json;
+          created_at: string;
+          difficulty: number;
+          examples_json: Json;
+          full_explanation_zh_tw: string;
+          id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          prerequisite_topic_ids: string[];
+          related_skill_ids: string[];
+          rules_json: Json;
+          short_explanation_zh_tw: string;
+          status: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          code: string;
+          common_mistakes_json?: Json;
+          created_at?: string;
+          difficulty: number;
+          examples_json?: Json;
+          full_explanation_zh_tw: string;
+          id?: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          prerequisite_topic_ids?: string[];
+          related_skill_ids?: string[];
+          rules_json?: Json;
+          short_explanation_zh_tw: string;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          code?: string;
+          common_mistakes_json?: Json;
+          created_at?: string;
+          difficulty?: number;
+          examples_json?: Json;
+          full_explanation_zh_tw?: string;
+          id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          prerequisite_topic_ids?: string[];
+          related_skill_ids?: string[];
+          rules_json?: Json;
+          short_explanation_zh_tw?: string;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de?: string;
+          title_zh_tw?: string;
+          updated_at?: string;
+          version?: number;
         };
         Relationships: [];
+      };
+      lesson_progress: {
+        Row: {
+          attempted_exercise_count: number;
+          completed_at: string | null;
+          completed_exercise_ids: string[];
+          completion_percent: number;
+          correct_exercise_count: number;
+          created_at: string;
+          id: string;
+          last_activity_id: string | null;
+          last_practiced_at: string | null;
+          lesson_id: string;
+          status: Database["public"]["Enums"]["lesson_progress_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          attempted_exercise_count?: number;
+          completed_at?: string | null;
+          completed_exercise_ids?: string[];
+          completion_percent?: number;
+          correct_exercise_count?: number;
+          created_at?: string;
+          id?: string;
+          last_activity_id?: string | null;
+          last_practiced_at?: string | null;
+          lesson_id: string;
+          status?: Database["public"]["Enums"]["lesson_progress_status"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attempted_exercise_count?: number;
+          completed_at?: string | null;
+          completed_exercise_ids?: string[];
+          completion_percent?: number;
+          correct_exercise_count?: number;
+          created_at?: string;
+          id?: string;
+          last_activity_id?: string | null;
+          last_practiced_at?: string | null;
+          lesson_id?: string;
+          status?: Database["public"]["Enums"]["lesson_progress_status"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_last_activity_id_fkey";
+            columns: ["last_activity_id"];
+            isOneToOne: false;
+            referencedRelation: "activities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_progress_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lessons: {
+        Row: {
+          cefr_descriptor: string;
+          created_at: string;
+          deleted_at: string | null;
+          estimated_minutes: number;
+          grammar_tags: string[];
+          id: string;
+          learning_objectives: string[];
+          level: Database["public"]["Enums"]["cefr_level"];
+          order_index: number;
+          prerequisite_skill_ids: string[];
+          skill_categories: Database["public"]["Enums"]["skill_category"][];
+          status: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          unit_id: string;
+          updated_at: string;
+          version: number;
+          vocabulary_tags: string[];
+        };
+        Insert: {
+          cefr_descriptor: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          estimated_minutes: number;
+          grammar_tags?: string[];
+          id?: string;
+          learning_objectives: string[];
+          level: Database["public"]["Enums"]["cefr_level"];
+          order_index: number;
+          prerequisite_skill_ids?: string[];
+          skill_categories?: Database["public"]["Enums"]["skill_category"][];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          unit_id: string;
+          updated_at?: string;
+          version?: number;
+          vocabulary_tags?: string[];
+        };
+        Update: {
+          cefr_descriptor?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          estimated_minutes?: number;
+          grammar_tags?: string[];
+          id?: string;
+          learning_objectives?: string[];
+          level?: Database["public"]["Enums"]["cefr_level"];
+          order_index?: number;
+          prerequisite_skill_ids?: string[];
+          skill_categories?: Database["public"]["Enums"]["skill_category"][];
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de?: string;
+          title_zh_tw?: string;
+          unit_id?: string;
+          updated_at?: string;
+          version?: number;
+          vocabulary_tags?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lessons_unit_id_fkey";
+            columns: ["unit_id"];
+            isOneToOne: false;
+            referencedRelation: "units";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          auth_user_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          display_name: string;
+          id: string;
+          onboarding_completed: boolean;
+          role: Database["public"]["Enums"]["app_role"];
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          auth_user_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          display_name?: string;
+          id?: string;
+          onboarding_completed?: boolean;
+          role?: Database["public"]["Enums"]["app_role"];
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: {
+          auth_user_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          display_name?: string;
+          id?: string;
+          onboarding_completed?: boolean;
+          role?: Database["public"]["Enums"]["app_role"];
+          timezone?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      review_queue: {
+        Row: {
+          completed_at: string | null;
+          completed_attempt_id: string | null;
+          created_at: string;
+          ease_factor: number;
+          exercise_id: string;
+          id: string;
+          interval_days: number;
+          priority: number;
+          reason: string;
+          scheduled_at: string;
+          skill_id: string;
+          source_attempt_id: string;
+          status: Database["public"]["Enums"]["review_queue_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          completed_attempt_id?: string | null;
+          created_at?: string;
+          ease_factor?: number;
+          exercise_id: string;
+          id?: string;
+          interval_days: number;
+          priority: number;
+          reason: string;
+          scheduled_at: string;
+          skill_id: string;
+          source_attempt_id: string;
+          status?: Database["public"]["Enums"]["review_queue_status"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          completed_attempt_id?: string | null;
+          created_at?: string;
+          ease_factor?: number;
+          exercise_id?: string;
+          id?: string;
+          interval_days?: number;
+          priority?: number;
+          reason?: string;
+          scheduled_at?: string;
+          skill_id?: string;
+          source_attempt_id?: string;
+          status?: Database["public"]["Enums"]["review_queue_status"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "review_queue_completed_attempt_id_fkey";
+            columns: ["completed_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_queue_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_queue_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_queue_source_attempt_id_fkey";
+            columns: ["source_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_queue_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      skill_mastery: {
+        Row: {
+          attempt_count: number;
+          average_response_time_ms: number;
+          confidence_score: number;
+          correct_count: number;
+          correct_streak: number;
+          created_at: string;
+          hint_count: number;
+          id: string;
+          incorrect_count: number;
+          incorrect_streak: number;
+          last_error_types: Database["public"]["Enums"]["error_type"][];
+          last_practiced_at: string | null;
+          mastery_score: number;
+          next_review_at: string | null;
+          skill_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          attempt_count?: number;
+          average_response_time_ms?: number;
+          confidence_score?: number;
+          correct_count?: number;
+          correct_streak?: number;
+          created_at?: string;
+          hint_count?: number;
+          id?: string;
+          incorrect_count?: number;
+          incorrect_streak?: number;
+          last_error_types?: Database["public"]["Enums"]["error_type"][];
+          last_practiced_at?: string | null;
+          mastery_score?: number;
+          next_review_at?: string | null;
+          skill_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attempt_count?: number;
+          average_response_time_ms?: number;
+          confidence_score?: number;
+          correct_count?: number;
+          correct_streak?: number;
+          created_at?: string;
+          hint_count?: number;
+          id?: string;
+          incorrect_count?: number;
+          incorrect_streak?: number;
+          last_error_types?: Database["public"]["Enums"]["error_type"][];
+          last_practiced_at?: string | null;
+          mastery_score?: number;
+          next_review_at?: string | null;
+          skill_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "skill_mastery_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skill_mastery_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      skills: {
+        Row: {
+          category: Database["public"]["Enums"]["skill_category"];
+          code: string;
+          created_at: string;
+          description_zh_tw: string;
+          id: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          mastery_threshold: number;
+          name_de: string;
+          name_zh_tw: string;
+          prerequisite_skill_ids: string[];
+          review_policy_json: Json;
+          status: Database["public"]["Enums"]["content_status"];
+          updated_at: string;
+        };
+        Insert: {
+          category: Database["public"]["Enums"]["skill_category"];
+          code: string;
+          created_at?: string;
+          description_zh_tw: string;
+          id?: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          mastery_threshold?: number;
+          name_de: string;
+          name_zh_tw: string;
+          prerequisite_skill_ids?: string[];
+          review_policy_json?: Json;
+          status?: Database["public"]["Enums"]["content_status"];
+          updated_at?: string;
+        };
+        Update: {
+          category?: Database["public"]["Enums"]["skill_category"];
+          code?: string;
+          created_at?: string;
+          description_zh_tw?: string;
+          id?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          mastery_threshold?: number;
+          name_de?: string;
+          name_zh_tw?: string;
+          prerequisite_skill_ids?: string[];
+          review_policy_json?: Json;
+          status?: Database["public"]["Enums"]["content_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      units: {
+        Row: {
+          course_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          description_zh_tw: string;
+          id: string;
+          order_index: number;
+          status: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          course_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw?: string;
+          id?: string;
+          order_index: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de: string;
+          title_zh_tw: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          course_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          description_zh_tw?: string;
+          id?: string;
+          order_index?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          title_de?: string;
+          title_zh_tw?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "units_course_id_fkey";
+            columns: ["course_id"];
+            isOneToOne: false;
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_levels: {
+        Row: {
+          created_at: string;
+          current_level: Database["public"]["Enums"]["cefr_level"];
+          id: string;
+          placement_result_json: Json;
+          placement_status: string;
+          target_level: Database["public"]["Enums"]["cefr_level"];
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          current_level?: Database["public"]["Enums"]["cefr_level"];
+          id?: string;
+          placement_result_json?: Json;
+          placement_status?: string;
+          target_level?: Database["public"]["Enums"]["cefr_level"];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          current_level?: Database["public"]["Enums"]["cefr_level"];
+          id?: string;
+          placement_result_json?: Json;
+          placement_status?: string;
+          target_level?: Database["public"]["Enums"]["cefr_level"];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_levels_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       user_preferences: {
         Row: {
-          id: string;
-          user_id: string;
-          daily_minutes: number;
-          target_level: CefrLevel;
-          notifications_enabled: boolean;
-          theme: "system" | "light" | "dark";
           audio_settings_json: Json;
-          learning_goals_json: Json;
           created_at: string;
+          daily_minutes: number;
+          id: string;
+          learning_goals_json: Json;
+          notifications_enabled: boolean;
+          target_level: Database["public"]["Enums"]["cefr_level"];
+          theme: string;
           updated_at: string;
+          user_id: string;
         };
         Insert: {
+          audio_settings_json?: Json;
+          created_at?: string;
+          daily_minutes?: number;
+          id?: string;
+          learning_goals_json?: Json;
+          notifications_enabled?: boolean;
+          target_level?: Database["public"]["Enums"]["cefr_level"];
+          theme?: string;
+          updated_at?: string;
           user_id: string;
-          daily_minutes: number;
-          target_level: CefrLevel;
-          notifications_enabled: boolean;
-          theme?: "system" | "light" | "dark";
-          learning_goals_json: Json;
         };
         Update: {
+          audio_settings_json?: Json;
+          created_at?: string;
           daily_minutes?: number;
-          target_level?: CefrLevel;
-          notifications_enabled?: boolean;
-          theme?: "system" | "light" | "dark";
+          id?: string;
           learning_goals_json?: Json;
+          notifications_enabled?: boolean;
+          target_level?: Database["public"]["Enums"]["cefr_level"];
+          theme?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vocabulary: {
+        Row: {
+          antonyms_json: Json;
+          audio_url: string | null;
+          collocations_json: Json;
+          created_at: string;
+          definitions_zh_tw: string[];
+          example_sentences: string[];
+          frequency_rank: number | null;
+          gender: string | null;
+          governing_case: string | null;
+          id: string;
+          lemma: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          part_of_speech: string;
+          plural: string | null;
+          principal_parts_json: Json;
+          reflexive: boolean;
+          region: string;
+          register: string;
+          required_preposition: string | null;
+          separable_prefix: string | null;
+          status: Database["public"]["Enums"]["content_status"];
+          synonyms_json: Json;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          antonyms_json?: Json;
+          audio_url?: string | null;
+          collocations_json?: Json;
+          created_at?: string;
+          definitions_zh_tw: string[];
+          example_sentences?: string[];
+          frequency_rank?: number | null;
+          gender?: string | null;
+          governing_case?: string | null;
+          id?: string;
+          lemma: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          part_of_speech: string;
+          plural?: string | null;
+          principal_parts_json?: Json;
+          reflexive?: boolean;
+          region?: string;
+          register?: string;
+          required_preposition?: string | null;
+          separable_prefix?: string | null;
+          status?: Database["public"]["Enums"]["content_status"];
+          synonyms_json?: Json;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          antonyms_json?: Json;
+          audio_url?: string | null;
+          collocations_json?: Json;
+          created_at?: string;
+          definitions_zh_tw?: string[];
+          example_sentences?: string[];
+          frequency_rank?: number | null;
+          gender?: string | null;
+          governing_case?: string | null;
+          id?: string;
+          lemma?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          part_of_speech?: string;
+          plural?: string | null;
+          principal_parts_json?: Json;
+          reflexive?: boolean;
+          region?: string;
+          register?: string;
+          required_preposition?: string | null;
+          separable_prefix?: string | null;
+          status?: Database["public"]["Enums"]["content_status"];
+          synonyms_json?: Json;
+          updated_at?: string;
+          version?: number;
         };
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      current_app_role: {
+        Args: never;
+        Returns: Database["public"]["Enums"]["app_role"];
+      };
+      current_profile_id: { Args: never; Returns: string };
+      is_content_team: { Args: never; Returns: boolean };
+      record_ai_attempt: {
+        Args: {
+          p_cache_key: string;
+          p_cached_from_id?: string;
+          p_duration_ms: number;
+          p_exercise_id: string;
+          p_feedback_json: Json;
+          p_idempotency_key: string;
+          p_mode: Database["public"]["Enums"]["attempt_mode"];
+          p_model: string;
+          p_prompt_id: string;
+          p_prompt_version: string;
+          p_response_de: string;
+          p_review_id?: string;
+          p_schema_version: string;
+          p_used_hint: boolean;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      record_fixed_attempt: {
+        Args: {
+          p_answer_json: Json;
+          p_duration_ms: number;
+          p_exercise_id: string;
+          p_grading_result_json: Json;
+          p_idempotency_key: string;
+          p_is_correct: boolean;
+          p_mode: Database["public"]["Enums"]["attempt_mode"];
+          p_normalized_answer_json: Json;
+          p_review_id?: string;
+          p_score: number;
+          p_used_hint: boolean;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      activity_type: "instruction" | "practice" | "review" | "quiz" | "task";
+      app_role: "learner" | "content_editor" | "reviewer" | "admin";
+      attempt_mode: "lesson" | "review" | "practice" | "placement";
+      cefr_level: "B1" | "B2" | "C1" | "C2";
+      content_status:
+        "draft" | "pending_review" | "approved" | "published" | "rejected" | "archived";
+      error_severity: "minor" | "moderate" | "major" | "critical";
+      error_type:
+        | "spelling"
+        | "capitalization"
+        | "punctuation"
+        | "article"
+        | "gender"
+        | "case"
+        | "declension"
+        | "adjective_ending"
+        | "verb_conjugation"
+        | "tense"
+        | "auxiliary"
+        | "word_order"
+        | "subordinate_clause"
+        | "preposition"
+        | "verb_preposition"
+        | "pronoun"
+        | "relative_clause"
+        | "passive_voice"
+        | "subjunctive"
+        | "collocation"
+        | "word_choice"
+        | "register"
+        | "coherence"
+        | "cohesion"
+        | "argumentation"
+        | "task_completion"
+        | "style"
+        | "idiomaticity"
+        | "redundancy"
+        | "ambiguity"
+        | "pronunciation"
+        | "fluency";
+      exercise_type:
+        | "multiple_choice"
+        | "multiple_select"
+        | "fill_blank"
+        | "sentence_order"
+        | "matching"
+        | "translation"
+        | "dictation"
+        | "error_correction"
+        | "reading_comprehension"
+        | "listening_comprehension"
+        | "free_response"
+        | "speaking"
+        | "conversation"
+        | "essay"
+        | "summary"
+        | "paraphrase"
+        | "argumentation"
+        | "mediation"
+        | "oral_presentation";
+      lesson_progress_status: "not_started" | "in_progress" | "completed";
+      review_queue_status: "scheduled" | "completed" | "skipped" | "cancelled";
+      review_status: "draft" | "pending_review" | "approved" | "rejected";
+      skill_category:
+        | "vocabulary"
+        | "grammar"
+        | "reading"
+        | "listening"
+        | "writing"
+        | "speaking"
+        | "interaction"
+        | "mediation"
+        | "pronunciation"
+        | "exam_preparation";
+      source_type: "human" | "ai_generated" | "ai_assisted";
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          allowed_mime_types: string[] | null;
+          avif_autodetection: boolean | null;
+          created_at: string | null;
+          file_size_limit: number | null;
+          id: string;
+          name: string;
+          owner: string | null;
+          owner_id: string | null;
+          public: boolean | null;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string | null;
+        };
+        Insert: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id: string;
+          name: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
+        Update: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id?: string;
+          name?: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      buckets_analytics: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          format: string;
+          id: string;
+          name: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      buckets_vectors: {
+        Row: {
+          created_at: string;
+          id: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      iceberg_namespaces: {
+        Row: {
+          bucket_name: string;
+          catalog_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_name: string;
+          catalog_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          bucket_name?: string;
+          catalog_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_namespaces_catalog_id_fkey";
+            columns: ["catalog_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets_analytics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      iceberg_tables: {
+        Row: {
+          bucket_name: string;
+          catalog_id: string;
+          created_at: string;
+          id: string;
+          location: string;
+          name: string;
+          namespace_id: string;
+          remote_table_id: string | null;
+          shard_id: string | null;
+          shard_key: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_name: string;
+          catalog_id: string;
+          created_at?: string;
+          id?: string;
+          location: string;
+          name: string;
+          namespace_id: string;
+          remote_table_id?: string | null;
+          shard_id?: string | null;
+          shard_key?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          bucket_name?: string;
+          catalog_id?: string;
+          created_at?: string;
+          id?: string;
+          location?: string;
+          name?: string;
+          namespace_id?: string;
+          remote_table_id?: string | null;
+          shard_id?: string | null;
+          shard_key?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_tables_catalog_id_fkey";
+            columns: ["catalog_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets_analytics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "iceberg_tables_namespace_id_fkey";
+            columns: ["namespace_id"];
+            isOneToOne: false;
+            referencedRelation: "iceberg_namespaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      migrations: {
+        Row: {
+          executed_at: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
+        Insert: {
+          executed_at?: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
+        Update: {
+          executed_at?: string | null;
+          hash?: string;
+          id?: number;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      objects: {
+        Row: {
+          bucket_id: string | null;
+          created_at: string | null;
+          id: string;
+          last_accessed_at: string | null;
+          metadata: Json | null;
+          name: string | null;
+          owner: string | null;
+          owner_id: string | null;
+          path_tokens: string[] | null;
+          updated_at: string | null;
+          user_metadata: Json | null;
+          version: string | null;
+        };
+        Insert: {
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
+        Update: {
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "objects_bucketId_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      s3_multipart_uploads: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          in_progress_size: number;
+          key: string;
+          metadata: Json | null;
+          owner_id: string | null;
+          upload_signature: string;
+          user_metadata: Json | null;
+          version: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          id: string;
+          in_progress_size?: number;
+          key: string;
+          metadata?: Json | null;
+          owner_id?: string | null;
+          upload_signature: string;
+          user_metadata?: Json | null;
+          version: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          id?: string;
+          in_progress_size?: number;
+          key?: string;
+          metadata?: Json | null;
+          owner_id?: string | null;
+          upload_signature?: string;
+          user_metadata?: Json | null;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      s3_multipart_uploads_parts: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          etag: string;
+          id: string;
+          key: string;
+          owner_id: string | null;
+          part_number: number;
+          size: number;
+          upload_id: string;
+          version: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          etag: string;
+          id?: string;
+          key: string;
+          owner_id?: string | null;
+          part_number: number;
+          size?: number;
+          upload_id: string;
+          version: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          etag?: string;
+          id?: string;
+          key?: string;
+          owner_id?: string | null;
+          part_number?: number;
+          size?: number;
+          upload_id?: string;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey";
+            columns: ["upload_id"];
+            isOneToOne: false;
+            referencedRelation: "s3_multipart_uploads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vector_indexes: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id: string;
+          metadata_configuration: Json | null;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          data_type?: string;
+          dimension?: number;
+          distance_metric?: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vector_indexes_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets_vectors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      allow_any_operation: {
+        Args: { expected_operations: string[] };
+        Returns: boolean;
+      };
+      allow_only_operation: {
+        Args: { expected_operation: string };
+        Returns: boolean;
+      };
+      can_insert_object: {
+        Args: { bucketid: string; metadata: Json; name: string; owner: string };
+        Returns: undefined;
+      };
+      extension: { Args: { name: string }; Returns: string };
+      filename: { Args: { name: string }; Returns: string };
+      foldername: { Args: { name: string }; Returns: string[] };
+      get_common_prefix: {
+        Args: { p_delimiter: string; p_key: string; p_prefix: string };
+        Returns: string;
+      };
+      get_size_by_bucket: {
+        Args: never;
+        Returns: {
+          bucket_id: string;
+          size: number;
+        }[];
+      };
+      list_multipart_uploads_with_delimiter: {
+        Args: {
+          bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_key_token?: string;
+          next_upload_token?: string;
+          prefix_param: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+        }[];
+      };
+      list_objects_with_delimiter: {
+        Args: {
+          _bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_token?: string;
+          prefix_param: string;
+          sort_order?: string;
+          start_after?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      operation: { Args: never; Returns: string };
+      search: {
+        Args: {
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      search_by_timestamp: {
+        Args: {
+          p_bucket_id: string;
+          p_level: number;
+          p_limit: number;
+          p_prefix: string;
+          p_sort_column: string;
+          p_sort_column_after: string;
+          p_sort_order: string;
+          p_start_after: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      search_v2: {
+        Args: {
+          bucket_name: string;
+          levels?: number;
+          limits?: number;
+          prefix: string;
+          sort_column?: string;
+          sort_column_after?: string;
+          sort_order?: string;
+          start_after?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+    };
+    Enums: {
+      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR";
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+};
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      activity_type: ["instruction", "practice", "review", "quiz", "task"],
+      app_role: ["learner", "content_editor", "reviewer", "admin"],
+      attempt_mode: ["lesson", "review", "practice", "placement"],
+      cefr_level: ["B1", "B2", "C1", "C2"],
+      content_status: ["draft", "pending_review", "approved", "published", "rejected", "archived"],
+      error_severity: ["minor", "moderate", "major", "critical"],
+      error_type: [
+        "spelling",
+        "capitalization",
+        "punctuation",
+        "article",
+        "gender",
+        "case",
+        "declension",
+        "adjective_ending",
+        "verb_conjugation",
+        "tense",
+        "auxiliary",
+        "word_order",
+        "subordinate_clause",
+        "preposition",
+        "verb_preposition",
+        "pronoun",
+        "relative_clause",
+        "passive_voice",
+        "subjunctive",
+        "collocation",
+        "word_choice",
+        "register",
+        "coherence",
+        "cohesion",
+        "argumentation",
+        "task_completion",
+        "style",
+        "idiomaticity",
+        "redundancy",
+        "ambiguity",
+        "pronunciation",
+        "fluency",
+      ],
+      exercise_type: [
+        "multiple_choice",
+        "multiple_select",
+        "fill_blank",
+        "sentence_order",
+        "matching",
+        "translation",
+        "dictation",
+        "error_correction",
+        "reading_comprehension",
+        "listening_comprehension",
+        "free_response",
+        "speaking",
+        "conversation",
+        "essay",
+        "summary",
+        "paraphrase",
+        "argumentation",
+        "mediation",
+        "oral_presentation",
+      ],
+      lesson_progress_status: ["not_started", "in_progress", "completed"],
+      review_queue_status: ["scheduled", "completed", "skipped", "cancelled"],
+      review_status: ["draft", "pending_review", "approved", "rejected"],
+      skill_category: [
+        "vocabulary",
+        "grammar",
+        "reading",
+        "listening",
+        "writing",
+        "speaking",
+        "interaction",
+        "mediation",
+        "pronunciation",
+        "exam_preparation",
+      ],
+      source_type: ["human", "ai_generated", "ai_assisted"],
+    },
+  },
+  storage: {
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
+    },
+  },
+} as const;

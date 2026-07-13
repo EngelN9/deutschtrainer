@@ -26,6 +26,8 @@
 - profiles：使用者可讀寫自己的 profile；admin 可管理角色。
 - course content：published 可公開讀；draft/pending_review/approved 僅內容角色。
 - attempts/progress/reviews：只允許 owner 讀取，寫入集中於驗證身分與內容關聯的 transaction RPC。
+- AI feedback/usage：只允許 owner 讀取；`record_ai_attempt` 僅 service role 可執行，learner 不可繞過 API 寫入分數。
+- exercise_answers：固定題的已發布答案可供 client grading；translation/free_response 參考答案僅後端可讀。
 - writing/speaking/conversation：只允許 owner；必要審核需使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
 - audit_logs：admin only。
@@ -44,6 +46,8 @@
 - 後端不把其他使用者資料傳入模型。
 - AI 輸出需通過 schema、Zod、程度與禁止內容檢查。
 - AI 回饋頁需說明 AI 可能出錯。
+- 後端依 `exerciseId` 讀取 target level、allowed skills 與參考答案，不信任 client 傳入的評分上下文。
+- 快取 key 包含 learner、exercise/version、正規化回答、prompt/version 與 schema/version，避免跨使用者回饋洩漏。
 
 ## 6. Rate Limit
 

@@ -4,12 +4,22 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Lightbulb, XCircle } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { LessonExercise } from "@deutschtrainer/shared-types";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { gradeFixedExercise, type GradingResult } from "@deutschtrainer/grading";
+import type { EvaluateResponseResponse } from "@deutschtrainer/validation";
 import { AuthGate } from "../../src/features/auth/AuthGate";
 import { useAuthStore } from "../../src/features/auth/useAuthStore";
-import { findLesson, getLessonExercises } from "../../src/features/courses/courseRepository";
+import {
+  findLesson,
+  getLessonExercises,
+  isAiEvaluatedExercise,
+  isFixedExercise,
+} from "../../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../../src/features/courses/useCourseCatalog";
+import { AiExerciseInput } from "../../src/features/ai-evaluation/AiExerciseInput";
+import { AiFeedbackPanel } from "../../src/features/ai-evaluation/AiFeedbackPanel";
+import { submitAiEvaluation } from "../../src/features/ai-evaluation/aiEvaluationRepository";
 import {
   FixedExerciseInput,
   formatAcceptedAnswer,
@@ -55,6 +65,7 @@ export default function ExerciseScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState<unknown>(undefined);
   const [result, setResult] = useState<GradingResult | undefined>();
+  const [aiEvaluation, setAiEvaluation] = useState<EvaluateResponseResponse | undefined>();
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
   const [usedHint, setUsedHint] = useState(false);
@@ -67,8 +78,9 @@ export default function ExerciseScreen() {
   );
   const completedExerciseIds =
     syncedLessonProgress?.completedExerciseIds ?? progress?.completedExerciseIds ?? [];
+  const isFallback = aiEvaluation?.status === "fallback";
   const displayPercent = exercises.length
-    ? Math.round(((currentIndex + (result ? 1 : 0)) / exercises.length) * 100)
+    ? Math.round(((currentIndex + (result && !isFallback ? 1 : 0)) / exercises.length) * 100)
     : 0;
 
   useEffect(() => {
@@ -104,29 +116,70 @@ export default function ExerciseScreen() {
   ]);
 
   async function submitAnswer() {
-    if (!exercise || !profile || result || saving || !isExerciseAnswered(exercise, answer)) {
+    if (
+      !exercise ||
+      !profile ||
+      (result && !isFallback) ||
+      saving ||
+      !isCurrentExerciseAnswered(exercise, answer)
+    ) {
       return;
     }
 
-    const gradingResult = gradeFixedExercise(exercise, answer);
     const submittedAt = new Date().toISOString();
     const durationMs = Math.max(0, Date.now() - attemptStartedAt.current);
     idempotencyKey.current ??= `${profile.id}:${exercise.id}:${submittedAt}`;
     setSaving(true);
     setSaveError(undefined);
     try {
-      if (mobileEnv.contentSource === "supabase") {
-        await submitRemoteAttempt({
+      let gradingResult: GradingResult;
+
+      if (isAiEvaluatedExercise(exercise)) {
+        const responseDe = typeof answer === "string" ? answer.trim() : "";
+        const evaluation = await submitAiEvaluation({
           exerciseId: exercise.id,
-          answer,
-          gradingResult,
+          responseDe,
           durationMs,
           usedHint,
           mode: isReviewSession ? "review" : "lesson",
           idempotencyKey: idempotencyKey.current,
           ...(reviewId ? { reviewId } : {}),
         });
+        gradingResult = {
+          score: evaluation.feedback.score,
+          isCorrect: evaluation.feedback.isCorrect,
+          normalizedAnswer: responseDe,
+          acceptedAnswer: evaluation.feedback.correctedText,
+          details: {
+            aiEvaluated: true,
+            cached: evaluation.cached,
+            fallback: evaluation.status === "fallback",
+          },
+        };
+        setAiEvaluation(evaluation);
+
+        if (evaluation.status === "fallback") {
+          setResult(gradingResult);
+          return;
+        }
+      } else if (isFixedExercise(exercise)) {
+        gradingResult = gradeFixedExercise(exercise, answer);
+        if (mobileEnv.contentSource === "supabase") {
+          await submitRemoteAttempt({
+            exerciseId: exercise.id,
+            answer,
+            gradingResult,
+            durationMs,
+            usedHint,
+            mode: isReviewSession ? "review" : "lesson",
+            idempotencyKey: idempotencyKey.current,
+            ...(reviewId ? { reviewId } : {}),
+          });
+        }
+      } else {
+        throw new Error("這個題型尚未開放作答。");
       }
+
       await recordAttempt({
         userId: profile.id,
         lessonId,
@@ -154,7 +207,7 @@ export default function ExerciseScreen() {
   }
 
   function continueSession() {
-    if (!exercise || !result) {
+    if (!exercise || !result || isFallback) {
       return;
     }
 
@@ -174,6 +227,7 @@ export default function ExerciseScreen() {
     setCurrentIndex((index) => index + 1);
     setAnswer(undefined);
     setResult(undefined);
+    setAiEvaluation(undefined);
     setUsedHint(false);
     setSaveError(undefined);
     attemptStartedAt.current = Date.now();
@@ -203,24 +257,44 @@ export default function ExerciseScreen() {
             title="題目載入失敗"
           />
         ) : !lesson || !exercise ? (
-          <StatePanel message="這堂課目前沒有可作答的固定題型。" state="empty" title="尚無題目" />
+          <StatePanel message="這堂課目前沒有可作答的題目。" state="empty" title="尚無題目" />
         ) : (
           <>
             <ProgressBar accessibilityLabel="本次課堂作答進度" percent={displayPercent} />
             <MessageBanner message={saveError ?? null} tone="error" />
             <View style={styles.promptSection}>
               <Text style={styles.instruction}>{exercise.instructionZhTw}</Text>
-              <Text selectable style={styles.prompt}>
-                {exercise.promptDe}
-              </Text>
+              {isAiEvaluatedExercise(exercise) && exercise.promptZhTw ? (
+                <>
+                  <Text selectable style={styles.promptZhTw}>
+                    {exercise.promptZhTw}
+                  </Text>
+                  <Text selectable style={styles.secondaryPrompt}>
+                    {exercise.promptDe}
+                  </Text>
+                </>
+              ) : (
+                <Text selectable style={styles.prompt}>
+                  {exercise.promptDe}
+                </Text>
+              )}
             </View>
-            <FixedExerciseInput
-              disabled={Boolean(result)}
-              exercise={exercise}
-              onChange={setAnswer}
-              value={answer}
-            />
-            {!result ? (
+            {isFixedExercise(exercise) ? (
+              <FixedExerciseInput
+                disabled={Boolean(result)}
+                exercise={exercise}
+                onChange={setAnswer}
+                value={answer}
+              />
+            ) : isAiEvaluatedExercise(exercise) ? (
+              <AiExerciseInput
+                disabled={Boolean(result) && !isFallback}
+                exercise={exercise}
+                onChange={setAnswer}
+                value={typeof answer === "string" ? answer : ""}
+              />
+            ) : null}
+            {!result || isFallback ? (
               <View style={styles.hintSection}>
                 <Pressable
                   accessibilityLabel="顯示作答提示"
@@ -236,7 +310,13 @@ export default function ExerciseScreen() {
                 ) : null}
               </View>
             ) : null}
-            {result ? (
+            {aiEvaluation ? (
+              <AiFeedbackPanel
+                cached={aiEvaluation.cached}
+                fallback={aiEvaluation.status === "fallback"}
+                feedback={aiEvaluation.feedback}
+              />
+            ) : result && isFixedExercise(exercise) ? (
               <View style={[styles.feedback, result.isCorrect ? styles.correct : styles.incorrect]}>
                 <View style={styles.feedbackHeading}>
                   {result.isCorrect ? (
@@ -266,18 +346,22 @@ export default function ExerciseScreen() {
               </View>
             ) : null}
             <PrimaryButton
-              accessibilityLabel={result ? "前往下一題或結果" : "提交答案"}
-              disabled={!result && !isExerciseAnswered(exercise, answer)}
+              accessibilityLabel={
+                isFallback ? "重新提交 AI 批改" : result ? "前往下一題或結果" : "提交答案"
+              }
+              disabled={!result && !isCurrentExerciseAnswered(exercise, answer)}
               loading={saving}
-              onPress={result ? continueSession : () => void submitAnswer()}
+              onPress={result && !isFallback ? continueSession : () => void submitAnswer()}
             >
-              {result
-                ? isReviewSession
-                  ? "完成本次複習"
-                  : currentIndex >= exercises.length - 1
-                    ? "查看課堂結果"
-                    : "下一題"
-                : "提交答案"}
+              {isFallback
+                ? "重新批改"
+                : result
+                  ? isReviewSession
+                    ? "完成本次複習"
+                    : currentIndex >= exercises.length - 1
+                      ? "查看課堂結果"
+                      : "下一題"
+                  : "提交答案"}
             </PrimaryButton>
           </>
         )}
@@ -294,8 +378,10 @@ function exerciseTypeLabel(type: string) {
     sentence_order: "句子排序",
     matching: "配對題 · 可部分得分",
     error_correction: "錯誤修正",
+    translation: "AI 翻譯批改",
+    free_response: "AI 自由回答",
   };
-  return labels[type] ?? "固定題型";
+  return labels[type] ?? "課堂題型";
 }
 
 function exerciseHint(type: string) {
@@ -306,8 +392,21 @@ function exerciseHint(type: string) {
     sentence_order: "德語主句通常讓限定動詞位於第二位置，從句則靠近句尾。",
     matching: "先完成最有把握的配對，再用剩餘項目交叉檢查。",
     error_correction: "先定位動詞、連接詞與名詞格位，再重寫完整句子。",
+    translation: "先保留原句語意，再檢查德語語序、格位與自然搭配。",
+    free_response: "先完整回應任務，再加入理由、連接詞與必要細節。",
   };
   return hints[type] ?? "先辨認題目測量的技能，再逐步檢查答案。";
+}
+
+function isCurrentExerciseAnswered(exercise: LessonExercise, answer: unknown): boolean {
+  if (isFixedExercise(exercise)) {
+    return isExerciseAnswered(exercise, answer);
+  }
+  if (isAiEvaluatedExercise(exercise) && typeof answer === "string") {
+    const length = Array.from(answer.trim()).length;
+    return length >= exercise.minimumCharacters && length <= exercise.maximumCharacters;
+  }
+  return false;
 }
 
 const styles = StyleSheet.create({
@@ -386,11 +485,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 32,
   },
+  promptZhTw: {
+    color: colorTokens.text,
+    fontSize: 20,
+    fontWeight: "700",
+    lineHeight: 30,
+  },
   promptSection: {
     borderBottomColor: colorTokens.border,
     borderBottomWidth: 1,
     gap: spacingTokens.md,
     paddingBottom: spacingTokens.lg,
+  },
+  secondaryPrompt: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 22,
   },
   pressed: {
     opacity: 0.7,

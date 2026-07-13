@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { aiEvaluationFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import {
+  AI_EVALUATED_EXERCISE_TYPES,
   ERROR_TYPES,
   EXERCISE_TYPES,
   FIXED_EXERCISE_TYPES,
@@ -40,6 +42,7 @@ export const apiErrorCodeSchema = z.enum([
   "DATABASE_ERROR",
   "AI_TIMEOUT",
   "AI_RESPONSE_INVALID",
+  "AI_NOT_CONFIGURED",
   "AUDIO_UPLOAD_FAILED",
   "CONTENT_NOT_PUBLISHED",
 ]);
@@ -186,6 +189,25 @@ export const fixedExerciseSchema = z.discriminatedUnion("type", [
   errorCorrectionExerciseSchema,
 ]);
 
+export const aiEvaluatedExerciseSchema = baseExerciseSchema
+  .extend({
+    type: z.enum(AI_EVALUATED_EXERCISE_TYPES),
+    promptZhTw: z.string().min(1).optional(),
+    responsePlaceholderZhTw: z.string().min(1),
+    minimumCharacters: z.number().int().min(1).max(2000),
+    maximumCharacters: z.number().int().min(1).max(2000),
+  })
+  .refine((exercise) => exercise.maximumCharacters >= exercise.minimumCharacters, {
+    message: "maximumCharacters must be greater than or equal to minimumCharacters",
+    path: ["maximumCharacters"],
+  })
+  .refine((exercise) => exercise.type !== "translation" || Boolean(exercise.promptZhTw), {
+    message: "translation exercises require promptZhTw",
+    path: ["promptZhTw"],
+  });
+
+export const lessonExerciseSchema = z.union([fixedExerciseSchema, aiEvaluatedExerciseSchema]);
+
 export const courseCatalogSchema = z.object({
   source: z.enum(["mock", "supabase"]),
   courses: z.array(
@@ -227,7 +249,7 @@ export const courseCatalogSchema = z.object({
                   titleZhTw: z.string().min(1),
                   type: z.enum(["instruction", "practice", "review", "quiz", "task"]),
                   orderIndex: z.number().int().nonnegative(),
-                  exercises: z.array(fixedExerciseSchema),
+                  exercises: z.array(lessonExerciseSchema),
                 }),
               ),
             }),
@@ -419,12 +441,44 @@ export const completeReviewResponseSchema = z.object({
 });
 
 export const evaluateResponseRequestSchema = z.object({
-  exerciseId: z.string().uuid(),
-  level: cefrLevelSchema,
-  promptDe: z.string().min(1),
-  responseDe: z.string().min(1),
-  idempotencyKey: z.string().min(12),
+  exerciseId: databaseUuidSchema,
+  responseDe: z.string().trim().min(1).max(2000),
+  durationMs: z.number().int().min(0).max(3_600_000),
+  usedHint: z.boolean(),
+  mode: attemptModeSchema,
+  idempotencyKey: z.string().min(12).max(200),
+  reviewId: databaseUuidSchema.optional(),
 });
+export type EvaluateResponseRequest = z.infer<typeof evaluateResponseRequestSchema>;
+
+export const evaluateResponseResponseSchema = z.object({
+  requestId: z.string().min(1),
+  status: z.enum(["completed", "fallback"]),
+  attemptId: databaseUuidSchema.nullable(),
+  feedbackId: databaseUuidSchema.nullable(),
+  feedback: aiEvaluationFeedbackSchema,
+  cached: z.boolean(),
+  model: z.string().min(1),
+  retryable: z.boolean(),
+  idempotentReplay: z.boolean(),
+  completionPercent: z.number().min(0).max(100).nullable(),
+  fallbackReason: z
+    .enum([
+      "AI_NOT_CONFIGURED",
+      "AI_TIMEOUT",
+      "AI_RESPONSE_INVALID",
+      "NETWORK_ERROR",
+      "RATE_LIMITED",
+    ])
+    .nullable(),
+  usage: z.object({
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    estimatedCost: z.number().nonnegative(),
+    latencyMs: z.number().int().nonnegative(),
+  }),
+});
+export type EvaluateResponseResponse = z.infer<typeof evaluateResponseResponseSchema>;
 
 export const evaluateWritingRequestSchema = z.object({
   submissionId: z.string().uuid(),

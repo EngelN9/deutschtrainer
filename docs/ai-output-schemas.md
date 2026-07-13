@@ -64,8 +64,8 @@ export interface AiErrorItem {
   correction: string;
   explanationZhTw: string;
   relatedSkillId: string;
-  grammarTopicId?: string;
-  vocabularyId?: string;
+  grammarTopicId: string | null;
+  vocabularyId: string | null;
 }
 ```
 
@@ -119,7 +119,9 @@ export interface AiErrorItem {
         "original",
         "correction",
         "explanationZhTw",
-        "relatedSkillId"
+        "relatedSkillId",
+        "grammarTopicId",
+        "vocabularyId"
       ],
       "properties": {
         "type": { "type": "string" },
@@ -128,8 +130,8 @@ export interface AiErrorItem {
         "correction": { "type": "string" },
         "explanationZhTw": { "type": "string" },
         "relatedSkillId": { "type": "string" },
-        "grammarTopicId": { "type": "string" },
-        "vocabularyId": { "type": "string" }
+        "grammarTopicId": { "type": ["string", "null"] },
+        "vocabularyId": { "type": ["string", "null"] }
       }
     }
   }

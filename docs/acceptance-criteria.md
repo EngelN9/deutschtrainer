@@ -85,3 +85,11 @@
 - AI 失敗時 App 不崩潰。
 - AI 成本寫入 ai_usage_logs。
 - 使用者看到繁體中文錯誤解釋。
+
+目前結果：Pass。
+
+- 本機整合測試驗證首次批改、相同 idempotency key 重播與 learner-scoped cache。
+- 兩位使用者 RLS 測試確認回饋不可跨帳號讀取；匿名使用者看不到 AI 參考答案。
+- authenticated 使用者不可直接執行 `record_ai_attempt`，所有 AI 寫入只經後端 service role。
+- 固定 provider 測試涵蓋 schema 不合法後重試、timeout、未設定 AI、快取及 24 小時額度。
+- Playwright 強制中斷一次網路請求後，App 保留原回答、顯示繁中錯誤並可成功重試。

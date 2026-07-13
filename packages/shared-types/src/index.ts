@@ -305,17 +305,30 @@ export type FixedExercise =
   | MatchingExercise
   | ErrorCorrectionExercise;
 
-export type FutureExerciseType = Exclude<ExerciseType, FixedExerciseType>;
+export const AI_EVALUATED_EXERCISE_TYPES = ["translation", "free_response"] as const;
+export type AiEvaluatedExerciseType = (typeof AI_EVALUATED_EXERCISE_TYPES)[number];
+
+export interface AiEvaluatedExercise extends BaseExercise {
+  type: AiEvaluatedExerciseType;
+  promptZhTw?: string;
+  responsePlaceholderZhTw: string;
+  minimumCharacters: number;
+  maximumCharacters: number;
+}
+
+export type LessonExercise = FixedExercise | AiEvaluatedExercise;
+
+export type FutureExerciseType = Exclude<ExerciseType, FixedExerciseType | AiEvaluatedExerciseType>;
 
 export interface FutureExercise extends BaseExercise {
   type: FutureExerciseType;
   payload: Record<string, unknown>;
 }
 
-export type Exercise = FixedExercise | FutureExercise;
+export type Exercise = FixedExercise | AiEvaluatedExercise | FutureExercise;
 
 export interface ActivityContent extends Omit<Activity, "exerciseIds"> {
-  exercises: FixedExercise[];
+  exercises: LessonExercise[];
 }
 
 export interface LessonContent extends Lesson {

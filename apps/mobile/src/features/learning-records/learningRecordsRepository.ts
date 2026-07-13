@@ -49,7 +49,7 @@ export async function submitRemoteAttempt(input: SubmitRemoteAttemptInput) {
     p_used_hint: input.usedHint,
     p_mode: input.mode,
     p_idempotency_key: input.idempotencyKey,
-    p_review_id: input.reviewId ?? null,
+    ...(input.reviewId ? { p_review_id: input.reviewId } : {}),
   });
 
   if (error) {

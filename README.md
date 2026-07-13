@@ -1,12 +1,12 @@
 # DeutschTrainer Monorepo
 
-DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic exercise grading, cross-device learning records, skill mastery, spaced review, error history, and learning analytics.
+DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic and AI-assisted exercise grading, cross-device learning records, skill mastery, spaced review, error history, and learning analytics.
 
 ## Workspace
 
 - `apps/mobile`: Expo + React Native learner app.
 - `apps/admin`: Next.js admin console foundation.
-- `apps/api`: backend boundary for local contracts and future Node/Edge handlers.
+- `apps/api`: authenticated Node API for AI evaluation and protected database writes.
 - `packages/shared-types`: shared domain models and discriminated unions.
 - `packages/validation`: Zod request, response, catalog, and exercise schemas.
 - `packages/grading`: deterministic fixed-exercise grading.
@@ -30,11 +30,13 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 pnpm install
 pnpm supabase:start
 pnpm supabase:reset
+Copy-Item .env.example .env
 Copy-Item apps/mobile/.env.example apps/mobile/.env
+pnpm dev:api
 pnpm dev:mobile
 ```
 
-Fill `apps/mobile/.env` with the local URL and anon key reported by `supabase status`. Never place a service-role key or OpenAI key in an `EXPO_PUBLIC_*` variable.
+Fill the root `.env` and `apps/mobile/.env` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` variable. Set `OPENAI_API_KEY` for real evaluation. `AI_EVALUATION_FAKE_MODE=true` enables the deterministic local fixture and must never be used in production.
 
 The mobile content source is controlled by:
 
@@ -52,6 +54,7 @@ pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm dev:api
 pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
@@ -66,6 +69,7 @@ Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, 
 - Phase 2: auth, onboarding, and protected navigation complete.
 - Phase 3: course map, lessons, six deterministic exercise types, source switching, and per-user local progress complete.
 - Phase 4: attempts, cross-device lesson progress, mastery, review scheduling, error history, and learning analytics complete.
-- Phase 5 onward: AI evaluation, detailed error classification, writing, audio, speaking, and admin workflows remain planned.
+- Phase 5: authenticated translation/free-response AI evaluation, Structured Outputs, detailed error classification, retry, learner-scoped cache, usage/cost logging, and protected answer keys complete.
+- Phase 6 onward: versioned writing, audio, speaking, and complete admin workflows remain planned.
 
-See `docs/phase-4-learning-records.md` for the current data flow, verification evidence, and known limits.
+See `docs/phase-5-ai-grading.md` for the current data flow, verification evidence, local integration command, and known limits.

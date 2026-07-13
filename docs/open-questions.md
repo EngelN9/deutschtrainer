@@ -10,15 +10,12 @@
 
 ## 2. AI 與成本
 
-- 免費使用者每日 AI 額度如何設定？
-- 第一版使用哪個 OpenAI 模型作為預設批改模型？
 - TTS 聲音要先提供幾種？是否區分男聲/女聲或地區？
 - AI 批改是否需要所有 C1/C2 輸出任務進入人工抽審？
 - AI 生成補強題目是否在 MVP 啟用，或先只做內部管理功能？
 
 ## 3. 技術
 
-- 後端採 Supabase Edge Functions 還是獨立 Node.js API？
 - monorepo 使用 pnpm workspace、Turborepo，或先採 pnpm workspace 即可？
 - 離線儲存使用 Expo SQLite、MMKV，或 React Query persistence？
 - E2E 第一版選 Maestro 還是 Detox？
@@ -36,3 +33,9 @@
 - MVP 是否需要區分免費/付費額度，即使不做訂閱付款？
 - 管理後台第一版是否需要完整匿名化學習統計，或先以種子資料與內部帳號測試？
 - 是否需要建立內容審核 SLA 或審核優先級？
+
+## 6. Phase 5 已決定
+
+- 免費 AI 回答批改採 rolling 24 小時 20 次，可由 `AI_DAILY_FREE_LIMIT` 調整。
+- 預設批改模型為可設定的 `gpt-5.6-luna`；模型與單價皆由 server-only 環境變數控制。
+- Phase 5 採獨立 Node.js API，Supabase 負責 Auth、PostgreSQL、RLS 與 transaction RPC。
