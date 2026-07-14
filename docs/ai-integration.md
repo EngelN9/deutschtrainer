@@ -15,7 +15,7 @@
 | ------------ | -------------------------------- | ------------------------ | -------------------------------- |
 | 自由回答批改 | POST /ai/evaluate-response       | AiEvaluationFeedback     | learner+exercise+answer+versions |
 | 作文批改     | POST /ai/evaluate-writing        | WritingFeedback          | no, but versioned                |
-| 生成補強練習 | POST /ai/generate-practice       | GeneratedPracticeSet     | no until approved                |
+| 生成題目草稿 | POST /admin/ai/exercise-drafts   | GeneratedExerciseDraft   | idempotent replay only           |
 | 德語 TTS     | POST /audio/text-to-speech       | TextToSpeechResult       | yes by text+voice hash           |
 | STT          | POST /audio/transcribe           | TranscriptionResult      | no                               |
 | 對話         | POST /conversations/:id/messages | ConversationTurnFeedback | no                               |
@@ -111,7 +111,7 @@ STT：
 - TTS 失敗：顯示文字稿並允許稍後重試。
 - STT 失敗：允許重新錄音或改用文字作答。
 
-## 9. Phase 5-7 實作狀態
+## 9. Phase 5-8 實作狀態
 
 - `translation` 與 `free_response` 已完成。
 - 預設模型為 server-configurable `gpt-5.6-luna`。
@@ -120,4 +120,6 @@ STT：
 - 作文已完成 save-before-provider、十項 rubric、UTF-16 行內錯誤、first/second pass reference、版本 diff、10/day rolling quota、重試與 owner delete。
 - TTS 已完成受信任 listening asset 輸入、private cache、短效 signed URL、idempotency 與 rolling quota。
 - STT 已完成 owner 錄音驗證、逐字稿、時間點、文字差異、語速、停頓、繁中回饋、免責聲明、失敗降級與 owner delete。
+- AI 題目草稿已完成內容角色驗證、三種受約束題型、Structured Output、Zod／語意重驗、retry、rolling quota、usage log 與冪等重播。
+- 生成結果不接受模型提供 UUID、status 或 review decision；成功後由 service-only RPC 固定寫成 `ai_generated + draft`。
 - 自由口說與多輪 AI 對話仍屬後續階段。

@@ -129,3 +129,22 @@
 - deterministic STT 已驗證 completed 狀態、文字差異、語速、停頓、繁中建議及「不是精確發音評分」免責聲明。
 - Phase 5、Phase 6 整合測試回歸通過；Expo Doctor 20/20，production web export 與 HTTP smoke test 通過。
 - iOS/Android 實機的麥克風權限、錄音品質、背景切換與裝置播放仍需在發行前完成 device matrix 驗證。
+
+## 10. Phase 8 驗收
+
+- learner 不可讀取草稿、版本、審核工作或進入管理工作區。
+- content_editor 只能建立、修改及送審，不可核准或發布。
+- reviewer 可核准或退回，但不可發布。
+- admin 發布前必須有相同內容版本的 approved review。
+- 每次課程或題目保存都建立不可變版本快照。
+- AI 產物必須通過 Structured Output、Zod 與題型語意驗證，且只能保存為 `ai_generated + draft`。
+- 所有核心內容的發布狀態轉換都必須寫入 `audit_logs`，並保存 admin actor 與版本。
+
+目前結果：Pass。
+
+- `supabase db reset` 已驗證 Phase 1-8 migrations 與完整 seed 可共同重建。
+- 四角色整合實測 learner save、editor approve/direct publish、reviewer publish 皆被拒絕。
+- 課程及 AI 題目均完成 draft、pending review、approved、published 流程。
+- AI 草稿在核准前發布被拒絕；相同 idempotency key 重播回傳同一題目且不增加 logical usage。
+- 兩次發布各產生一筆 `content.published` audit，actor 均為 admin profile。
+- Next.js production build 與 Admin TypeScript 檢查通過。

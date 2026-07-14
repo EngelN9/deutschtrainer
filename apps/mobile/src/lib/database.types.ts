@@ -1,6 +1,31 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       activities: {
@@ -126,6 +151,90 @@ export type Database = {
           {
             foreignKeyName: "ai_feedback_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_generation_jobs: {
+        Row: {
+          activity_id: string;
+          completed_at: string | null;
+          created_at: string;
+          error_code: string | null;
+          exercise_type: Database["public"]["Enums"]["exercise_type"];
+          id: string;
+          idempotency_key: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          model: string | null;
+          output_json: Json | null;
+          provider: string | null;
+          provider_request_id: string | null;
+          request_json: Json;
+          requested_by: string;
+          status: string;
+          target_entity_type: string;
+          target_skill_ids: string[];
+          topic_zh_tw: string;
+          updated_at: string;
+          validation_errors_json: Json;
+        };
+        Insert: {
+          activity_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          exercise_type: Database["public"]["Enums"]["exercise_type"];
+          id?: string;
+          idempotency_key: string;
+          level: Database["public"]["Enums"]["cefr_level"];
+          model?: string | null;
+          output_json?: Json | null;
+          provider?: string | null;
+          provider_request_id?: string | null;
+          request_json: Json;
+          requested_by: string;
+          status?: string;
+          target_entity_type?: string;
+          target_skill_ids: string[];
+          topic_zh_tw: string;
+          updated_at?: string;
+          validation_errors_json?: Json;
+        };
+        Update: {
+          activity_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          exercise_type?: Database["public"]["Enums"]["exercise_type"];
+          id?: string;
+          idempotency_key?: string;
+          level?: Database["public"]["Enums"]["cefr_level"];
+          model?: string | null;
+          output_json?: Json | null;
+          provider?: string | null;
+          provider_request_id?: string | null;
+          request_json?: Json;
+          requested_by?: string;
+          status?: string;
+          target_entity_type?: string;
+          target_skill_ids?: string[];
+          topic_zh_tw?: string;
+          updated_at?: string;
+          validation_errors_json?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_generation_jobs_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: false;
+            referencedRelation: "activities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_generation_jobs_requested_by_fkey";
+            columns: ["requested_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -413,6 +522,114 @@ export type Database = {
           {
             foreignKeyName: "audit_logs_actor_user_id_fkey";
             columns: ["actor_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_reviews: {
+        Row: {
+          content_version_id: string;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          request_notes: string;
+          requested_by: string;
+          review_notes: string;
+          reviewed_at: string | null;
+          reviewer_id: string | null;
+          status: string;
+        };
+        Insert: {
+          content_version_id: string;
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          request_notes?: string;
+          requested_by: string;
+          review_notes?: string;
+          reviewed_at?: string | null;
+          reviewer_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          content_version_id?: string;
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          request_notes?: string;
+          requested_by?: string;
+          review_notes?: string;
+          reviewed_at?: string | null;
+          reviewer_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_reviews_content_version_id_fkey";
+            columns: ["content_version_id"];
+            isOneToOne: false;
+            referencedRelation: "content_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_reviews_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_reviews_reviewer_id_fkey";
+            columns: ["reviewer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_versions: {
+        Row: {
+          change_summary: string;
+          created_at: string;
+          created_by: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          snapshot_json: Json;
+          source_type: Database["public"]["Enums"]["source_type"];
+          version: number;
+        };
+        Insert: {
+          change_summary?: string;
+          created_at?: string;
+          created_by?: string | null;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          snapshot_json: Json;
+          source_type?: Database["public"]["Enums"]["source_type"];
+          version: number;
+        };
+        Update: {
+          change_summary?: string;
+          created_at?: string;
+          created_by?: string | null;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          snapshot_json?: Json;
+          source_type?: Database["public"]["Enums"]["source_type"];
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_versions_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -2015,6 +2232,63 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_publish_content: {
+        Args: {
+          p_entity_id: string;
+          p_entity_type: string;
+          p_expected_version: number;
+        };
+        Returns: Json;
+      };
+      admin_record_ai_exercise_draft: {
+        Args: {
+          p_draft: Json;
+          p_job_id: string;
+          p_model: string;
+          p_provider_request_id: string;
+        };
+        Returns: Json;
+      };
+      admin_review_content: {
+        Args: {
+          p_decision: string;
+          p_review_id: string;
+          p_review_notes: string;
+        };
+        Returns: Json;
+      };
+      admin_save_course: {
+        Args: {
+          p_change_summary: string;
+          p_course_id: string;
+          p_draft: Json;
+          p_expected_version: number;
+        };
+        Returns: Json;
+      };
+      admin_save_exercise: {
+        Args: {
+          p_change_summary: string;
+          p_draft: Json;
+          p_exercise_id: string;
+          p_expected_version: number;
+        };
+        Returns: Json;
+      };
+      admin_submit_content_review: {
+        Args: {
+          p_entity_id: string;
+          p_entity_type: string;
+          p_expected_version: number;
+          p_request_notes: string;
+        };
+        Returns: Json;
+      };
+      content_course_snapshot: { Args: { p_course_id: string }; Returns: Json };
+      content_exercise_snapshot: {
+        Args: { p_exercise_id: string };
+        Returns: Json;
+      };
       current_app_role: {
         Args: never;
         Returns: Database["public"]["Enums"]["app_role"];
@@ -2922,6 +3196,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       activity_type: ["instruction", "practice", "review", "quiz", "task"],

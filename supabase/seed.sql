@@ -1,7 +1,8 @@
 insert into public.feature_flags (key, description, enabled)
 values
   ('ai_evaluation_enabled', 'Enable AI evaluation endpoints for controlled environments.', false),
-  ('offline_attempt_sync_enabled', 'Enable offline attempt sync queue.', false)
+  ('offline_attempt_sync_enabled', 'Enable offline attempt sync queue.', false),
+  ('admin_ai_generation_enabled', 'Enable review-required AI exercise drafts in the admin console.', false)
 on conflict (key) do update
 set
   description = excluded.description,

@@ -5,8 +5,8 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 ## Workspace
 
 - `apps/mobile`: Expo + React Native learner app.
-- `apps/admin`: Next.js admin console foundation.
-- `apps/api`: authenticated Node API for AI evaluation and protected database writes.
+- `apps/admin`: role-gated Next.js course, exercise, review, version, AI draft, and publishing console.
+- `apps/api`: authenticated Node API for AI evaluation, audio, content generation, and protected database writes.
 - `packages/shared-types`: shared domain models and discriminated unions.
 - `packages/validation`: Zod request, response, catalog, and exercise schemas.
 - `packages/grading`: deterministic fixed-exercise grading.
@@ -32,11 +32,13 @@ pnpm supabase:start
 pnpm supabase:reset
 Copy-Item .env.example .env
 Copy-Item apps/mobile/.env.example apps/mobile/.env
+Copy-Item apps/admin/.env.example apps/admin/.env.local
 pnpm dev:api
 pnpm dev:mobile
+pnpm dev:admin
 ```
 
-Fill the root `.env` and `apps/mobile/.env` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` variable. Set `OPENAI_API_KEY` for real evaluation. `AI_EVALUATION_FAKE_MODE=true` enables the deterministic local fixture and must never be used in production.
+Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. Set `OPENAI_API_KEY` for real evaluation and content generation. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in production.
 
 The mobile content source is controlled by:
 
@@ -59,9 +61,10 @@ pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
 pnpm --filter @deutschtrainer/api verify:audio:local
+pnpm --filter @deutschtrainer/api verify:admin:local
 ```
 
-Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
+Local mobile web is available at `http://localhost:8081`; the admin console uses `http://localhost:3000`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
 
 ## Current Scope
 
@@ -73,6 +76,6 @@ Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, 
 - Phase 5: authenticated translation/free-response AI evaluation, Structured Outputs, detailed error classification, retry, learner-scoped cache, usage/cost logging, and protected answer keys complete.
 - Phase 6: B1-C2 writing prompts, immutable versions, AI inline diagnosis, ten-dimension rubrics, rewrite/reference flow, version comparison, retry, analytics, RLS, and deletion complete.
 - Phase 7: private TTS playback, listening telemetry, protected transcripts, server-scored dictation, microphone fallback, recording/STT, assisted speaking feedback, analytics, cross-user isolation, and deletion complete.
-- Phase 8 onward: complete admin authoring/review workflows remain planned.
+- Phase 8: role-gated course and exercise editing, immutable content versions, review decisions, review-required AI drafts, admin-only publishing, and audit trails complete.
 
-See `docs/phase-7-audio-speaking.md` for the current audio flow, privacy model, verification evidence, local integration command, and known limits.
+See `docs/phase-8-admin-console.md` for the current content governance flow, role model, verification evidence, and local integration command.

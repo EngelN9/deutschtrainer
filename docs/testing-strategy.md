@@ -127,3 +127,12 @@ pnpm test
 - deterministic audio provider 產生有效 WAV 與固定 word timings，不依賴真實 OpenAI 呼叫。
 - 單元測試驗證德語 word diff、長停頓、發音限制聲明、cache hit 與 unavailable-provider fallback。
 - Web 瀏覽器需巡檢桌面與 390 px viewport 的入口、聽力、口說權限替代及分析頁，並檢查無水平溢出。
+
+## 12. Phase 8 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:admin:local` 建立 learner、content_editor、reviewer、admin 四個臨時帳號。
+- 驗證草稿保存、不可變版本、送審、核准、admin-only 發布、audit actor 與測試資料清理。
+- 驗證 learner 看不到版本，editor 不可核准／直發，reviewer 不可發布，admin 不可發布未審 AI 草稿。
+- deterministic content provider 不依賴真實 OpenAI；測試 schema invalid retry、quota、idempotency 與 draft-only persistence。
+- Next production build 必須在缺少公開環境設定時仍可預渲染；執行時顯示設定狀態而非載入 server secret。
+- 瀏覽器巡檢 1440 px 與 390 px 的登入、角色拒絕、六個工作區、長德文／UUID／JSON 及水平溢出。

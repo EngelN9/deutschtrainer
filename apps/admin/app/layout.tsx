@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DeutschTrainer Admin",
-  description: "Content and review console for the DeutschTrainer learning system.",
+  title: "DeutschTrainer 內容管理",
+  description: "DeutschTrainer 課程、題目、審核與發布管理後台。",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
