@@ -25,7 +25,7 @@
 
 - profiles：使用者可讀寫自己的 profile；admin 可管理角色。
 - course content：published 可公開讀；draft/pending_review/approved 僅內容角色。
-- attempts/progress/reviews：只允許 owner 讀取，寫入集中於驗證身分與內容關聯的 transaction RPC。
+- attempts/progress/reviews：API 先驗證 access token 並以 profile ID 篩選；寫入集中於 service-role-only transaction RPC。
 - AI feedback/usage：只允許 owner 讀取；`record_ai_attempt` 僅 service role 可執行，learner 不可繞過 API 寫入分數。
 - exercise_answers：固定題的已發布答案可供 client grading；translation/free_response 參考答案僅後端可讀。
 - writing：published prompt 公開讀；prompt rules 僅 service role；submission/version 只允許 owner 讀取，準備、批改與失敗狀態只經 service-role RPC 寫入。
@@ -59,6 +59,7 @@
 - AI 題目生成只接受 activity、level、題型、可信 skill code 與編輯 brief；模型不得提供 UUID、status 或 review decision。
 - AI 題目輸出經 Structured Output、Zod、題型一致性、德文／繁中及禁止內容檢查，成功後仍固定寫成 `ai_generated + draft`。
 - 快取 key 包含 learner、exercise/version、正規化回答、prompt/version 與 schema/version，避免跨使用者回饋洩漏。
+- 固定題 API 只接受原始答案，不接受 client 傳入 score、isCorrect 或 grading result；後端依已發布題目重新評分。
 
 ## 6. Rate Limit
 
@@ -70,6 +71,8 @@
 - STT：預設免費 10/day。
 - AI 題目草稿：內容編輯與 admin 預設 20/rolling 24h；idempotent replay 不重複計數。
 - 對話：受 scenario maximumTurns 與 daily limit 限制。
+
+Phase 9 的私人學習 API 在單一 runtime 內採每位 profile 60/min sliding window；正式多執行個體部署仍需由 gateway 或共享 rate-limit store 提供全域限制。
 
 ## 7. 隱私與資料保留
 

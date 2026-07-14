@@ -1,6 +1,6 @@
 # DeutschTrainer Monorepo
 
-DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic and AI-assisted exercise grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, private listening/speaking practice, and learning analytics.
+DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, API-backed course navigation, server-authoritative deterministic and AI-assisted grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, private listening/speaking practice, and learning analytics.
 
 ## Workspace
 
@@ -44,10 +44,10 @@ The mobile content source is controlled by:
 
 ```text
 EXPO_PUBLIC_CONTENT_SOURCE=mock
-EXPO_PUBLIC_CONTENT_SOURCE=supabase
+EXPO_PUBLIC_CONTENT_SOURCE=api
 ```
 
-Both sources return the same validated `CourseCatalog` ViewModel. `mock` runs without course-network calls; `supabase` reads the published B1-C2 seed through RLS.
+Both sources return the same validated `CourseCatalog` ViewModel. `mock` runs without course-network calls; `api` reads published B1-C2 content through the backend. The legacy `supabase` value is treated as `api` for local configuration compatibility.
 
 ## Commands
 
@@ -60,6 +60,7 @@ pnpm dev:api
 pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
+pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:admin:local
 ```
@@ -77,5 +78,6 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 6: B1-C2 writing prompts, immutable versions, AI inline diagnosis, ten-dimension rubrics, rewrite/reference flow, version comparison, retry, analytics, RLS, and deletion complete.
 - Phase 7: private TTS playback, listening telemetry, protected transcripts, server-scored dictation, microphone fallback, recording/STT, assisted speaking feedback, analytics, cross-user isolation, and deletion complete.
 - Phase 8: role-gated course and exercise editing, immutable content versions, review decisions, review-required AI drafts, admin-only publishing, and audit trails complete.
+- Phase 9: published course APIs, server-authoritative fixed grading, private progress/review APIs, per-user rate limiting, idempotent replay, and Mobile core-data API migration complete.
 
-See `docs/phase-8-admin-console.md` for the current content governance flow, role model, verification evidence, and local integration command.
+See `docs/phase-9-api-boundary.md` for the current learner-data API boundary, security model, and local integration evidence.

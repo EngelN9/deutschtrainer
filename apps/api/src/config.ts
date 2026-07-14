@@ -14,6 +14,7 @@ export interface ApiConfig {
   audioTtsDailyFreeLimit: number;
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
+  learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
 }
 
@@ -40,6 +41,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       env.AI_CONTENT_GENERATION_DAILY_FREE_LIMIT,
       20,
     ),
+    learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
   };
 }

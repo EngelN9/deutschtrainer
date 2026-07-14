@@ -148,3 +148,21 @@
 - AI 草稿在核准前發布被拒絕；相同 idempotency key 重播回傳同一題目且不增加 logical usage。
 - 兩次發布各產生一筆 `content.published` audit，actor 均為 admin profile。
 - Next.js production build 與 Admin TypeScript 檢查通過。
+
+## 11. Phase 9 驗收
+
+- `GET /courses`、`GET /courses/:id` 與 `GET /lessons/:id` 只回傳 published 內容。
+- `POST /attempts` 只接受原始答案；score、isCorrect 與 grading result 由後端建立。
+- `GET /users/me/progress` 與 `GET /users/me/reviews` 只能回傳登入者資料。
+- `POST /reviews/:id/complete` 必須驗證 review owner 並原子完成作答與複習排程。
+- 相同 learner + idempotency key 回傳第一次保存的評分，不得以不同答案覆蓋。
+- authenticated 不可直接執行 `record_fixed_attempt`。
+- Mobile 核心課程與學習紀錄不得直接操作 Supabase table/RPC。
+
+目前結果：Pass。
+
+- 公開 API 實測 4 門 B1-C2 課程、C2 篩選、course/lesson detail 與 cache header。
+- 錯誤答案由後端保存為 0 分；以正確答案重送相同 key 仍回放原始 0 分。
+- learner A 有一筆 attempt，learner B 為零；learner B 完成 A 的 review 回傳 404。
+- learner A 完成複習後舊項目為 completed 且建立下一次 scheduled review。
+- 直接 PostgREST 呼叫舊 RPC 回傳 404。

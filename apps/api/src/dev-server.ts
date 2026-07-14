@@ -24,6 +24,8 @@ import {
   UnavailableEvaluationProvider,
 } from "./evaluation/openAiEvaluationProvider";
 import { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
+import { LearningDataService } from "./learning-data/learningDataService";
+import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
 import { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
 import { WritingEvaluationService } from "./writing/writingService";
 import {
@@ -64,6 +66,10 @@ const evaluationService = new ResponseEvaluationService({
   dailyLimit: config.dailyFreeLimit,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
+});
+const learningDataService = new LearningDataService({
+  repository: new SupabaseLearningDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  privateRequestsPerMinute: config.learningApiRequestsPerMinute,
 });
 const writingRepository = new SupabaseWritingRepository(
   config.supabaseUrl,
@@ -130,6 +136,7 @@ const handleRequest = createApiHandler({
   writingService,
   audioService,
   contentGenerationService,
+  learningDataService,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&

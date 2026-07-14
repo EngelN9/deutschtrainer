@@ -2371,6 +2371,23 @@ export type Database = {
         };
         Returns: Json;
       };
+      record_fixed_attempt_service: {
+        Args: {
+          p_answer_json: Json;
+          p_duration_ms: number;
+          p_exercise_id: string;
+          p_grading_result_json: Json;
+          p_idempotency_key: string;
+          p_is_correct: boolean;
+          p_mode: Database["public"]["Enums"]["attempt_mode"];
+          p_normalized_answer_json: Json;
+          p_review_id?: string;
+          p_score: number;
+          p_used_hint: boolean;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       record_listening_activity: {
         Args: {
           p_listening_asset_id: string;
