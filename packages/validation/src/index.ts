@@ -621,6 +621,14 @@ export const writingWorkspaceSchema = z.object({
   submissions: z.array(writingSubmissionSchema),
 });
 export type WritingWorkspace = z.infer<typeof writingWorkspaceSchema>;
+export const writingWorkspaceResponseSchema = writingWorkspaceSchema;
+export type WritingWorkspaceResponse = z.infer<typeof writingWorkspaceResponseSchema>;
+
+export const deleteWritingSubmissionResponseSchema = z.object({
+  requestId: z.string().min(1),
+  deleted: z.literal(true),
+});
+export type DeleteWritingSubmissionResponse = z.infer<typeof deleteWritingSubmissionResponseSchema>;
 
 export const evaluateWritingRequestSchema = z.object({
   promptId: databaseUuidSchema,
@@ -816,6 +824,8 @@ export const audioLearningWorkspaceSchema = z.object({
   audioAssets: z.array(audioAssetSchema),
 });
 export type AudioLearningWorkspace = z.infer<typeof audioLearningWorkspaceSchema>;
+export const audioLearningWorkspaceResponseSchema = audioLearningWorkspaceSchema;
+export type AudioLearningWorkspaceResponse = z.infer<typeof audioLearningWorkspaceResponseSchema>;
 
 export const listeningActivityRequestSchema = z.object({
   listeningAssetId: databaseUuidSchema,
@@ -825,6 +835,12 @@ export const listeningActivityRequestSchema = z.object({
   transcriptViewed: z.boolean(),
 });
 export type ListeningActivityRequest = z.infer<typeof listeningActivityRequestSchema>;
+
+export const listeningActivityResponseSchema = z.object({
+  requestId: z.string().min(1),
+  attemptId: databaseUuidSchema,
+});
+export type ListeningActivityResponse = z.infer<typeof listeningActivityResponseSchema>;
 
 export const revealListeningTranscriptRequestSchema = listeningActivityRequestSchema.omit({
   transcriptViewed: true,

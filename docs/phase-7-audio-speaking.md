@@ -18,11 +18,11 @@ Speech feedback is deliberately described as STT-assisted text comparison. It is
 
 ### Listening
 
-1. Mobile reads only approved public metadata from `listening_assets`.
+1. Mobile loads approved metadata and owner attempts through `GET /users/me/audio-learning`.
 2. `POST /audio/text-to-speech` accepts an asset ID, voice, and idempotency key. Arbitrary client text is not accepted.
 3. API loads the protected transcript and TTS instructions, enforces quota, and stores generated WAV audio in the private `listening-audio` bucket.
 4. Repeated requests use a content/version/model/voice cache key and return a 15-minute signed URL.
-5. Mobile records each play through `record_listening_activity`; slow speed and transcript reveal are sticky telemetry flags.
+5. Mobile records each play through `POST /listening/activity`; the API calls a service-only atomic wrapper and keeps slow speed/transcript reveal as sticky flags.
 6. `POST /listening/reveal-transcript` returns the protected transcript only to an authenticated learner and records the reveal.
 7. `POST /listening/submit-dictation` performs server-side normalized word comparison and comprehension scoring, then stores an idempotent attempt result.
 
@@ -78,7 +78,7 @@ Start Supabase and the API in deterministic mode, export the local Supabase keys
 pnpm --filter @deutschtrainer/api verify:audio:local
 ```
 
-The script creates two temporary users and deletes them afterward. It checks protected transcripts, public metadata, TTS generation/cache/signed playback, listening telemetry, dictation replay, private upload, cross-user Storage and table RLS, transcription feedback disclaimer, cross-user delete denial, and owner hard deletion.
+The script creates two temporary users and deletes them afterward. It checks protected transcripts, public metadata, TTS generation/cache/signed playback, API listening telemetry/workspace isolation, dictation replay, private upload, cross-user Storage and table RLS, transcription feedback disclaimer, cross-user delete denial, and owner hard deletion.
 
 ## Verification Evidence
 

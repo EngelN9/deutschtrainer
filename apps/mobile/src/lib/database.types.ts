@@ -2298,6 +2298,10 @@ export type Database = {
         Args: { p_submission_id: string };
         Returns: boolean;
       };
+      delete_writing_submission_service: {
+        Args: { p_submission_id: string; p_user_id: string };
+        Returns: boolean;
+      };
       is_content_team: { Args: never; Returns: boolean };
       mark_speaking_transcription_failed: {
         Args: {
@@ -2395,6 +2399,17 @@ export type Database = {
           p_session_key: string;
           p_transcript_viewed?: boolean;
           p_used_slow_speed?: boolean;
+        };
+        Returns: string;
+      };
+      record_listening_activity_service: {
+        Args: {
+          p_listening_asset_id: string;
+          p_play_increment?: number;
+          p_session_key: string;
+          p_transcript_viewed?: boolean;
+          p_used_slow_speed?: boolean;
+          p_user_id: string;
         };
         Returns: string;
       };

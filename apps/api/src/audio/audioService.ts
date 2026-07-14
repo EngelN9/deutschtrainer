@@ -6,7 +6,10 @@ import type {
   SpeechWordTiming,
 } from "@deutschtrainer/shared-types";
 import type {
+  AudioLearningWorkspaceResponse,
   DeleteSpeakingSubmissionResponse,
+  ListeningActivityRequest,
+  ListeningActivityResponse,
   RevealListeningTranscriptRequest,
   RevealListeningTranscriptResponse,
   SubmitDictationRequest,
@@ -17,6 +20,7 @@ import type {
   TranscribeResponse,
 } from "@deutschtrainer/validation";
 import { ApiError } from "../errors";
+import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import { AudioProviderError, type AudioProviderErrorCode } from "./openAiAudioProvider";
 import type {
   AudioLearningServiceContract,
@@ -31,6 +35,8 @@ export interface AudioLearningServiceOptions {
   provider: AudioProvider;
   dailyTtsLimit: number;
   dailyTranscriptionLimit: number;
+  privateRequestsPerMinute?: number;
+  rateLimiter?: PrivateRequestRateLimiter;
   signedUrlSeconds?: number;
   now?: () => Date;
   requestId?: () => string;
@@ -40,11 +46,37 @@ export class AudioLearningService implements AudioLearningServiceContract {
   private readonly now: () => Date;
   private readonly requestId: () => string;
   private readonly signedUrlSeconds: number;
+  private readonly rateLimiter: PrivateRequestRateLimiter;
 
   constructor(private readonly options: AudioLearningServiceOptions) {
     this.now = options.now ?? (() => new Date());
     this.requestId = options.requestId ?? randomUUID;
     this.signedUrlSeconds = options.signedUrlSeconds ?? 900;
+    this.rateLimiter =
+      options.rateLimiter ??
+      new PrivateRequestRateLimiter(options.privateRequestsPerMinute ?? 60, this.now);
+  }
+
+  async getWorkspace(accessToken: string): Promise<AudioLearningWorkspaceResponse> {
+    const learner = await this.requireLearner(accessToken);
+    return this.options.repository.getWorkspace(learner.profileId);
+  }
+
+  async recordActivity(
+    accessToken: string,
+    request: ListeningActivityRequest,
+  ): Promise<ListeningActivityResponse> {
+    const requestId = this.requestId();
+    const learner = await this.requireLearner(accessToken);
+    const asset = await this.options.repository.getListeningAsset(request.listeningAssetId);
+    if (!asset) {
+      throw new ApiError("NOT_FOUND", "找不到可使用的聽力素材。", 404, false);
+    }
+    const attemptId = await this.options.repository.recordListeningActivity(
+      learner.profileId,
+      request,
+    );
+    return { requestId, attemptId };
   }
 
   async synthesize(
@@ -174,10 +206,10 @@ export class AudioLearningService implements AudioLearningServiceContract {
     if (!asset) {
       throw new ApiError("NOT_FOUND", "找不到可使用的聽力素材。", 404, false);
     }
-    const attemptId = await this.options.repository.recordListeningActivity(
-      learner.profileId,
-      request,
-    );
+    const attemptId = await this.options.repository.recordListeningActivity(learner.profileId, {
+      ...request,
+      transcriptViewed: true,
+    });
     return { requestId, attemptId, transcriptDe: asset.transcriptDe };
   }
 
@@ -440,6 +472,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
     if (!learner) {
       throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
     }
+    this.rateLimiter.assertAllowed(learner.profileId);
     return learner;
   }
 

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
+  audioLearningWorkspaceResponseSchema,
   deleteSpeakingSubmissionResponseSchema,
+  listeningActivityResponseSchema,
   revealListeningTranscriptResponseSchema,
   submitDictationResponseSchema,
   textToSpeechResponseSchema,
@@ -83,14 +85,38 @@ try {
   assert.equal(cachedTts.audioAssetId, firstTts.audioAssetId);
 
   const sessionKey = `phase7-listening-${stamp}`;
-  const activity = await learnerA.rpc("record_listening_activity", {
-    p_listening_asset_id: listeningAssetId,
-    p_session_key: sessionKey,
-    p_play_increment: 2,
-    p_used_slow_speed: true,
-    p_transcript_viewed: false,
-  });
-  assertDatabaseSuccess(activity.error, "record listening activity");
+  const activity = await post(
+    tokenA,
+    "/listening/activity",
+    {
+      listeningAssetId,
+      sessionKey,
+      playIncrement: 2,
+      usedSlowSpeed: true,
+      transcriptViewed: false,
+    },
+    listeningActivityResponseSchema,
+  );
+
+  const directActivityResponse = await fetch(
+    `${supabaseUrl}/rest/v1/rpc/record_listening_activity`,
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        authorization: `Bearer ${tokenA}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        p_listening_asset_id: listeningAssetId,
+        p_session_key: `${sessionKey}-direct`,
+        p_play_increment: 1,
+        p_used_slow_speed: false,
+        p_transcript_viewed: false,
+      }),
+    },
+  );
+  assert.ok([401, 403, 404].includes(directActivityResponse.status));
 
   const revealed = await post(
     tokenA,
@@ -176,6 +202,18 @@ try {
   assert.equal(transcription.status, "completed");
   assert.equal(transcription.feedback?.disclaimerZhTw.includes("不是精確的發音評分"), true);
 
+  const workspaceA = await getWorkspace(tokenA);
+  const workspaceB = await getWorkspace(tokenB);
+  assert.equal(workspaceA.listeningAssets.length, 4);
+  assert.equal(workspaceA.speakingPrompts.length, 4);
+  assert.equal(workspaceA.listeningAttempts.length, 1);
+  assert.equal(workspaceA.listeningAttempts[0]?.id, activity.attemptId);
+  assert.equal(workspaceA.speakingSubmissions.length, 1);
+  assert.equal(workspaceA.audioAssets.length, 1);
+  assert.equal(workspaceB.listeningAttempts.length, 0);
+  assert.equal(workspaceB.speakingSubmissions.length, 0);
+  assert.equal(workspaceB.audioAssets.length, 0);
+
   const crossUserSubmissions = await learnerB
     .from("speaking_submissions")
     .select("id")
@@ -211,6 +249,8 @@ try {
         anonymousProtectedTranscriptStatus: protectedContentResponse.status,
         generatedAudioBytes: Number(audioResponse.headers.get("content-length") ?? 0),
         ttsCacheHit: cachedTts.cached,
+        activityAttemptId: activity.attemptId,
+        authenticatedDirectActivityStatus: directActivityResponse.status,
         dictationScore: dictation.score,
         dictationReplay: dictationReplay.idempotentReplay,
         crossUserSignedUrlDenied: Boolean(crossUserSignedUrl.error),
@@ -218,6 +258,8 @@ try {
         pronunciationDisclaimer: transcription.feedback?.disclaimerZhTw,
         crossUserSubmissionRows: crossUserSubmissions.data.length,
         crossUserAudioRows: crossUserAudio.data.length,
+        workspaceListeningAttempts: workspaceA.listeningAttempts.length,
+        crossUserWorkspaceAttempts: workspaceB.listeningAttempts.length,
         crossUserDeleteStatus: crossUserDelete.status,
         recordingDeleted: deletedObject.data.length === 0,
       },
@@ -282,6 +324,16 @@ async function deleteSubmission(token: string, submissionId: string) {
     throw new Error(`Delete failed (${response.status}): ${await response.text()}`);
   }
   return deleteSpeakingSubmissionResponseSchema.parse(await response.json());
+}
+
+async function getWorkspace(token: string) {
+  const response = await fetch(`${apiBaseUrl}/users/me/audio-learning`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Audio workspace failed (${response.status}): ${await response.text()}`);
+  }
+  return audioLearningWorkspaceResponseSchema.parse(await response.json());
 }
 
 async function countRows(

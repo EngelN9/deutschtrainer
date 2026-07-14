@@ -6,7 +6,11 @@ import {
   type CefrLevel,
   type WritingType,
 } from "@deutschtrainer/shared-types";
-import { writingDiffChangeSchema } from "@deutschtrainer/validation";
+import {
+  writingDiffChangeSchema,
+  writingWorkspaceResponseSchema,
+  type WritingWorkspaceResponse,
+} from "@deutschtrainer/validation";
 import { ApiError } from "../errors";
 import type { AuthenticatedLearner } from "../evaluation/types";
 import type {
@@ -25,6 +29,54 @@ interface LoadedFeedback {
   feedbackId: string;
   feedback: WritingFeedback;
   model: string;
+}
+
+interface WritingPromptRow {
+  id: string;
+  lesson_id: string;
+  level: CefrLevel;
+  writing_type: WritingType;
+  title_zh_tw: string;
+  prompt_de: string;
+  prompt_zh_tw: string;
+  requirements_json: unknown;
+  minimum_words: number;
+  maximum_words: number;
+  estimated_minutes: number;
+  skill_ids: string[];
+  version: number;
+}
+
+interface WritingSubmissionRow {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  prompt_id: string;
+  level: CefrLevel;
+  writing_type: WritingType;
+  status: WritingWorkspaceResponse["submissions"][number]["status"];
+  current_version_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WritingVersionRow {
+  id: string;
+  submission_id: string;
+  previous_version_id: string | null;
+  version_number: number;
+  text_de: string;
+  word_count: number;
+  diff_json: unknown;
+  idempotency_key: string;
+  ai_feedback_id: string | null;
+  created_at: string;
+}
+
+interface WorkspaceFeedbackRow {
+  id: string;
+  target_id: string;
+  feedback_json: unknown;
 }
 
 export class SupabaseWritingRepository implements WritingRepository {
@@ -58,6 +110,65 @@ export class SupabaseWritingRepository implements WritingRepository {
       profileId: profileResult.data.id,
       timezone: profileResult.data.timezone,
     };
+  }
+
+  async getWorkspace(learnerId: string): Promise<WritingWorkspaceResponse> {
+    const [promptsResult, submissionsResult, versionsResult, feedbackResult] = await Promise.all([
+      this.client
+        .from("writing_prompts")
+        .select(
+          "id, lesson_id, level, writing_type, title_zh_tw, prompt_de, prompt_zh_tw, requirements_json, minimum_words, maximum_words, estimated_minutes, skill_ids, version",
+        )
+        .eq("status", "published")
+        .eq("review_status", "approved")
+        .is("deleted_at", null)
+        .order("level")
+        .limit(100),
+      this.client
+        .from("writing_submissions")
+        .select(
+          "id, user_id, lesson_id, prompt_id, level, writing_type, status, current_version_id, created_at, updated_at",
+        )
+        .eq("user_id", learnerId)
+        .order("updated_at", { ascending: false })
+        .limit(100),
+      this.client
+        .from("writing_versions")
+        .select(
+          "id, submission_id, previous_version_id, version_number, text_de, word_count, diff_json, idempotency_key, ai_feedback_id, created_at",
+        )
+        .eq("user_id", learnerId)
+        .order("version_number")
+        .limit(1000),
+      this.client
+        .from("ai_feedback")
+        .select("id, target_id, feedback_json")
+        .eq("user_id", learnerId)
+        .eq("feature", "evaluate_writing")
+        .limit(1000),
+    ]);
+    assertFirstDatabaseError(
+      [promptsResult.error, submissionsResult.error, versionsResult.error, feedbackResult.error],
+      "無法載入作文工作區。",
+    );
+
+    const feedbackByVersion = new Map(
+      ((feedbackResult.data ?? []) as WorkspaceFeedbackRow[]).map((row) => [row.target_id, row]),
+    );
+    const versionsBySubmission = groupBy(
+      (versionsResult.data ?? []) as WritingVersionRow[],
+      (row) => row.submission_id,
+    );
+    return writingWorkspaceResponseSchema.parse({
+      prompts: ((promptsResult.data ?? []) as WritingPromptRow[]).map(mapWorkspacePrompt),
+      submissions: ((submissionsResult.data ?? []) as WritingSubmissionRow[]).map((submission) =>
+        mapWorkspaceSubmission(
+          submission,
+          versionsBySubmission.get(submission.id) ?? [],
+          feedbackByVersion,
+        ),
+      ),
+    });
   }
 
   async findByIdempotency(
@@ -303,6 +414,20 @@ export class SupabaseWritingRepository implements WritingRepository {
     assertDatabaseResult(result.error, "無法保存作文 AI 成本紀錄。");
   }
 
+  async deleteSubmission(learnerId: string, submissionId: string): Promise<void> {
+    const result = await this.client.rpc("delete_writing_submission_service", {
+      p_user_id: learnerId,
+      p_submission_id: submissionId,
+    });
+    if (result.error?.code === "22023") {
+      throw new ApiError("NOT_FOUND", "找不到可刪除的作文提交紀錄。", 404, false);
+    }
+    assertDatabaseResult(result.error, "無法刪除作文與版本紀錄。");
+    if (result.data !== true) {
+      throw new ApiError("DATABASE_ERROR", "作文刪除結果不完整。", 500, true);
+    }
+  }
+
   private async loadVersionFeedback(
     learnerId: string,
     versionId: string,
@@ -341,6 +466,72 @@ export class SupabaseWritingRepository implements WritingRepository {
   }
 }
 
+function mapWorkspacePrompt(row: WritingPromptRow) {
+  return {
+    id: row.id,
+    lessonId: row.lesson_id,
+    level: row.level,
+    writingType: row.writing_type,
+    titleZhTw: row.title_zh_tw,
+    promptDe: row.prompt_de,
+    promptZhTw: row.prompt_zh_tw,
+    requirementsZhTw: readStringArray(row.requirements_json),
+    minimumWords: row.minimum_words,
+    maximumWords: row.maximum_words,
+    estimatedMinutes: row.estimated_minutes,
+    skillIds: row.skill_ids,
+    version: row.version,
+  };
+}
+
+function mapWorkspaceSubmission(
+  row: WritingSubmissionRow,
+  versions: WritingVersionRow[],
+  feedbackByVersion: Map<string, WorkspaceFeedbackRow>,
+) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    lessonId: row.lesson_id,
+    promptId: row.prompt_id,
+    level: row.level,
+    writingType: row.writing_type,
+    status: row.status,
+    ...(row.current_version_id ? { currentVersionId: row.current_version_id } : {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    versions: [...versions]
+      .sort((left, right) => left.version_number - right.version_number)
+      .map((version) => {
+        const feedback = feedbackByVersion.get(version.id);
+        return {
+          id: version.id,
+          submissionId: version.submission_id,
+          ...(version.previous_version_id
+            ? { previousVersionId: version.previous_version_id }
+            : {}),
+          versionNumber: version.version_number,
+          textDe: version.text_de,
+          wordCount: version.word_count,
+          diff: writingDiffChangeSchema.array().parse(version.diff_json),
+          idempotencyKey: version.idempotency_key,
+          ...(version.ai_feedback_id ? { feedbackId: version.ai_feedback_id } : {}),
+          ...(feedback ? { feedback: writingFeedbackSchema.parse(feedback.feedback_json) } : {}),
+          createdAt: version.created_at,
+        };
+      }),
+  };
+}
+
+function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+  for (const row of rows) {
+    const value = key(row);
+    grouped.set(value, [...(grouped.get(value) ?? []), row]);
+  }
+  return grouped;
+}
+
 function assertDatabaseResult(
   error: { code?: string; message: string } | null,
   message: string,
@@ -357,6 +548,16 @@ function assertDatabaseResult(
     );
   }
   throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+}
+
+function assertFirstDatabaseError(
+  errors: Array<{ code?: string; message: string } | null>,
+  message: string,
+): void {
+  const error = errors.find(Boolean);
+  if (error) {
+    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+  }
 }
 
 function isCefrLevel(value: string): value is CefrLevel {

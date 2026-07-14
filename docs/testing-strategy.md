@@ -145,3 +145,11 @@ pnpm test
 - 驗證 unauthenticated progress 401、跨帳號空進度、跨帳號 review 404。
 - 驗證 review 完成、下一次排程及 authenticated 直接 RPC 404。
 - 單元測試覆蓋未登入、未發布內容、authoritative grading、replay、owner review 與 rate limit。
+
+## 14. Phase 10 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:workspaces:local` 依序執行作文與聽說雙帳號整合測試。
+- 作文驗證 API workspace 的兩個不可變版本、另一位使用者零筆資料、跨帳號刪除 `404`、owner 刪除與 metadata-only usage 保留。
+- 聽說驗證 API 遙測、workspace owner filter、另一位使用者零筆 attempt/submission/audio metadata，以及 Storage RLS 與 owner deletion。
+- authenticated 直接呼叫 `delete_own_writing_submission` 與 `record_listening_activity` 必須回傳 `403/404`。
+- repository/service 單元測試驗證 owner profile 傳遞、workspace response、mutation response 與共用 rate limiter。

@@ -166,3 +166,19 @@
 - learner A 有一筆 attempt，learner B 為零；learner B 完成 A 的 review 回傳 404。
 - learner A 完成複習後舊項目為 completed 且建立下一次 scheduled review。
 - 直接 PostgREST 呼叫舊 RPC 回傳 404。
+
+## 12. Phase 10 驗收
+
+- `GET /users/me/writing` 只回傳登入者的作文 submissions、versions 與 feedback。
+- `DELETE /writing/submissions/:id` 驗證 owner；其他使用者收到 `404`。
+- `GET /users/me/audio-learning` 只回傳登入者的 listening attempts、speaking submissions 與 uploaded audio metadata。
+- `POST /listening/activity` 透過 service-role wrapper 原子累加播放次數及 sticky flags。
+- authenticated 不可直接執行 `delete_own_writing_submission` 或 `record_listening_activity`。
+- Mobile 寫作與聽說結構化 repository 不得直接操作 Supabase table/RPC。
+- 錄音 binary 可保留 owner JWT + Storage RLS 直傳，不得包含 service-role key。
+
+目前結果：Pass。
+
+- learner A 的作文 workspace 有 2 個版本，learner B submissions 為 0；跨帳號刪除回傳 404。
+- learner A 的 audio workspace 有 1 筆 listening attempt、1 筆 speaking submission 與 1 筆 owner audio metadata，learner B 均為 0。
+- 舊 authenticated 作文刪除與聽力遙測 RPC 實測回傳 `403`；service wrappers 僅 service role 有 execute privilege。

@@ -29,7 +29,7 @@ Phase 9 moves the learner app's course, fixed-attempt, progress, and review data
 - `courseRepository` calls `GET /courses` and validates the API DTO before producing `CourseCatalog`.
 - `learningRecordsRepository` calls progress, attempt, and review endpoints.
 - Mock mode retains local deterministic grading for standalone UI development.
-- Supabase client remains for Auth, owner Storage uploads, and writing/audio repositories pending their later API migration.
+- Phase 10 subsequently moved writing/audio structured repositories behind the API. Supabase client remains for Auth, onboarding/profile, and owner Storage uploads.
 
 ## Verification
 

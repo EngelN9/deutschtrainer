@@ -14,7 +14,7 @@ Phase 6 delivers a complete B1-C2 writing loop for Traditional Chinese learners:
 
 ## Request Flow
 
-1. Mobile reads only published prompt data through Supabase RLS.
+1. Mobile loads published prompts and owner submissions through `GET /users/me/writing`.
 2. Mobile sends `promptId`, optional `submissionId`, German text, duration, and idempotency key.
 3. API authenticates the Supabase access token and loads protected prompt rules with the service role.
 4. API computes the same whitespace word count enforced by PostgreSQL.
@@ -53,7 +53,7 @@ The database rejects edits to a stale current version, rewrites before current f
 - `writing_prompt_rules` has RLS enabled and no anon/authenticated policy or grant.
 - Learners can read only their own submissions, versions, feedback, and usage rows.
 - Preparation, feedback attachment, and failure-state RPCs are executable only by `service_role`.
-- `delete_own_writing_submission` verifies ownership and hard-deletes text, versions, and AI feedback. Usage metadata remains for cost/audit accounting and contains no essay text.
+- `DELETE /writing/submissions/:id` verifies ownership and calls a service-only wrapper that hard-deletes text, versions, and AI feedback. Usage metadata remains for cost/audit accounting and contains no essay text.
 - OpenAI and Supabase service-role credentials remain backend-only.
 
 ## Local Verification
@@ -64,7 +64,7 @@ Start Supabase and the API with `AI_EVALUATION_FAKE_MODE=true`, export the local
 pnpm --filter @deutschtrainer/api verify:writing:local
 ```
 
-The script creates temporary users and removes them after checking first pass, idempotent replay, second pass, version immutability, diff persistence, prompt-rule protection, cross-user RLS, RPC permissions, and deletion behavior.
+The script creates temporary users and removes them after checking first pass, idempotent replay, second pass, API workspace isolation, version immutability, diff persistence, prompt-rule protection, RPC permissions, and API deletion behavior.
 
 ## Verification Evidence
 

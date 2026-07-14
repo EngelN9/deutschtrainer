@@ -26,6 +26,7 @@ import {
 import { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
 import { LearningDataService } from "./learning-data/learningDataService";
 import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
+import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
 import { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
 import { WritingEvaluationService } from "./writing/writingService";
 import {
@@ -67,9 +68,13 @@ const evaluationService = new ResponseEvaluationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
+const privateRequestRateLimiter = new PrivateRequestRateLimiter(
+  config.learningApiRequestsPerMinute,
+  () => new Date(),
+);
 const learningDataService = new LearningDataService({
   repository: new SupabaseLearningDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
-  privateRequestsPerMinute: config.learningApiRequestsPerMinute,
+  rateLimiter: privateRequestRateLimiter,
 });
 const writingRepository = new SupabaseWritingRepository(
   config.supabaseUrl,
@@ -88,6 +93,7 @@ const writingService = new WritingEvaluationService({
   repository: writingRepository,
   provider: writingProvider,
   dailyLimit: config.writingDailyFreeLimit,
+  rateLimiter: privateRequestRateLimiter,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
@@ -110,6 +116,7 @@ const audioService = new AudioLearningService({
   provider: audioProvider,
   dailyTtsLimit: config.audioTtsDailyFreeLimit,
   dailyTranscriptionLimit: config.audioTranscriptionDailyFreeLimit,
+  rateLimiter: privateRequestRateLimiter,
 });
 const contentGenerationRepository = new SupabaseContentGenerationRepository(
   config.supabaseUrl,

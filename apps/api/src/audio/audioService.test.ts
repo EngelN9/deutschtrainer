@@ -60,6 +60,44 @@ describe("audio learning helpers", () => {
 });
 
 describe("AudioLearningService", () => {
+  it("loads an owner-scoped audio workspace through the repository", async () => {
+    const workspace = {
+      listeningAssets: [],
+      listeningAttempts: [],
+      speakingPrompts: [],
+      speakingSubmissions: [],
+      audioAssets: [],
+    };
+    const getWorkspace = jest.fn(async () => workspace);
+    const service = createService(
+      createRepository({ getWorkspace }),
+      new DeterministicAudioProvider(),
+    );
+
+    await expect(service.getWorkspace("valid-token")).resolves.toEqual(workspace);
+    expect(getWorkspace).toHaveBeenCalledWith(learner.profileId);
+  });
+
+  it("records listening telemetry without revealing the transcript", async () => {
+    const recordListeningActivity = jest.fn(async () => "2f48dbbe-2e97-4f4f-a795-d8d0cda0bfc2");
+    const service = createService(
+      createRepository({ recordListeningActivity }),
+      new DeterministicAudioProvider(),
+    );
+    const request = {
+      listeningAssetId: listeningAsset.id,
+      sessionKey: "phase10-listening-session",
+      playIncrement: 1,
+      usedSlowSpeed: true,
+      transcriptViewed: false,
+    };
+
+    const result = await service.recordActivity("valid-token", request);
+
+    expect(result.attemptId).toBe("2f48dbbe-2e97-4f4f-a795-d8d0cda0bfc2");
+    expect(recordListeningActivity).toHaveBeenCalledWith(learner.profileId, request);
+  });
+
   it("serves a private cached TTS asset without invoking the provider", async () => {
     const provider = new DeterministicAudioProvider();
     const synthesize = jest.spyOn(provider, "synthesize");
@@ -156,6 +194,13 @@ function createService(
 function createRepository(overrides: Partial<AudioRepository> = {}): AudioRepository {
   return {
     authenticate: async () => learner,
+    getWorkspace: async () => ({
+      listeningAssets: [],
+      listeningAttempts: [],
+      speakingPrompts: [],
+      speakingSubmissions: [],
+      audioAssets: [],
+    }),
     getListeningAsset: async () => listeningAsset,
     getSpeakingPrompt: async () => speakingPrompt,
     findGeneratedAudio: async () => undefined,

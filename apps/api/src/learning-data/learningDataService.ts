@@ -12,6 +12,7 @@ import type {
   SubmitAttemptResponse,
 } from "@deutschtrainer/validation";
 import { ApiError } from "../errors";
+import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import type {
   AuthenticatedLearningUser,
   LearningDataRepository,
@@ -22,19 +23,21 @@ import type {
 interface LearningDataServiceOptions {
   repository: LearningDataRepository;
   privateRequestsPerMinute?: number;
+  rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
 }
 
 export class LearningDataService implements LearningDataServiceContract {
   private readonly repository: LearningDataRepository;
-  private readonly privateRequestsPerMinute: number;
   private readonly now: () => Date;
-  private readonly requestWindows = new Map<string, number[]>();
+  private readonly rateLimiter: PrivateRequestRateLimiter;
 
   constructor(options: LearningDataServiceOptions) {
     this.repository = options.repository;
-    this.privateRequestsPerMinute = options.privateRequestsPerMinute ?? 60;
     this.now = options.now ?? (() => new Date());
+    this.rateLimiter =
+      options.rateLimiter ??
+      new PrivateRequestRateLimiter(options.privateRequestsPerMinute ?? 60, this.now);
   }
 
   async listCourses(request: CourseListRequest): Promise<CourseListResponse> {
@@ -183,20 +186,8 @@ export class LearningDataService implements LearningDataServiceContract {
     if (!learner) {
       throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
     }
-    this.assertRateLimit(learner.profileId);
+    this.rateLimiter.assertAllowed(learner.profileId);
     return learner;
-  }
-
-  private assertRateLimit(profileId: string): void {
-    const now = this.now().getTime();
-    const active = (this.requestWindows.get(profileId) ?? []).filter(
-      (timestamp) => timestamp > now - 60_000,
-    );
-    if (active.length >= this.privateRequestsPerMinute) {
-      throw new ApiError("RATE_LIMITED", "操作過於頻繁，請稍後再試。", 429, true);
-    }
-    active.push(now);
-    this.requestWindows.set(profileId, active);
   }
 }
 

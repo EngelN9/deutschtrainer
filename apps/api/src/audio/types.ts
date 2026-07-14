@@ -7,7 +7,10 @@ import type {
   SpeechWordTiming,
 } from "@deutschtrainer/shared-types";
 import type {
+  AudioLearningWorkspaceResponse,
   DeleteSpeakingSubmissionResponse,
+  ListeningActivityRequest,
+  ListeningActivityResponse,
   RevealListeningTranscriptRequest,
   RevealListeningTranscriptResponse,
   SubmitDictationRequest,
@@ -107,6 +110,7 @@ export interface AudioUsageLogInput {
 
 export interface AudioRepository {
   authenticate(accessToken: string): Promise<AuthenticatedLearner | undefined>;
+  getWorkspace(learnerId: string): Promise<AudioLearningWorkspaceResponse>;
   getListeningAsset(assetId: string): Promise<ProtectedListeningAsset | undefined>;
   getSpeakingPrompt(promptId: string): Promise<ProtectedSpeakingPrompt | undefined>;
   findGeneratedAudio(cacheKey: string): Promise<StoredGeneratedAudio | undefined>;
@@ -118,10 +122,7 @@ export interface AudioRepository {
     since: string,
   ): Promise<number>;
   recordUsage(input: AudioUsageLogInput): Promise<void>;
-  recordListeningActivity(
-    learnerId: string,
-    request: RevealListeningTranscriptRequest,
-  ): Promise<string>;
+  recordListeningActivity(learnerId: string, request: ListeningActivityRequest): Promise<string>;
   findListeningAttemptByIdempotency(
     learnerId: string,
     idempotencyKey: string,
@@ -196,6 +197,11 @@ export interface AudioProvider {
 }
 
 export interface AudioLearningServiceContract {
+  getWorkspace(accessToken: string): Promise<AudioLearningWorkspaceResponse>;
+  recordActivity(
+    accessToken: string,
+    request: ListeningActivityRequest,
+  ): Promise<ListeningActivityResponse>;
   synthesize(accessToken: string, request: TextToSpeechRequest): Promise<TextToSpeechResponse>;
   revealTranscript(
     accessToken: string,
