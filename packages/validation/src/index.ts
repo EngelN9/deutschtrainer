@@ -2,10 +2,13 @@ import { z } from "zod";
 import { aiEvaluationFeedbackSchema, writingFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import {
   AI_EVALUATED_EXERCISE_TYPES,
+  AUDIO_VOICES,
   ERROR_TYPES,
   EXERCISE_TYPES,
   FIXED_EXERCISE_TYPES,
+  LISTENING_KINDS,
   SKILL_CATEGORIES,
+  SPEAKING_SUBMISSION_STATUSES,
   SUPPORTED_LEVELS,
   WRITING_TYPES,
 } from "@deutschtrainer/shared-types";
@@ -587,15 +590,247 @@ export const generatePracticeRequestSchema = z.object({
 });
 
 export const textToSpeechRequestSchema = z.object({
-  textDe: z.string().min(1).max(3000),
-  voice: z.string().min(1),
-  idempotencyKey: z.string().min(12),
+  listeningAssetId: databaseUuidSchema,
+  voice: z.enum(AUDIO_VOICES),
+  idempotencyKey: z.string().min(12).max(200),
+});
+export type TextToSpeechRequest = z.infer<typeof textToSpeechRequestSchema>;
+
+export const textToSpeechResponseSchema = z.object({
+  requestId: z.string().min(1),
+  audioAssetId: databaseUuidSchema,
+  signedUrl: z.string().url(),
+  expiresAt: z.string().datetime({ offset: true }),
+  contentType: z.enum(["audio/wav", "audio/mpeg"]),
+  voice: z.enum(AUDIO_VOICES),
+  model: z.string().min(1),
+  cached: z.boolean(),
+});
+export type TextToSpeechResponse = z.infer<typeof textToSpeechResponseSchema>;
+
+export const listeningOptionSchema = z.object({
+  key: z.string().min(1).max(20),
+  textZhTw: z.string().min(1).max(300),
 });
 
-export const transcribeRequestSchema = z.object({
-  audioAssetId: z.string().uuid(),
-  idempotencyKey: z.string().min(12),
+export const listeningAssetSchema = z.object({
+  id: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  kind: z.enum(LISTENING_KINDS),
+  titleZhTw: z.string().min(1),
+  descriptionZhTw: z.string().min(1),
+  estimatedSeconds: z.number().int().positive().max(1800),
+  keywordHints: z.array(z.string().min(1)).max(20),
+  comprehensionQuestionZhTw: z.string().min(1),
+  comprehensionOptions: z.array(listeningOptionSchema).min(2).max(8),
+  skillIds: z.array(z.string().min(1)).min(1),
+  ttsVoice: z.enum(AUDIO_VOICES),
+  version: z.number().int().positive(),
 });
+export type ListeningAssetData = z.infer<typeof listeningAssetSchema>;
+
+export const listeningAttemptSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  listeningAssetId: databaseUuidSchema,
+  sessionKey: z.string().min(12).max(200),
+  status: z.enum(["in_progress", "completed"]),
+  playCount: z.number().int().min(0).max(1000),
+  usedSlowSpeed: z.boolean(),
+  transcriptViewed: z.boolean(),
+  dictationText: z.string().optional(),
+  dictationScore: z.number().int().min(0).max(100).optional(),
+  comprehensionAnswer: z.string().optional(),
+  comprehensionCorrect: z.boolean().optional(),
+  difficultWords: z.array(z.string().min(1)).max(100),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type ListeningAttemptData = z.infer<typeof listeningAttemptSchema>;
+
+export const speakingPromptSchema = z.object({
+  id: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  titleZhTw: z.string().min(1),
+  instructionZhTw: z.string().min(1),
+  targetDe: z.string().min(1).max(1200),
+  translationZhTw: z.string().min(1),
+  skillIds: z.array(z.string().min(1)).min(1),
+  maximumSeconds: z.number().int().min(5).max(300),
+  version: z.number().int().positive(),
+});
+export type SpeakingPromptData = z.infer<typeof speakingPromptSchema>;
+
+export const speechWordTimingSchema = z.object({
+  word: z.string().min(1),
+  startMs: z.number().int().nonnegative(),
+  endMs: z.number().int().positive(),
+});
+
+export const speechPauseSchema = z.object({
+  afterWord: z.string().min(1),
+  positionMs: z.number().int().nonnegative(),
+  durationMs: z.number().int().positive(),
+});
+
+export const speechComparisonChangeSchema = z.object({
+  kind: z.enum(["unchanged", "missing", "extra"]),
+  value: z.string().min(1),
+});
+
+export const speakingFeedbackSchema = z.object({
+  contentScore: z.number().int().min(0).max(100),
+  grammarScore: z.number().int().min(0).max(100),
+  fluencyScore: z.number().int().min(0).max(100),
+  intelligibilityScore: z.number().int().min(0).max(100),
+  wordsPerMinute: z.number().min(0).max(1000),
+  paceBand: z.enum(["slow", "balanced", "fast"]),
+  pauses: z.array(speechPauseSchema).max(100),
+  suspectedPronunciationWords: z.array(z.string().min(1)).max(100),
+  strengthsZhTw: z.array(z.string().min(1)).max(10),
+  retryAdviceZhTw: z.array(z.string().min(1)).min(1).max(10),
+  disclaimerZhTw: z.string().min(1),
+});
+export type SpeakingFeedbackData = z.infer<typeof speakingFeedbackSchema>;
+
+export const audioAssetSchema = z.object({
+  id: databaseUuidSchema,
+  ownerUserId: databaseUuidSchema.optional(),
+  listeningAssetId: databaseUuidSchema.optional(),
+  storageBucket: z.enum(["listening-audio", "speaking-audio"]),
+  storagePath: z.string().min(3).max(500),
+  sourceType: z.enum(["uploaded", "generated", "licensed"]),
+  license: z.string().min(3).max(200),
+  contentType: z.string().startsWith("audio/"),
+  durationMs: z.number().int().nonnegative().max(1_800_000),
+  voice: z.enum(AUDIO_VOICES).optional(),
+  model: z.string().min(1).optional(),
+  createdAt: z.string().datetime({ offset: true }),
+});
+export type AudioAssetData = z.infer<typeof audioAssetSchema>;
+
+export const speakingSubmissionSchema = z.object({
+  id: databaseUuidSchema,
+  userId: databaseUuidSchema,
+  speakingPromptId: databaseUuidSchema,
+  audioAssetId: databaseUuidSchema,
+  status: z.enum(SPEAKING_SUBMISSION_STATUSES),
+  transcriptDe: z.string().optional(),
+  wordTimings: z.array(speechWordTimingSchema),
+  comparison: z.array(speechComparisonChangeSchema),
+  feedback: speakingFeedbackSchema.optional(),
+  wordsPerMinute: z.number().min(0).max(1000).optional(),
+  model: z.string().min(1).optional(),
+  errorCode: z.string().min(1).optional(),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type SpeakingSubmissionData = z.infer<typeof speakingSubmissionSchema>;
+
+export const audioLearningWorkspaceSchema = z.object({
+  listeningAssets: z.array(listeningAssetSchema),
+  listeningAttempts: z.array(listeningAttemptSchema),
+  speakingPrompts: z.array(speakingPromptSchema),
+  speakingSubmissions: z.array(speakingSubmissionSchema),
+  audioAssets: z.array(audioAssetSchema),
+});
+export type AudioLearningWorkspace = z.infer<typeof audioLearningWorkspaceSchema>;
+
+export const listeningActivityRequestSchema = z.object({
+  listeningAssetId: databaseUuidSchema,
+  sessionKey: z.string().min(12).max(200),
+  playIncrement: z.number().int().min(0).max(20),
+  usedSlowSpeed: z.boolean(),
+  transcriptViewed: z.boolean(),
+});
+export type ListeningActivityRequest = z.infer<typeof listeningActivityRequestSchema>;
+
+export const revealListeningTranscriptRequestSchema = listeningActivityRequestSchema.omit({
+  transcriptViewed: true,
+});
+export type RevealListeningTranscriptRequest = z.infer<
+  typeof revealListeningTranscriptRequestSchema
+>;
+
+export const revealListeningTranscriptResponseSchema = z.object({
+  requestId: z.string().min(1),
+  attemptId: databaseUuidSchema,
+  transcriptDe: z.string().min(1),
+});
+export type RevealListeningTranscriptResponse = z.infer<
+  typeof revealListeningTranscriptResponseSchema
+>;
+
+export const submitDictationRequestSchema = z.object({
+  listeningAssetId: databaseUuidSchema,
+  sessionKey: z.string().min(12).max(200),
+  textDe: z.string().trim().min(1).max(4096),
+  comprehensionAnswer: z.string().min(1).max(20),
+  playCount: z.number().int().min(0).max(1000),
+  usedSlowSpeed: z.boolean(),
+  idempotencyKey: z.string().min(12).max(200),
+});
+export type SubmitDictationRequest = z.infer<typeof submitDictationRequestSchema>;
+
+export const submitDictationResponseSchema = z.object({
+  requestId: z.string().min(1),
+  attemptId: databaseUuidSchema,
+  transcriptDe: z.string().min(1),
+  score: z.number().int().min(0).max(100),
+  comparison: z.array(speechComparisonChangeSchema),
+  difficultWords: z.array(z.string().min(1)),
+  comprehensionCorrect: z.boolean(),
+  idempotentReplay: z.boolean(),
+});
+export type SubmitDictationResponse = z.infer<typeof submitDictationResponseSchema>;
+
+export const transcribeRequestSchema = z.object({
+  speakingPromptId: databaseUuidSchema,
+  storagePath: z
+    .string()
+    .min(39)
+    .max(500)
+    .regex(/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+$/i),
+  mimeType: z.enum([
+    "audio/m4a",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/webm",
+    "audio/wav",
+    "audio/x-m4a",
+  ]),
+  durationMs: z.number().int().min(500).max(120_000),
+  idempotencyKey: z.string().min(12).max(200),
+});
+export type TranscribeRequest = z.infer<typeof transcribeRequestSchema>;
+
+export const transcribeResponseSchema = z.object({
+  requestId: z.string().min(1),
+  submissionId: databaseUuidSchema,
+  audioAssetId: databaseUuidSchema,
+  status: z.enum(["completed", "fallback"]),
+  transcriptDe: z.string().nullable(),
+  wordTimings: z.array(speechWordTimingSchema),
+  comparison: z.array(speechComparisonChangeSchema),
+  feedback: speakingFeedbackSchema.nullable(),
+  model: z.string().min(1),
+  idempotentReplay: z.boolean(),
+  retryable: z.boolean(),
+  fallbackReason: z
+    .enum(["AI_NOT_CONFIGURED", "AI_TIMEOUT", "NETWORK_ERROR", "RATE_LIMITED"])
+    .nullable(),
+});
+export type TranscribeResponse = z.infer<typeof transcribeResponseSchema>;
+
+export const deleteSpeakingSubmissionResponseSchema = z.object({
+  requestId: z.string().min(1),
+  deleted: z.literal(true),
+});
+export type DeleteSpeakingSubmissionResponse = z.infer<
+  typeof deleteSpeakingSubmissionResponseSchema
+>;
 
 export const createConversationRequestSchema = z.object({
   scenarioId: z.string().uuid(),

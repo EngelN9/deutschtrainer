@@ -1,11 +1,21 @@
 import { randomUUID } from "node:crypto";
 import {
   apiErrorResponseSchema,
+  deleteSpeakingSubmissionResponseSchema,
   evaluateResponseRequestSchema,
   evaluateResponseResponseSchema,
   evaluateWritingRequestSchema,
   evaluateWritingResponseSchema,
+  revealListeningTranscriptRequestSchema,
+  revealListeningTranscriptResponseSchema,
+  submitDictationRequestSchema,
+  submitDictationResponseSchema,
+  textToSpeechRequestSchema,
+  textToSpeechResponseSchema,
+  transcribeRequestSchema,
+  transcribeResponseSchema,
 } from "@deutschtrainer/validation";
+import type { AudioLearningServiceContract } from "./audio/types";
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
 import type { WritingService } from "./writing/types";
@@ -13,6 +23,7 @@ import type { WritingService } from "./writing/types";
 export interface ApiHandlerOptions {
   evaluationService: EvaluationService;
   writingService: WritingService;
+  audioService: AudioLearningServiceContract;
   aiConfigured: boolean;
   requestId?: () => string;
 }
@@ -77,6 +88,85 @@ export function createApiHandler(options: ApiHandlerOptions) {
       }
     }
 
+    if (request.method === "POST" && url.pathname === "/audio/text-to-speech") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = textToSpeechRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "語音合成要求格式不正確。");
+        }
+        const result = await options.audioService.synthesize(accessToken, parsed.data);
+        return jsonResponse(textToSpeechResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/listening/reveal-transcript") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = revealListeningTranscriptRequestSchema.safeParse(
+          await readJsonBody(request),
+        );
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "逐字稿要求格式不正確。");
+        }
+        const result = await options.audioService.revealTranscript(accessToken, parsed.data);
+        return jsonResponse(revealListeningTranscriptResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/listening/submit-dictation") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = submitDictationRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "聽寫提交格式不正確。");
+        }
+        const result = await options.audioService.submitDictation(accessToken, parsed.data);
+        return jsonResponse(submitDictationResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/audio/transcribe") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = transcribeRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "錄音轉錄要求格式不正確。");
+        }
+        const result = await options.audioService.transcribe(accessToken, parsed.data);
+        return jsonResponse(transcribeResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const speakingDeleteMatch = url.pathname.match(
+      /^\/speaking\/submissions\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
+    );
+    if (request.method === "DELETE" && speakingDeleteMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.audioService.deleteSpeakingSubmission(
+          accessToken,
+          speakingDeleteMatch[1],
+        );
+        return jsonResponse(deleteSpeakingSubmissionResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
     return errorResponse(
       new ApiError("NOT_FOUND", "找不到要求的 API 路徑。", 404, false),
       createRequestId(),
@@ -86,9 +176,13 @@ export function createApiHandler(options: ApiHandlerOptions) {
 
 function readBearerToken(header: string | null): string {
   if (!header?.startsWith("Bearer ") || header.length <= 7) {
-    throw new ApiError("UNAUTHORIZED", "請先登入再使用 AI 批改。", 401, false);
+    throw new ApiError("UNAUTHORIZED", "請先登入再使用此功能。", 401, false);
   }
   return header.slice(7).trim();
+}
+
+function validationError(message: string | undefined, fallback: string): ApiError {
+  return new ApiError("VALIDATION_ERROR", message ?? fallback, 400, false);
 }
 
 async function readJsonBody(request: Request): Promise<unknown> {
@@ -126,6 +220,6 @@ function jsonResponse(payload: unknown, status: number): Response {
 function withCors(response: Response): Response {
   response.headers.set("access-control-allow-origin", "*");
   response.headers.set("access-control-allow-headers", "authorization, content-type");
-  response.headers.set("access-control-allow-methods", "GET, POST, OPTIONS");
+  response.headers.set("access-control-allow-methods", "GET, POST, DELETE, OPTIONS");
   return response;
 }

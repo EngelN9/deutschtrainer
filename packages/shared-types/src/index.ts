@@ -15,6 +15,28 @@ export const SKILL_CATEGORIES = [
 ] as const;
 export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
 
+export const LISTENING_KINDS = [
+  "sentence",
+  "dialogue",
+  "announcement",
+  "interview",
+  "news",
+  "lecture",
+  "academic",
+  "discussion",
+] as const;
+export type ListeningKind = (typeof LISTENING_KINDS)[number];
+
+export const AUDIO_VOICES = ["marin", "cedar"] as const;
+export type AudioVoice = (typeof AUDIO_VOICES)[number];
+
+export const SPEAKING_SUBMISSION_STATUSES = [
+  "transcribing",
+  "completed",
+  "transcription_failed",
+] as const;
+export type SpeakingSubmissionStatus = (typeof SPEAKING_SUBMISSION_STATUSES)[number];
+
 export const EXERCISE_TYPES = [
   "multiple_choice",
   "multiple_select",
@@ -596,21 +618,119 @@ export interface ConversationSession {
   startedAt: string;
 }
 
-export interface SpeakingSubmission {
-  id: string;
-  userId: string;
-  exerciseId: string;
-  audioAssetId: string;
-  transcriptDe: string;
-  wordsPerMinute: number;
-}
-
 export interface AudioAsset {
   id: string;
+  ownerUserId?: string;
+  listeningAssetId?: string;
+  storageBucket: "listening-audio" | "speaking-audio";
   storagePath: string;
   sourceType: "uploaded" | "generated" | "licensed";
   license: string;
+  contentType: string;
   durationMs: number;
+  voice?: AudioVoice;
+  model?: string;
+  createdAt: string;
+}
+
+export interface ListeningOption {
+  key: string;
+  textZhTw: string;
+}
+
+export interface ListeningAsset {
+  id: string;
+  lessonId: string;
+  level: CefrLevel;
+  kind: ListeningKind;
+  titleZhTw: string;
+  descriptionZhTw: string;
+  estimatedSeconds: number;
+  keywordHints: string[];
+  comprehensionQuestionZhTw: string;
+  comprehensionOptions: ListeningOption[];
+  skillIds: string[];
+  ttsVoice: AudioVoice;
+  version: number;
+}
+
+export interface ListeningAttempt {
+  id: string;
+  userId: string;
+  listeningAssetId: string;
+  sessionKey: string;
+  status: "in_progress" | "completed";
+  playCount: number;
+  usedSlowSpeed: boolean;
+  transcriptViewed: boolean;
+  dictationText?: string;
+  dictationScore?: number;
+  comprehensionAnswer?: string;
+  comprehensionCorrect?: boolean;
+  difficultWords: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SpeakingPrompt {
+  id: string;
+  lessonId: string;
+  level: CefrLevel;
+  titleZhTw: string;
+  instructionZhTw: string;
+  targetDe: string;
+  translationZhTw: string;
+  skillIds: string[];
+  maximumSeconds: number;
+  version: number;
+}
+
+export interface SpeechWordTiming {
+  word: string;
+  startMs: number;
+  endMs: number;
+}
+
+export interface SpeechPause {
+  afterWord: string;
+  positionMs: number;
+  durationMs: number;
+}
+
+export interface SpeechComparisonChange {
+  kind: "unchanged" | "missing" | "extra";
+  value: string;
+}
+
+export interface SpeakingFeedback {
+  contentScore: number;
+  grammarScore: number;
+  fluencyScore: number;
+  intelligibilityScore: number;
+  wordsPerMinute: number;
+  paceBand: "slow" | "balanced" | "fast";
+  pauses: SpeechPause[];
+  suspectedPronunciationWords: string[];
+  strengthsZhTw: string[];
+  retryAdviceZhTw: string[];
+  disclaimerZhTw: string;
+}
+
+export interface SpeakingSubmission {
+  id: string;
+  userId: string;
+  speakingPromptId: string;
+  audioAssetId: string;
+  status: SpeakingSubmissionStatus;
+  transcriptDe?: string;
+  wordTimings: SpeechWordTiming[];
+  comparison: SpeechComparisonChange[];
+  feedback?: SpeakingFeedback;
+  wordsPerMinute?: number;
+  model?: string;
+  errorCode?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ContentVersion {

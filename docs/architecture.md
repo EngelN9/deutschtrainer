@@ -192,6 +192,9 @@ AI 題型流程：
 - AIFeedback
 - ConversationScenario
 - ConversationSession
+- ListeningAsset
+- ListeningAttempt
+- SpeakingPrompt
 - SpeakingSubmission
 - AudioAsset
 - ContentVersion

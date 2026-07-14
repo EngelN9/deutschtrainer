@@ -1,6 +1,6 @@
 # DeutschTrainer Monorepo
 
-DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic and AI-assisted exercise grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, and learning analytics.
+DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, course navigation, deterministic and AI-assisted exercise grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, private listening/speaking practice, and learning analytics.
 
 ## Workspace
 
@@ -58,6 +58,7 @@ pnpm dev:api
 pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
+pnpm --filter @deutschtrainer/api verify:audio:local
 ```
 
 Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
@@ -71,6 +72,7 @@ Local mobile web is available at `http://localhost:8081`. Supabase API, Studio, 
 - Phase 4: attempts, cross-device lesson progress, mastery, review scheduling, error history, and learning analytics complete.
 - Phase 5: authenticated translation/free-response AI evaluation, Structured Outputs, detailed error classification, retry, learner-scoped cache, usage/cost logging, and protected answer keys complete.
 - Phase 6: B1-C2 writing prompts, immutable versions, AI inline diagnosis, ten-dimension rubrics, rewrite/reference flow, version comparison, retry, analytics, RLS, and deletion complete.
-- Phase 7 onward: audio, speaking, and complete admin workflows remain planned.
+- Phase 7: private TTS playback, listening telemetry, protected transcripts, server-scored dictation, microphone fallback, recording/STT, assisted speaking feedback, analytics, cross-user isolation, and deletion complete.
+- Phase 8 onward: complete admin authoring/review workflows remain planned.
 
-See `docs/phase-6-writing.md` for the current writing flow, verification evidence, local integration command, and known limits.
+See `docs/phase-7-audio-speaking.md` for the current audio flow, privacy model, verification evidence, local integration command, and known limits.

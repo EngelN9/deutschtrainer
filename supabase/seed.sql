@@ -1309,3 +1309,366 @@ drop table public._phase6_writing_prompt_seed;
 
 end;
 $phase3_seed$;
+
+insert into public.skills (
+  id,
+  code,
+  name_zh_tw,
+  name_de,
+  description_zh_tw,
+  level,
+  category,
+  mastery_threshold,
+  review_policy_json,
+  status
+)
+values
+  (
+    md5('skill:B1.listening.announcement')::uuid,
+    'B1.listening.announcement',
+    '理解生活公告',
+    'Alltagsansagen verstehen',
+    '掌握時間、行動要求與原因等關鍵資訊。',
+    'B1',
+    'listening',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:B1.speaking.clear_sentence')::uuid,
+    'B1.speaking.clear_sentence',
+    '清楚說出完整句',
+    'Vollständige Sätze sprechen',
+    '以可理解速度說出含禮貌請求的完整句子。',
+    'B1',
+    'speaking',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:B2.listening.interview')::uuid,
+    'B2.listening.interview',
+    '理解訪談重點',
+    'Interviewaussagen erfassen',
+    '從較長陳述中辨識主張、條件與結果。',
+    'B2',
+    'listening',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:B2.speaking.formal_opinion')::uuid,
+    'B2.speaking.formal_opinion',
+    '正式表達意見',
+    'Formell Stellung nehmen',
+    '使用讓步與理由形成清楚的職場立場。',
+    'B2',
+    'speaking',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:C1.listening.news_analysis')::uuid,
+    'C1.listening.news_analysis',
+    '理解分析性報導',
+    'Analytische Berichte verstehen',
+    '區分研究結果、限制與政策推論。',
+    'C1',
+    'listening',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:C1.speaking.academic_summary')::uuid,
+    'C1.speaking.academic_summary',
+    '口頭摘要研究結果',
+    'Forschung mündlich zusammenfassen',
+    '以中性且精確的語句壓縮研究資訊。',
+    'C1',
+    'speaking',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:C2.listening.academic_discussion')::uuid,
+    'C2.listening.academic_discussion',
+    '理解學術討論細節',
+    'Akademische Diskussionen erfassen',
+    '辨識含蓄保留、修辭策略與論證界線。',
+    'C2',
+    'listening',
+    80,
+    '{}',
+    'published'
+  ),
+  (
+    md5('skill:C2.speaking.nuanced_position')::uuid,
+    'C2.speaking.nuanced_position',
+    '細緻表達立場',
+    'Nuanciert Stellung nehmen',
+    '在保留不確定性的同時精確界定主張。',
+    'C2',
+    'speaking',
+    80,
+    '{}',
+    'published'
+  )
+on conflict (code) do update
+set
+  name_zh_tw = excluded.name_zh_tw,
+  name_de = excluded.name_de,
+  description_zh_tw = excluded.description_zh_tw,
+  level = excluded.level,
+  category = excluded.category,
+  mastery_threshold = excluded.mastery_threshold,
+  review_policy_json = excluded.review_policy_json,
+  status = excluded.status,
+  updated_at = now();
+
+insert into public.listening_assets (
+  id,
+  lesson_id,
+  level,
+  kind,
+  title_zh_tw,
+  description_zh_tw,
+  estimated_seconds,
+  keyword_hints_json,
+  comprehension_question_zh_tw,
+  comprehension_options_json,
+  skill_ids,
+  tts_voice,
+  source_type,
+  review_status,
+  status,
+  version
+)
+values
+  (
+    md5('deutschtrainer:listening:b1-praxis')::uuid,
+    md5('deutschtrainer:lesson:b1-gesundheit')::uuid,
+    'B1',
+    'announcement',
+    '診所更改預約通知',
+    '聽出日期、時間與對方要求你採取的行動。',
+    24,
+    '["der Termin","verschieben","zurückrufen"]',
+    '病人接下來應該做什麼？',
+    '[{"key":"a","textZhTw":"最晚星期三回電"},{"key":"b","textZhTw":"星期四直接到診所"},{"key":"c","textZhTw":"寄出新的處方"}]',
+    array['B1.listening.announcement', 'B1.interaction.appointment'],
+    'marin',
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:listening:b2-hybrid')::uuid,
+    md5('deutschtrainer:lesson:b2-arbeitsplatz')::uuid,
+    'B2',
+    'interview',
+    '混合會議的工作訪談',
+    '辨識受訪者提出的優點、必要條件與後續措施。',
+    34,
+    '["die Moderation","Unterlagen verteilen","schriftlich festhalten"]',
+    '為什麼會後要留下書面決定？',
+    '[{"key":"a","textZhTw":"為了縮短下一次會議"},{"key":"b","textZhTw":"讓缺席同事掌握進度"},{"key":"c","textZhTw":"避免事前提供資料"}]',
+    array['B2.listening.interview', 'B2.register.formal'],
+    'cedar',
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:listening:c1-mobility')::uuid,
+    md5('deutschtrainer:lesson:c1-zusammenfassung')::uuid,
+    'C1',
+    'news',
+    '城市交通研究報導',
+    '區分研究發現、資料限制與政策建議。',
+    43,
+    '["innerstädtische Mobilität","belastbare Daten","vorschnelle Schlussfolgerung"]',
+    '報導為什麼反對立刻下定論？',
+    '[{"key":"a","textZhTw":"樣本只涵蓋夏季與部分行政區"},{"key":"b","textZhTw":"研究完全沒有量化資料"},{"key":"c","textZhTw":"公共交通沒有任何變化"}]',
+    array['C1.listening.news_analysis', 'C1.reading.author_stance'],
+    'marin',
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:listening:c2-science')::uuid,
+    md5('deutschtrainer:lesson:c2-ironie')::uuid,
+    'C2',
+    'discussion',
+    '科學溝通中的確定性',
+    '辨識說話者對確定語氣的保留，以及其背後的論證界線。',
+    52,
+    '["vorläufiger Befund","kommunikative Klarheit","methodische Unsicherheit"]',
+    '說話者主張科學溝通應如何處理不確定性？',
+    '[{"key":"a","textZhTw":"完全省略限制以維持清楚"},{"key":"b","textZhTw":"清楚表達，同時保留方法上的限制"},{"key":"c","textZhTw":"只向專業人士公布研究"}]',
+    array['C2.listening.academic_discussion', 'C2.style.rhetorical_effect'],
+    'cedar',
+    'human',
+    'approved',
+    'published',
+    1
+  )
+on conflict (id) do update
+set
+  lesson_id = excluded.lesson_id,
+  level = excluded.level,
+  kind = excluded.kind,
+  title_zh_tw = excluded.title_zh_tw,
+  description_zh_tw = excluded.description_zh_tw,
+  estimated_seconds = excluded.estimated_seconds,
+  keyword_hints_json = excluded.keyword_hints_json,
+  comprehension_question_zh_tw = excluded.comprehension_question_zh_tw,
+  comprehension_options_json = excluded.comprehension_options_json,
+  skill_ids = excluded.skill_ids,
+  tts_voice = excluded.tts_voice,
+  source_type = excluded.source_type,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  updated_at = now(),
+  deleted_at = null;
+
+insert into public.listening_asset_content (
+  asset_id,
+  transcript_de,
+  comprehension_correct_option,
+  tts_instructions
+)
+values
+  (
+    md5('deutschtrainer:listening:b1-praxis')::uuid,
+    'Guten Tag, hier ist die Praxis am Stadtpark. Ihr Termin am Donnerstag um zehn Uhr muss leider verschoben werden. Bitte rufen Sie uns bis Mittwoch zurück, damit wir einen neuen Termin vereinbaren können.',
+    'a',
+    'Sprich freundlich, klar und in natürlichem Standarddeutsch wie bei einer telefonischen Nachricht.'
+  ),
+  (
+    md5('deutschtrainer:listening:b2-hybrid')::uuid,
+    'Im Gespräch erklärt die Projektleiterin, dass hybride Besprechungen zwar mehr Flexibilität ermöglichen, aber eine klare Moderation brauchen. Vor jeder Sitzung sollen die Unterlagen verteilt werden. Entscheidungen werden anschließend schriftlich festgehalten, damit auch abwesende Kolleginnen und Kollegen den Stand nachvollziehen können.',
+    'b',
+    'Sprich sachlich, gut gegliedert und in natürlichem Standarddeutsch.'
+  ),
+  (
+    md5('deutschtrainer:listening:c1-mobility')::uuid,
+    'Eine neue Untersuchung zur innerstädtischen Mobilität kommt zu dem Ergebnis, dass besser getaktete Buslinien den Autoverkehr messbar verringern können. Die Forschenden warnen jedoch vor vorschnellen Schlussfolgerungen, weil die Erhebung nur in drei Bezirken und während der Sommermonate stattfand. Für langfristige Entscheidungen seien deshalb weitere, saisonübergreifende Daten erforderlich.',
+    'a',
+    'Sprich wie in einem seriösen Radionachrichtenbeitrag, präzise und ohne dramatische Betonung.'
+  ),
+  (
+    md5('deutschtrainer:listening:c2-science')::uuid,
+    'Die Forderung nach eindeutigen Botschaften in der Wissenschaftskommunikation ist nachvollziehbar, wird aber problematisch, sobald ein vorläufiger Befund als endgültige Gewissheit erscheint. Kommunikative Klarheit bedeutet nicht, methodische Unsicherheit zu verschweigen. Sie verlangt vielmehr, Reichweite und Grenzen einer Aussage so zu markieren, dass das Publikum weder mit Vorbehalten überfrachtet noch durch falsche Sicherheit irregeführt wird.',
+    'b',
+    'Sprich ruhig, differenziert und mit feinen Akzenten auf Kontrast und Einschränkung.'
+  )
+on conflict (asset_id) do update
+set
+  transcript_de = excluded.transcript_de,
+  comprehension_correct_option = excluded.comprehension_correct_option,
+  tts_instructions = excluded.tts_instructions,
+  updated_at = now();
+
+insert into public.speaking_prompts (
+  id,
+  lesson_id,
+  level,
+  title_zh_tw,
+  instruction_zh_tw,
+  target_de,
+  translation_zh_tw,
+  skill_ids,
+  maximum_seconds,
+  source_type,
+  review_status,
+  status,
+  version
+)
+values
+  (
+    md5('deutschtrainer:speaking:b1-appointment')::uuid,
+    md5('deutschtrainer:lesson:b1-gesundheit')::uuid,
+    'B1',
+    '禮貌更改預約',
+    '先看懂句意，再以自然速度完整說出目標句。',
+    'Könnten Sie meinen Termin bitte auf Freitag verschieben, weil ich am Donnerstag arbeiten muss?',
+    '您可以把我的預約改到星期五嗎？因為我星期四必須工作。',
+    array['B1.speaking.clear_sentence', 'B1.interaction.appointment'],
+    45,
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:speaking:b2-hybrid')::uuid,
+    md5('deutschtrainer:lesson:b2-arbeitsplatz')::uuid,
+    'B2',
+    '說明混合會議立場',
+    '注意 zwar...aber 的對比與從句尾端。',
+    'Zwar bieten hybride Besprechungen mehr Flexibilität, aber sie funktionieren nur, wenn Entscheidungen klar dokumentiert werden.',
+    '混合會議雖然更有彈性，但只有在決定被清楚記錄時才能順利運作。',
+    array['B2.speaking.formal_opinion', 'B2.register.formal'],
+    55,
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:speaking:c1-research')::uuid,
+    md5('deutschtrainer:lesson:c1-zusammenfassung')::uuid,
+    'C1',
+    '口頭摘要研究限制',
+    '維持中性語氣，清楚說出研究結果與限制之間的關係。',
+    'Die Studie deutet auf einen positiven Effekt hin, lässt wegen ihrer begrenzten Stichprobe jedoch keine allgemeingültigen Schlussfolgerungen zu.',
+    '研究顯示可能有正面效果，但因樣本有限，不能得出普遍適用的結論。',
+    array['C1.speaking.academic_summary', 'C1.writing.academic_summary'],
+    65,
+    'human',
+    'approved',
+    'published',
+    1
+  ),
+  (
+    md5('deutschtrainer:speaking:c2-certainty')::uuid,
+    md5('deutschtrainer:lesson:c2-ironie')::uuid,
+    'C2',
+    '界定科學主張的確定性',
+    '用細緻但清楚的語氣保留限制，不要把暫時性發現說成定論。',
+    'Präzise Wissenschaftskommunikation sollte Unsicherheit weder dramatisieren noch kaschieren, sondern ihre Bedeutung für die Reichweite einer Aussage transparent machen.',
+    '精確的科學溝通既不應誇大也不應掩飾不確定性，而應透明說明它對主張適用範圍的影響。',
+    array['C2.speaking.nuanced_position', 'C2.style.rhetorical_effect'],
+    75,
+    'human',
+    'approved',
+    'published',
+    1
+  )
+on conflict (id) do update
+set
+  lesson_id = excluded.lesson_id,
+  level = excluded.level,
+  title_zh_tw = excluded.title_zh_tw,
+  instruction_zh_tw = excluded.instruction_zh_tw,
+  target_de = excluded.target_de,
+  translation_zh_tw = excluded.translation_zh_tw,
+  skill_ids = excluded.skill_ids,
+  maximum_seconds = excluded.maximum_seconds,
+  source_type = excluded.source_type,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  updated_at = now(),
+  deleted_at = null;
