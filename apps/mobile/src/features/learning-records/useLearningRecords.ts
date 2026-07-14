@@ -13,7 +13,7 @@ export function useLearningRecords() {
   const query = useQuery({
     queryKey: learningRecordsQueryKey(profile?.id),
     queryFn: getRemoteLearningRecords,
-    enabled: Boolean(profile && mobileEnv.contentSource === "supabase"),
+    enabled: Boolean(profile && mobileEnv.contentSource === "api"),
     staleTime: 30 * 1000,
     retry: 1,
   });

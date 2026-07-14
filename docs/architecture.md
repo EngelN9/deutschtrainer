@@ -48,7 +48,7 @@ TypeScript strict mode 必須啟用。UI 元件不得直接呼叫資料庫；資
 - 負責 UI、離線快取、表單驗證、狀態呈現與 API 呼叫。
 - 不保存 OpenAI API key 或 Supabase service role key。
 - 不直接查詢資料庫。
-- 固定題型可本地評分，但最終 Attempt 同步至後端。
+- 固定題型可先本地預覽，但後端會以受信任內容重新評分，最終 Attempt 只採後端結果。
 
 ### Admin Web
 
@@ -80,8 +80,8 @@ flowchart LR
 1. Mobile 載入 lesson 與 exercises。
 2. 使用者作答。
 3. grading package 先產生本地結果。
-4. Mobile 送出 attempt。
-5. Backend 驗證 request、重新評分或核對結果、寫入 attempt、error_records、skill_mastery、review_queue。
+4. Mobile 只送出原始答案、時間、提示使用狀態與 idempotency key。
+5. Backend 載入已發布題目、重新評分並以 transaction 寫入 attempt、error_records、skill_mastery、review_queue。
 
 AI 題型流程：
 
@@ -96,22 +96,22 @@ AI 題型流程：
 
 所有 API 需定義 request schema、response schema、權限、錯誤碼、rate limit、cache、idempotency。
 
-| Method | Path                        | Request Schema                 | Response Schema                 | 權限                             | Rate limit         | Cache            | Idempotency |
-| ------ | --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | ------------------ | ---------------- | ----------- |
-| GET    | /courses                    | CourseListRequest              | CourseListResponse              | public published                 | 120/min            | yes              | no          |
-| GET    | /courses/:courseId          | CourseDetailRequest            | CourseDetailResponse            | public published or editor draft | 120/min            | yes              | no          |
-| GET    | /lessons/:lessonId          | LessonDetailRequest            | LessonDetailResponse            | public published or editor draft | 120/min            | yes              | no          |
-| POST   | /attempts                   | SubmitAttemptRequest           | SubmitAttemptResponse           | learner self                     | 60/min             | no               | yes         |
-| GET    | /users/me/progress          | ProgressRequest                | ProgressResponse                | learner self                     | 60/min             | no               | no          |
-| GET    | /users/me/reviews           | ReviewQueueRequest             | ReviewQueueResponse             | learner self                     | 60/min             | no               | no          |
-| POST   | /reviews/:reviewId/complete | CompleteReviewRequest          | CompleteReviewResponse          | learner self                     | 60/min             | no               | yes         |
-| POST   | /ai/evaluate-response       | EvaluateResponseRequest        | EvaluateResponseResponse        | learner self                     | 20/rolling 24h     | learner scoped   | yes         |
-| POST   | /ai/evaluate-writing        | EvaluateWritingRequest         | EvaluateWritingResponse         | learner self                     | 10/day free tier   | no               | yes         |
-| POST   | /admin/ai/exercise-drafts   | GenerateExerciseDraftRequest   | GenerateExerciseDraftResponse   | content_editor or admin          | 20/rolling 24h     | replay only      | yes         |
-| POST   | /audio/text-to-speech       | TextToSpeechRequest            | TextToSpeechResponse            | learner self or editor           | 60/day free tier   | yes by text hash | yes         |
-| POST   | /audio/transcribe           | TranscribeRequest              | TranscribeResponse              | learner self                     | 30/day free tier   | no               | yes         |
-| POST   | /conversations              | CreateConversationRequest      | CreateConversationResponse      | learner self                     | 20/day free tier   | no               | yes         |
-| POST   | /conversations/:id/messages | SendConversationMessageRequest | SendConversationMessageResponse | learner self                     | scenario max turns | no               | yes         |
+| Method | Path                        | Request Schema                 | Response Schema                 | 權限                    | Rate limit         | Cache            | Idempotency |
+| ------ | --------------------------- | ------------------------------ | ------------------------------- | ----------------------- | ------------------ | ---------------- | ----------- |
+| GET    | /courses                    | CourseListRequest              | CourseListResponse              | public published        | 120/min            | yes              | no          |
+| GET    | /courses/:courseId          | CourseDetailRequest            | CourseDetailResponse            | public published        | 120/min            | yes              | no          |
+| GET    | /lessons/:lessonId          | LessonDetailRequest            | LessonDetailResponse            | public published        | 120/min            | yes              | no          |
+| POST   | /attempts                   | SubmitAttemptRequest           | SubmitAttemptResponse           | learner self            | 60/min             | no               | yes         |
+| GET    | /users/me/progress          | ProgressRequest                | ProgressResponse                | learner self            | 60/min             | no               | no          |
+| GET    | /users/me/reviews           | ReviewQueueRequest             | ReviewQueueResponse             | learner self            | 60/min             | no               | no          |
+| POST   | /reviews/:reviewId/complete | CompleteReviewRequest          | CompleteReviewResponse          | learner self            | 60/min             | no               | yes         |
+| POST   | /ai/evaluate-response       | EvaluateResponseRequest        | EvaluateResponseResponse        | learner self            | 20/rolling 24h     | learner scoped   | yes         |
+| POST   | /ai/evaluate-writing        | EvaluateWritingRequest         | EvaluateWritingResponse         | learner self            | 10/day free tier   | no               | yes         |
+| POST   | /admin/ai/exercise-drafts   | GenerateExerciseDraftRequest   | GenerateExerciseDraftResponse   | content_editor or admin | 20/rolling 24h     | replay only      | yes         |
+| POST   | /audio/text-to-speech       | TextToSpeechRequest            | TextToSpeechResponse            | learner self or editor  | 60/day free tier   | yes by text hash | yes         |
+| POST   | /audio/transcribe           | TranscribeRequest              | TranscribeResponse              | learner self            | 30/day free tier   | no               | yes         |
+| POST   | /conversations              | CreateConversationRequest      | CreateConversationResponse      | learner self            | 20/day free tier   | no               | yes         |
+| POST   | /conversations/:id/messages | SendConversationMessageRequest | SendConversationMessageResponse | learner self            | scenario max turns | no               | yes         |
 
 統一錯誤格式：
 
@@ -146,6 +146,7 @@ AI 題型流程：
 - React Hook Form + Zod 管理表單。
 - API client 只呼叫 backend；不得直接從 UI 呼叫 Supabase table。
 - DB row type、API DTO、UI ViewModel 分離。
+- Phase 9 已將課程、固定作答、進度與複習移至 API；Auth、Storage upload 與尚未遷移的作文／音訊 owner repository 仍使用 Supabase client + RLS。
 
 ## 8. 環境設定
 

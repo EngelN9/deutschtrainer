@@ -102,6 +102,9 @@ importers:
       '@deutschtrainer/ai-schemas':
         specifier: workspace:*
         version: link:../../packages/ai-schemas
+      '@deutschtrainer/grading':
+        specifier: workspace:*
+        version: link:../../packages/grading
       '@deutschtrainer/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

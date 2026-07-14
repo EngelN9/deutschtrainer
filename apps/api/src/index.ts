@@ -43,6 +43,8 @@ export {
   UnavailableEvaluationProvider,
 } from "./evaluation/openAiEvaluationProvider";
 export { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
+export { LearningDataService } from "./learning-data/learningDataService";
+export { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
 export { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
 export {
   WritingEvaluationService,

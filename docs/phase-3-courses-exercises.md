@@ -35,7 +35,7 @@ Phase 3 implements course discovery, lesson details, deterministic fixed exercis
   - error correction
 - Added exact and partial-credit grading tests.
 - Added a Zod-validated `CourseCatalog` boundary. Database rows are mapped to ViewModels before reaching UI components.
-- Added `EXPO_PUBLIC_CONTENT_SOURCE=mock|supabase` switching.
+- Added content-source switching; Phase 9 standardized the remote value as `api` while retaining legacy `supabase` compatibility.
 - Added per-user AsyncStorage progress with an awaited write before feedback or navigation.
 - Added routes:
   - `/home`
@@ -66,7 +66,7 @@ Database rows or mock fixture
   -> screens and exercise player
 ```
 
-Use `mock` for UI work without course-network calls. Use `supabase` to validate migrations, seed data, PostgREST grants, and RLS.
+Use `mock` for UI work without course-network calls. Phase 9 起使用 `api` 讀取已發布 seed；舊 `supabase` 設定值會相容轉成 `api`。
 
 ## Progress Semantics
 

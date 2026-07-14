@@ -1,10 +1,12 @@
 import { describe, expect, it } from "@jest/globals";
 import {
-  generateExerciseDraftRequestSchema,
   apiErrorResponseSchema,
+  completeReviewRequestSchema,
+  courseListResponseSchema,
   evaluateResponseRequestSchema,
   evaluateWritingRequestSchema,
   fixedExerciseSchema,
+  generateExerciseDraftRequestSchema,
   learningRecordSnapshotSchema,
   onboardingRequestSchema,
   submitAttemptRequestSchema,
@@ -62,14 +64,51 @@ describe("validation schemas", () => {
   it("rejects short idempotency keys for attempts", () => {
     const result = submitAttemptRequestSchema.safeParse({
       exerciseId: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
-      lessonId: "61a33427-3d02-4b0c-9bb8-4da705e50313",
       answer: "weil ich Deutsch lerne",
       durationMs: 2000,
       usedHint: false,
+      mode: "lesson",
       idempotencyKey: "short",
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("accepts raw fixed answers but rejects client-authored scores", () => {
+    const valid = submitAttemptRequestSchema.safeParse({
+      exerciseId: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
+      answer: "weil",
+      durationMs: 2000,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "phase9-server-grading",
+    });
+    const forged = submitAttemptRequestSchema.safeParse({
+      exerciseId: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
+      answer: "denn",
+      durationMs: 2000,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "phase9-forged-grading",
+      score: 100,
+      isCorrect: true,
+    });
+
+    expect(valid.success).toBe(true);
+    expect(forged.success).toBe(false);
+  });
+
+  it("accepts API catalog and review completion contracts", () => {
+    const catalog = courseListResponseSchema.parse({ source: "api", courses: [] });
+    const review = completeReviewRequestSchema.parse({
+      answer: "weil",
+      durationMs: 1000,
+      usedHint: false,
+      idempotencyKey: "phase9-review-contract",
+    });
+
+    expect(catalog.source).toBe("api");
+    expect(review.answer).toBe("weil");
   });
 
   it("rejects onboarding when target level is below current level", () => {

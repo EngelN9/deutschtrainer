@@ -30,7 +30,10 @@ import {
   learningRecordsQueryKey,
   useLearningRecords,
 } from "../../src/features/learning-records/useLearningRecords";
-import { submitRemoteAttempt } from "../../src/features/learning-records/learningRecordsRepository";
+import {
+  completeRemoteReview,
+  submitRemoteAttempt,
+} from "../../src/features/learning-records/learningRecordsRepository";
 import { mobileEnv } from "../../src/lib/env";
 import { toUserFacingError } from "../../src/lib/userFacingErrors";
 import { ContentScreen } from "../../src/components/ContentScreen";
@@ -164,17 +167,26 @@ export default function ExerciseScreen() {
         }
       } else if (isFixedExercise(exercise)) {
         gradingResult = gradeFixedExercise(exercise, answer);
-        if (mobileEnv.contentSource === "supabase") {
-          await submitRemoteAttempt({
-            exerciseId: exercise.id,
-            answer,
-            gradingResult,
-            durationMs,
-            usedHint,
-            mode: isReviewSession ? "review" : "lesson",
-            idempotencyKey: idempotencyKey.current,
-            ...(reviewId ? { reviewId } : {}),
-          });
+        if (mobileEnv.contentSource === "api") {
+          const remoteResult =
+            isReviewSession && reviewId
+              ? (
+                  await completeRemoteReview(reviewId, {
+                    answer,
+                    durationMs,
+                    usedHint,
+                    idempotencyKey: idempotencyKey.current,
+                  })
+                ).attempt
+              : await submitRemoteAttempt({
+                  exerciseId: exercise.id,
+                  answer,
+                  durationMs,
+                  usedHint,
+                  mode: "lesson",
+                  idempotencyKey: idempotencyKey.current,
+                });
+          gradingResult = remoteResult.gradingResult;
         }
       } else {
         throw new Error("這個題型尚未開放作答。");

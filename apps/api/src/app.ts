@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import {
   apiErrorResponseSchema,
+  completeReviewRequestSchema,
+  completeReviewResponseSchema,
+  courseDetailResponseSchema,
+  courseListRequestSchema,
+  courseListResponseSchema,
+  databaseUuidSchema,
   deleteSpeakingSubmissionResponseSchema,
   evaluateResponseRequestSchema,
   evaluateResponseResponseSchema,
@@ -8,8 +14,14 @@ import {
   evaluateWritingResponseSchema,
   generateExerciseDraftRequestSchema,
   generateExerciseDraftResponseSchema,
+  lessonDetailResponseSchema,
+  progressResponseSchema,
   revealListeningTranscriptRequestSchema,
   revealListeningTranscriptResponseSchema,
+  reviewQueueRequestSchema,
+  reviewQueueResponseSchema,
+  submitAttemptRequestSchema,
+  submitAttemptResponseSchema,
   submitDictationRequestSchema,
   submitDictationResponseSchema,
   textToSpeechRequestSchema,
@@ -21,6 +33,7 @@ import type { AudioLearningServiceContract } from "./audio/types";
 import type { ContentGenerationServiceContract } from "./content-generation/types";
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
+import type { LearningDataServiceContract } from "./learning-data/types";
 import type { WritingService } from "./writing/types";
 
 export interface ApiHandlerOptions {
@@ -28,6 +41,7 @@ export interface ApiHandlerOptions {
   writingService: WritingService;
   audioService: AudioLearningServiceContract;
   contentGenerationService: ContentGenerationServiceContract;
+  learningDataService: LearningDataServiceContract;
   aiConfigured: boolean;
   requestId?: () => string;
 }
@@ -46,6 +60,118 @@ export function createApiHandler(options: ApiHandlerOptions) {
         { status: "ok", service: "deutschtrainer-api", aiConfigured: options.aiConfigured },
         200,
       );
+    }
+
+    if (request.method === "GET" && url.pathname === "/courses") {
+      const requestId = createRequestId();
+      try {
+        const parsed = courseListRequestSchema.safeParse({
+          level: url.searchParams.get("level") ?? undefined,
+        });
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "課程篩選格式不正確。");
+        }
+        const result = await options.learningDataService.listCourses(parsed.data);
+        return jsonResponse(courseListResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const courseDetailMatch = url.pathname.match(/^\/courses\/([^/]+)$/);
+    if (request.method === "GET" && courseDetailMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const courseId = parseDatabaseUuid(courseDetailMatch[1], "課程 ID 格式不正確。");
+        const result = await options.learningDataService.getCourse(courseId);
+        return jsonResponse(courseDetailResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const lessonDetailMatch = url.pathname.match(/^\/lessons\/([^/]+)$/);
+    if (request.method === "GET" && lessonDetailMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const lessonId = parseDatabaseUuid(lessonDetailMatch[1], "課堂 ID 格式不正確。");
+        const result = await options.learningDataService.getLesson(lessonId);
+        return jsonResponse(lessonDetailResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/attempts") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = submitAttemptRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "作答提交格式不正確。");
+        }
+        const result = await options.learningDataService.submitAttempt(accessToken, parsed.data);
+        return jsonResponse(submitAttemptResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/progress") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.learningDataService.getProgress(accessToken);
+        return jsonResponse(progressResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/reviews") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = reviewQueueRequestSchema.safeParse({
+          status: url.searchParams.get("status") ?? undefined,
+          dueBefore: url.searchParams.get("dueBefore") ?? undefined,
+          limit: url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined,
+        });
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "複習篩選格式不正確。");
+        }
+        const result = await options.learningDataService.getReviews(accessToken, parsed.data);
+        return jsonResponse(reviewQueueResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const completeReviewMatch = url.pathname.match(/^\/reviews\/([^/]+)\/complete$/);
+    if (request.method === "POST" && completeReviewMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const reviewId = parseDatabaseUuid(completeReviewMatch[1], "複習項目 ID 格式不正確。");
+        const parsed = completeReviewRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "複習提交格式不正確。");
+        }
+        const result = await options.learningDataService.completeReview(
+          accessToken,
+          reviewId,
+          parsed.data,
+        );
+        return jsonResponse(completeReviewResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
     }
 
     if (request.method === "POST" && url.pathname === "/ai/evaluate-response") {
@@ -207,6 +333,14 @@ function validationError(message: string | undefined, fallback: string): ApiErro
   return new ApiError("VALIDATION_ERROR", message ?? fallback, 400, false);
 }
 
+function parseDatabaseUuid(value: string, message: string): string {
+  const parsed = databaseUuidSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new ApiError("VALIDATION_ERROR", message, 400, false);
+  }
+  return parsed.data;
+}
+
 async function readJsonBody(request: Request): Promise<unknown> {
   try {
     return (await request.json()) as unknown;
@@ -227,12 +361,16 @@ function errorResponse(error: ApiError, requestId: string): Response {
   return jsonResponse(payload, error.status);
 }
 
-function jsonResponse(payload: unknown, status: number): Response {
+function jsonResponse(
+  payload: unknown,
+  status: number,
+  options: { cacheControl?: string } = {},
+): Response {
   return withCors(
     new Response(JSON.stringify(payload), {
       status,
       headers: {
-        "cache-control": "no-store",
+        "cache-control": options.cacheControl ?? "no-store",
         "content-type": "application/json; charset=utf-8",
       },
     }),

@@ -284,141 +284,121 @@ export const aiEvaluatedExerciseSchema = baseExerciseSchema
 
 export const lessonExerciseSchema = z.union([fixedExerciseSchema, aiEvaluatedExerciseSchema]);
 
-export const courseCatalogSchema = z.object({
-  source: z.enum(["mock", "supabase"]),
-  courses: z.array(
-    z.object({
-      id: databaseUuidSchema,
-      level: cefrLevelSchema,
-      titleZhTw: z.string().min(1),
-      titleDe: z.string().min(1),
-      descriptionZhTw: z.string().min(1),
-      status: contentStatusSchema,
-      version: z.number().int().positive(),
-      units: z.array(
-        z.object({
-          id: databaseUuidSchema,
-          courseId: databaseUuidSchema,
-          titleZhTw: z.string().min(1),
-          orderIndex: z.number().int().nonnegative(),
-          status: contentStatusSchema,
-          version: z.number().int().positive(),
-          lessons: z.array(
-            z.object({
-              id: databaseUuidSchema,
-              unitId: databaseUuidSchema,
-              level: cefrLevelSchema,
-              titleZhTw: z.string().min(1),
-              estimatedMinutes: z.number().int().positive(),
-              skillCategories: z.array(skillCategorySchema).min(1),
-              prerequisiteSkillIds: z.array(z.string()),
-              learningObjectives: z.array(z.string().min(1)).min(1).max(3),
-              vocabularyTags: z.array(z.string()),
-              grammarTags: z.array(z.string()),
-              cefrDescriptor: z.string().min(1),
-              status: contentStatusSchema,
-              version: z.number().int().positive(),
-              activities: z.array(
-                z.object({
-                  id: databaseUuidSchema,
-                  lessonId: databaseUuidSchema,
-                  titleZhTw: z.string().min(1),
-                  type: z.enum(["instruction", "practice", "review", "quiz", "task"]),
-                  orderIndex: z.number().int().nonnegative(),
-                  exercises: z.array(lessonExerciseSchema),
-                }),
-              ),
-            }),
-          ),
-        }),
-      ),
-    }),
-  ),
+export const activityContentSchema = z.object({
+  id: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  titleZhTw: z.string().min(1),
+  type: z.enum(["instruction", "practice", "review", "quiz", "task"]),
+  orderIndex: z.number().int().nonnegative(),
+  exercises: z.array(lessonExerciseSchema),
 });
-export type CourseCatalogResponse = z.infer<typeof courseCatalogSchema>;
 
-export const courseSummarySchema = z.object({
-  id: z.string().uuid(),
+export const lessonContentSchema = z.object({
+  id: databaseUuidSchema,
+  unitId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  titleZhTw: z.string().min(1),
+  estimatedMinutes: z.number().int().positive(),
+  skillCategories: z.array(skillCategorySchema).min(1),
+  prerequisiteSkillIds: z.array(z.string()),
+  learningObjectives: z.array(z.string().min(1)).min(1).max(3),
+  vocabularyTags: z.array(z.string()),
+  grammarTags: z.array(z.string()),
+  cefrDescriptor: z.string().min(1),
+  status: contentStatusSchema,
+  version: z.number().int().positive(),
+  activities: z.array(activityContentSchema),
+});
+
+export const catalogUnitSchema = z.object({
+  id: databaseUuidSchema,
+  courseId: databaseUuidSchema,
+  titleZhTw: z.string().min(1),
+  orderIndex: z.number().int().nonnegative(),
+  status: contentStatusSchema,
+  version: z.number().int().positive(),
+  lessons: z.array(lessonContentSchema),
+});
+
+export const catalogCourseSchema = z.object({
+  id: databaseUuidSchema,
   level: cefrLevelSchema,
   titleZhTw: z.string().min(1),
   titleDe: z.string().min(1),
   descriptionZhTw: z.string().min(1),
-  completionPercent: z.number().min(0).max(100).optional(),
+  status: contentStatusSchema,
+  version: z.number().int().positive(),
+  units: z.array(catalogUnitSchema),
 });
 
-export const courseListRequestSchema = z.object({
-  level: cefrLevelSchema.optional(),
+export const courseCatalogSchema = z.object({
+  source: z.enum(["api", "mock", "supabase"]),
+  courses: z.array(catalogCourseSchema),
 });
-export const courseListResponseSchema = z.object({
-  courses: z.array(courseSummarySchema),
+export type CourseCatalogResponse = z.infer<typeof courseCatalogSchema>;
+
+export const courseListRequestSchema = z
+  .object({
+    level: cefrLevelSchema.optional(),
+  })
+  .strict();
+export const courseListResponseSchema = courseCatalogSchema.extend({
+  source: z.literal("api"),
 });
 export type CourseListRequest = z.infer<typeof courseListRequestSchema>;
 export type CourseListResponse = z.infer<typeof courseListResponseSchema>;
 
-export const courseDetailRequestSchema = z.object({
-  courseId: z.string().uuid(),
-});
+export const courseDetailRequestSchema = z
+  .object({
+    courseId: databaseUuidSchema,
+  })
+  .strict();
 export const courseDetailResponseSchema = z.object({
-  course: courseSummarySchema,
-  units: z.array(
-    z.object({
-      id: z.string().uuid(),
-      titleZhTw: z.string().min(1),
-      orderIndex: z.number().int().nonnegative(),
-      lessonCount: z.number().int().nonnegative(),
-    }),
-  ),
+  course: catalogCourseSchema,
 });
+export type CourseDetailResponse = z.infer<typeof courseDetailResponseSchema>;
 
-export const lessonDetailRequestSchema = z.object({
-  lessonId: z.string().uuid(),
-});
+export const lessonDetailRequestSchema = z
+  .object({
+    lessonId: databaseUuidSchema,
+  })
+  .strict();
 export const lessonDetailResponseSchema = z.object({
-  lesson: z.object({
-    id: z.string().uuid(),
-    level: cefrLevelSchema,
-    titleZhTw: z.string().min(1),
-    learningObjectives: z.array(z.string().min(1)).min(1).max(3),
-    estimatedMinutes: z.number().int().positive(),
-    activityIds: z.array(z.string().uuid()),
-  }),
+  lesson: lessonContentSchema,
 });
-
-export const submitAttemptRequestSchema = z.object({
-  exerciseId: z.string().uuid(),
-  lessonId: z.string().uuid(),
-  answer: z.unknown(),
-  durationMs: z.number().int().nonnegative(),
-  usedHint: z.boolean(),
-  idempotencyKey: z.string().min(12),
-});
-export const submitAttemptResponseSchema = z.object({
-  attemptId: z.string().uuid(),
-  score: z.number().min(0).max(100),
-  isCorrect: z.boolean(),
-  createdReviewItemIds: z.array(z.string().uuid()),
-});
-
-export const progressResponseSchema = z.object({
-  currentLevel: cefrLevelSchema,
-  targetLevel: cefrLevelSchema,
-  weeklyLearningMinutes: z.number().int().nonnegative(),
-  weakSkillIds: z.array(z.string()),
-});
-
-export const reviewQueueResponseSchema = z.object({
-  reviews: z.array(
-    z.object({
-      id: z.string().uuid(),
-      skillId: z.string(),
-      exerciseId: z.string().uuid(),
-      scheduledAt: z.string().datetime(),
-      priority: z.number().int().min(0),
-    }),
-  ),
-});
+export type LessonDetailResponse = z.infer<typeof lessonDetailResponseSchema>;
 
 export const attemptModeSchema = z.enum(["lesson", "review", "practice", "placement"]);
+
+export const fixedGradingResultSchema = z.object({
+  score: z.number().min(0).max(100),
+  isCorrect: z.boolean(),
+  normalizedAnswer: z.unknown(),
+  acceptedAnswer: z.unknown(),
+  details: z.record(z.string(), z.union([z.number(), z.string(), z.boolean()])),
+});
+
+export const submitAttemptRequestSchema = z
+  .object({
+    exerciseId: databaseUuidSchema,
+    answer: z.unknown(),
+    durationMs: z.number().int().min(0).max(3_600_000),
+    usedHint: z.boolean(),
+    mode: z.enum(["lesson", "practice", "placement"]),
+    idempotencyKey: z.string().trim().min(12).max(200),
+  })
+  .strict();
+export const submitAttemptResponseSchema = z.object({
+  attemptId: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  gradingResult: fixedGradingResultSchema,
+  completionPercent: z.number().min(0).max(100),
+  scheduledReviewCount: z.number().int().nonnegative(),
+  idempotentReplay: z.boolean(),
+});
+export type SubmitAttemptRequest = z.infer<typeof submitAttemptRequestSchema>;
+export type SubmitAttemptResponse = z.infer<typeof submitAttemptResponseSchema>;
+
 export const errorTypeSchema = z.enum(ERROR_TYPES);
 export const errorSeveritySchema = z.enum(["minor", "moderate", "major", "critical"]);
 export const reviewQueueStatusSchema = z.enum(["scheduled", "completed", "skipped", "cancelled"]);
@@ -505,16 +485,44 @@ export const learningRecordSnapshotSchema = z.object({
   lessonProgress: z.array(lessonProgressRecordSchema),
   skillNames: z.record(databaseUuidSchema, z.string().min(1)),
 });
+export type LearningRecordSnapshotResponse = z.infer<typeof learningRecordSnapshotSchema>;
 
-export const completeReviewRequestSchema = z.object({
-  reviewId: z.string().uuid(),
-  idempotencyKey: z.string().min(12),
+export const progressResponseSchema = learningRecordSnapshotSchema.extend({
+  generatedAt: z.string().datetime({ offset: true }),
 });
+export type ProgressResponse = z.infer<typeof progressResponseSchema>;
+
+export const reviewQueueRequestSchema = z
+  .object({
+    status: reviewQueueStatusSchema.optional(),
+    dueBefore: z.string().datetime({ offset: true }).optional(),
+    limit: z.number().int().min(1).max(100).default(50),
+  })
+  .strict();
+export type ReviewQueueRequest = z.infer<typeof reviewQueueRequestSchema>;
+
+export const reviewQueueResponseSchema = z.object({
+  reviews: z.array(reviewItemSchema),
+  skillNames: z.record(databaseUuidSchema, z.string().min(1)),
+});
+export type ReviewQueueResponse = z.infer<typeof reviewQueueResponseSchema>;
+
+export const completeReviewRequestSchema = z
+  .object({
+    answer: z.unknown(),
+    durationMs: z.number().int().min(0).max(3_600_000),
+    usedHint: z.boolean(),
+    idempotencyKey: z.string().trim().min(12).max(200),
+  })
+  .strict();
 export const completeReviewResponseSchema = z.object({
-  reviewId: z.string().uuid(),
+  reviewId: databaseUuidSchema,
   status: z.literal("completed"),
-  nextReviewAt: z.string().datetime().optional(),
+  attempt: submitAttemptResponseSchema,
+  nextReviewAt: z.string().datetime({ offset: true }).optional(),
 });
+export type CompleteReviewRequest = z.infer<typeof completeReviewRequestSchema>;
+export type CompleteReviewResponse = z.infer<typeof completeReviewResponseSchema>;
 
 export const evaluateResponseRequestSchema = z.object({
   exerciseId: databaseUuidSchema,

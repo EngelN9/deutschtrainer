@@ -136,3 +136,12 @@ pnpm test
 - deterministic content provider 不依賴真實 OpenAI；測試 schema invalid retry、quota、idempotency 與 draft-only persistence。
 - Next production build 必須在缺少公開環境設定時仍可預渲染；執行時顯示設定狀態而非載入 server secret。
 - 瀏覽器巡檢 1440 px 與 390 px 的登入、角色拒絕、六個工作區、長德文／UUID／JSON 及水平溢出。
+
+## 13. Phase 9 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:learning-api:local` 建立兩位臨時 learner。
+- 驗證公開課程、level filter、course/lesson detail 與 cache header。
+- 以錯誤答案驗證後端權威評分，再用正確答案重送相同 key 驗證原結果回放。
+- 驗證 unauthenticated progress 401、跨帳號空進度、跨帳號 review 404。
+- 驗證 review 完成、下一次排程及 authenticated 直接 RPC 404。
+- 單元測試覆蓋未登入、未發布內容、authoritative grading、replay、owner review 與 rate limit。

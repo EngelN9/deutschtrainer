@@ -51,7 +51,7 @@ Review time is deterministic application logic; AI does not control scheduling.
 
 ## Mobile Data Flow
 
-- `supabase` content mode treats PostgreSQL learning records as the cross-device source of truth.
+- `api` content mode treats PostgreSQL learning records behind the backend API as the cross-device source of truth。
 - `mock` content mode applies the same learning-engine rules and persists the snapshot in AsyncStorage.
 - The exercise player measures response time, records hint use, and preserves one idempotency key across a failed retry.
 - TanStack Query invalidates the learning snapshot after a successful submission.
@@ -74,7 +74,7 @@ Completed on 2026-07-13:
 
 ## Known Limits
 
-- Fixed exercise grading is deterministic in the client and its result is submitted to the RPC. Moving fixed grading behind an API boundary is recommended before competitive or certified assessment use.
+- Phase 9 已解決 client grading 信任問題：Client 只送原始答案，後端重新評分並透過 service-role-only RPC 保存。
 - Phase 4 uses `task_completion` as the generic fixed-exercise error type. Detailed linguistic classification starts in Phase 5.
 - Push notifications for scheduled reviews are not part of this phase.
 - Review intervals are the specified deterministic first version, not full SM-2.

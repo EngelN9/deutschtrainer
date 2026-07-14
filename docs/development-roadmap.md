@@ -228,3 +228,29 @@
 - Next.js 後台完成總覽、課程、題目、審核、AI 工作與操作紀錄六個工作區。
 - 四角色本機整合測試驗證 learner/editor/reviewer/admin 的拒絕與允許路徑、冪等 AI 草稿及 audit actor。
 - 詳見 `docs/phase-8-admin-console.md`。
+
+## Phase 9：核心 API 資料邊界
+
+交付：
+
+- 已發布課程、課程明細與課堂明細 API。
+- 固定題後端權威評分與 transaction 寫入。
+- 私人進度與複習 API。
+- Mobile 課程與學習紀錄 repository API 化。
+- learner 直接作答 RPC 撤權。
+
+驗收：
+
+- Client 不可傳入 score 或 isCorrect。
+- 相同 idempotency key 必須回放第一次結果。
+- 第二位使用者不可讀取進度或完成他人複習。
+- 公開內容只包含 published 資料並具有快取標頭。
+- 舊 `record_fixed_attempt` 不可由 authenticated 直接執行。
+
+目前狀態：Pass。
+
+- 七個規格端點均有獨立 Zod request/response schema。
+- API 依已發布固定題重新評分，再呼叫 service-role-only RPC 原子更新學習紀錄。
+- Mobile 不再直接查詢課程、attempt、mastery、review 或 lesson progress table。
+- 雙帳號整合測試驗證後端 0 分、冪等回放、`401`、跨帳號 `404`、下一次複習及舊 RPC `404`。
+- 詳見 `docs/phase-9-api-boundary.md`。

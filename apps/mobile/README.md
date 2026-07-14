@@ -12,8 +12,8 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 - Multiple choice, multiple select, fill blank, sentence order, matching, and error correction.
 - Deterministic grading with partial credit where applicable.
 - Per-user lesson progress persisted with AsyncStorage.
-- `mock` and `supabase` content-source adapters with Zod validation.
-- Transactional Supabase attempts with idempotent retries.
+- `mock` and backend `api` content-source adapters with Zod validation.
+- Server-authoritative fixed grading and transactional attempts with idempotent retries.
 - Cross-device lesson progress and skill mastery.
 - Deterministic spaced-review queue and review-mode exercises.
 - Traditional Chinese error history and learning analytics.
@@ -32,8 +32,8 @@ Copy-Item .env.example .env
 pnpm start
 ```
 
-Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `supabase` after starting and seeding the local Supabase stack.
+Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `api` after starting the local API and Supabase stack.
 
-AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=supabase`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
+Remote courses, progress, review, fixed grading, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
-Audio and speaking are intentionally deferred to later phases.
+Supabase remains in Mobile for authentication, owner-scoped uploads, and the writing/audio repositories that will move behind later API endpoints.

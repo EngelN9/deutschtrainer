@@ -8,7 +8,9 @@ export type ApiErrorCode =
   | "DATABASE_ERROR"
   | "AI_TIMEOUT"
   | "AI_RESPONSE_INVALID"
-  | "AI_NOT_CONFIGURED";
+  | "AI_NOT_CONFIGURED"
+  | "AUDIO_UPLOAD_FAILED"
+  | "CONTENT_NOT_PUBLISHED";
 
 export class ApiError extends Error {
   constructor(
