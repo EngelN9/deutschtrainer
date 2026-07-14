@@ -5,6 +5,137 @@ export const aiSchemaVersions = {
   evaluationFeedback: "AiEvaluationFeedback.v1",
   writingFeedback: "WritingFeedback.v1",
   speakingFeedback: "SpeakingFeedback.v1",
+  generatedExerciseDraft: "GeneratedExerciseDraft.v1",
+} as const;
+
+export const generatedExerciseOptionSchema = z
+  .object({
+    label: z.string().trim().min(1).max(12),
+    textDe: z.string().trim().min(1).max(300),
+    textZhTw: z.string().trim().min(1).max(300).nullable(),
+    isCorrect: z.boolean(),
+  })
+  .strict();
+
+export const generatedExerciseDraftSchema = z
+  .object({
+    type: z.enum(["multiple_choice", "fill_blank", "error_correction"]),
+    titleZhTw: z.string().trim().min(1).max(120),
+    instructionZhTw: z.string().trim().min(1).max(300),
+    promptDe: z.string().trim().min(1).max(800),
+    estimatedSeconds: z.number().int().min(15).max(600),
+    difficulty: z.number().int().min(1).max(5),
+    options: z.array(generatedExerciseOptionSchema).max(8),
+    acceptedAnswers: z.array(z.string().trim().min(1).max(500)).max(12),
+    explanationZhTw: z.string().trim().min(1).max(1000).nullable(),
+    validationNotes: z.array(z.string().trim().min(1).max(300)).max(8),
+    requiresHumanReview: z.literal(true),
+  })
+  .strict()
+  .superRefine((draft, context) => {
+    if (draft.type === "multiple_choice") {
+      if (draft.options.length < 2) {
+        context.addIssue({
+          code: "custom",
+          message: "multiple_choice requires at least two options",
+          path: ["options"],
+        });
+      }
+      if (draft.options.filter((option) => option.isCorrect).length !== 1) {
+        context.addIssue({
+          code: "custom",
+          message: "multiple_choice requires exactly one correct option",
+          path: ["options"],
+        });
+      }
+      if (draft.acceptedAnswers.length > 0) {
+        context.addIssue({
+          code: "custom",
+          message: "multiple_choice must not include acceptedAnswers",
+          path: ["acceptedAnswers"],
+        });
+      }
+    } else {
+      if (draft.options.length > 0) {
+        context.addIssue({
+          code: "custom",
+          message: `${draft.type} must not include options`,
+          path: ["options"],
+        });
+      }
+      if (draft.acceptedAnswers.length === 0) {
+        context.addIssue({
+          code: "custom",
+          message: `${draft.type} requires acceptedAnswers`,
+          path: ["acceptedAnswers"],
+        });
+      }
+    }
+
+    if (draft.type === "error_correction" && !draft.explanationZhTw) {
+      context.addIssue({
+        code: "custom",
+        message: "error_correction requires a Traditional Chinese explanation",
+        path: ["explanationZhTw"],
+      });
+    }
+  });
+export type GeneratedExerciseDraft = z.infer<typeof generatedExerciseDraftSchema>;
+
+export const generatedExerciseDraftJsonSchema = {
+  type: "object",
+  properties: {
+    type: {
+      type: "string",
+      enum: ["multiple_choice", "fill_blank", "error_correction"],
+    },
+    titleZhTw: { type: "string", minLength: 1, maxLength: 120 },
+    instructionZhTw: { type: "string", minLength: 1, maxLength: 300 },
+    promptDe: { type: "string", minLength: 1, maxLength: 800 },
+    estimatedSeconds: { type: "integer", minimum: 15, maximum: 600 },
+    difficulty: { type: "integer", minimum: 1, maximum: 5 },
+    options: {
+      type: "array",
+      maxItems: 8,
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string", minLength: 1, maxLength: 12 },
+          textDe: { type: "string", minLength: 1, maxLength: 300 },
+          textZhTw: { type: ["string", "null"] },
+          isCorrect: { type: "boolean" },
+        },
+        required: ["label", "textDe", "textZhTw", "isCorrect"],
+        additionalProperties: false,
+      },
+    },
+    acceptedAnswers: {
+      type: "array",
+      maxItems: 12,
+      items: { type: "string", minLength: 1, maxLength: 500 },
+    },
+    explanationZhTw: { type: ["string", "null"] },
+    validationNotes: {
+      type: "array",
+      maxItems: 8,
+      items: { type: "string", minLength: 1, maxLength: 300 },
+    },
+    requiresHumanReview: { type: "boolean", const: true },
+  },
+  required: [
+    "type",
+    "titleZhTw",
+    "instructionZhTw",
+    "promptDe",
+    "estimatedSeconds",
+    "difficulty",
+    "options",
+    "acceptedAnswers",
+    "explanationZhTw",
+    "validationNotes",
+    "requiresHumanReview",
+  ],
+  additionalProperties: false,
 } as const;
 
 export const aiErrorItemSchema = z

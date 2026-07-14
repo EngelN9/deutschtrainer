@@ -1,6 +1,11 @@
 import { z } from "zod";
-import { aiEvaluationFeedbackSchema, writingFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import {
+  aiEvaluationFeedbackSchema,
+  generatedExerciseDraftSchema,
+  writingFeedbackSchema,
+} from "@deutschtrainer/ai-schemas";
+import {
+  AI_GENERATED_EXERCISE_TYPES,
   AI_EVALUATED_EXERCISE_TYPES,
   AUDIO_VOICES,
   ERROR_TYPES,
@@ -29,6 +34,72 @@ export const contentStatusSchema = z.enum([
   "rejected",
   "archived",
 ]);
+
+export const managedContentEntityTypeSchema = z.enum(["course", "exercise"]);
+
+export const adminCourseDraftSchema = z.object({
+  level: cefrLevelSchema,
+  titleZhTw: z.string().trim().min(1).max(120),
+  titleDe: z.string().trim().min(1).max(120),
+  descriptionZhTw: z.string().trim().min(1).max(1000),
+});
+export type AdminCourseDraft = z.infer<typeof adminCourseDraftSchema>;
+
+export const adminExerciseOptionDraftSchema = z.object({
+  id: databaseUuidSchema,
+  label: z.string().trim().min(1).max(12),
+  textDe: z.string().trim().min(1).max(300),
+  textZhTw: z.string().trim().max(300).optional(),
+  orderIndex: z.number().int().nonnegative(),
+  isCorrect: z.boolean(),
+  metadataJson: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const adminExerciseDraftSchema = z.object({
+  activityId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  type: exerciseTypeSchema,
+  title: z.string().trim().min(1).max(120),
+  instructionZhTw: z.string().trim().min(1).max(300),
+  promptDe: z.string().trim().min(1).max(1000),
+  payloadJson: z.record(z.string(), z.unknown()),
+  skillIds: z.array(z.string().trim().min(1)).min(1).max(12),
+  grammarTopicIds: z.array(z.string().trim().min(1)).max(12),
+  vocabularyIds: z.array(z.string().trim().min(1)).max(20),
+  estimatedSeconds: z.number().int().min(1).max(3600),
+  difficulty: z.number().int().min(1).max(5),
+  sourceType: z.enum(["human", "ai_assisted"]),
+  orderIndex: z.number().int().nonnegative(),
+  options: z.array(adminExerciseOptionDraftSchema).max(12),
+  answerJson: z.record(z.string(), z.unknown()),
+  gradingPolicyJson: z.record(z.string(), z.unknown()),
+  explanationZhTw: z.string().trim().max(1000),
+});
+export type AdminExerciseDraft = z.infer<typeof adminExerciseDraftSchema>;
+
+export const generateExerciseDraftRequestSchema = z.object({
+  activityId: databaseUuidSchema,
+  level: cefrLevelSchema,
+  type: z.enum(AI_GENERATED_EXERCISE_TYPES),
+  topicZhTw: z.string().trim().min(2).max(160),
+  targetSkillIds: z.array(z.string().trim().min(1)).min(1).max(8),
+  instructionsZhTw: z.string().trim().max(1000),
+  orderIndex: z.number().int().nonnegative(),
+  idempotencyKey: z.string().trim().min(12).max(200),
+});
+export type GenerateExerciseDraftRequest = z.infer<typeof generateExerciseDraftRequestSchema>;
+
+export const generateExerciseDraftResponseSchema = z.object({
+  jobId: databaseUuidSchema,
+  exerciseId: databaseUuidSchema,
+  contentVersionId: databaseUuidSchema,
+  status: z.literal("draft"),
+  reviewStatus: z.literal("draft"),
+  sourceType: z.literal("ai_generated"),
+  draft: generatedExerciseDraftSchema,
+  idempotentReplay: z.boolean(),
+});
+export type GenerateExerciseDraftResponse = z.infer<typeof generateExerciseDraftResponseSchema>;
 
 const cefrLevelRank = {
   B1: 1,

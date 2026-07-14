@@ -64,6 +64,15 @@ export type SourceType = "human" | "ai_generated" | "ai_assisted";
 export type ReviewStatus = "draft" | "pending_review" | "approved" | "rejected";
 export type ContentStatus =
   "draft" | "pending_review" | "approved" | "published" | "rejected" | "archived";
+export type ContentTeamRole = "content_editor" | "reviewer" | "admin";
+export type ManagedContentEntityType = "course" | "exercise";
+
+export const AI_GENERATED_EXERCISE_TYPES = [
+  "multiple_choice",
+  "fill_blank",
+  "error_correction",
+] as const;
+export type AiGeneratedExerciseType = (typeof AI_GENERATED_EXERCISE_TYPES)[number];
 
 export const ERROR_TYPES = [
   "spelling",

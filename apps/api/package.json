@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "verify:local": "tsx scripts/verify-local-e2e.ts",
     "verify:writing:local": "tsx scripts/verify-writing-e2e.ts",
-    "verify:audio:local": "tsx scripts/verify-audio-e2e.ts"
+    "verify:audio:local": "tsx scripts/verify-audio-e2e.ts",
+    "verify:admin:local": "tsx scripts/verify-admin-e2e.ts"
   },
   "dependencies": {
     "@deutschtrainer/ai-prompts": "workspace:*",

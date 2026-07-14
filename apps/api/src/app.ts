@@ -6,6 +6,8 @@ import {
   evaluateResponseResponseSchema,
   evaluateWritingRequestSchema,
   evaluateWritingResponseSchema,
+  generateExerciseDraftRequestSchema,
+  generateExerciseDraftResponseSchema,
   revealListeningTranscriptRequestSchema,
   revealListeningTranscriptResponseSchema,
   submitDictationRequestSchema,
@@ -16,6 +18,7 @@ import {
   transcribeResponseSchema,
 } from "@deutschtrainer/validation";
 import type { AudioLearningServiceContract } from "./audio/types";
+import type { ContentGenerationServiceContract } from "./content-generation/types";
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
 import type { WritingService } from "./writing/types";
@@ -24,6 +27,7 @@ export interface ApiHandlerOptions {
   evaluationService: EvaluationService;
   writingService: WritingService;
   audioService: AudioLearningServiceContract;
+  contentGenerationService: ContentGenerationServiceContract;
   aiConfigured: boolean;
   requestId?: () => string;
 }
@@ -145,6 +149,24 @@ export function createApiHandler(options: ApiHandlerOptions) {
         }
         const result = await options.audioService.transcribe(accessToken, parsed.data);
         return jsonResponse(transcribeResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/ai/exercise-drafts") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = generateExerciseDraftRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "AI 題目草稿要求格式不正確。");
+        }
+        const result = await options.contentGenerationService.generateExerciseDraft(
+          accessToken,
+          parsed.data,
+        );
+        return jsonResponse(generateExerciseDraftResponseSchema.parse(result), 200);
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }

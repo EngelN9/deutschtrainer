@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  generateExerciseDraftRequestSchema,
   apiErrorResponseSchema,
   evaluateResponseRequestSchema,
   evaluateWritingRequestSchema,
@@ -11,6 +12,38 @@ import {
   textToSpeechRequestSchema,
   transcribeRequestSchema,
 } from "./index";
+
+describe("generateExerciseDraftRequestSchema", () => {
+  it("accepts a constrained admin generation brief", () => {
+    const result = generateExerciseDraftRequestSchema.parse({
+      activityId: "1103f461-2efe-46c2-a238-00b310037494",
+      level: "B2",
+      type: "multiple_choice",
+      topicZhTw: "正式職場溝通",
+      targetSkillIds: ["B2.register.formal"],
+      instructionsZhTw: "答案必須明確。",
+      orderIndex: 20,
+      idempotencyKey: "phase8-generation-contract",
+    });
+
+    expect(result.type).toBe("multiple_choice");
+  });
+
+  it("rejects unsupported AI draft exercise types", () => {
+    const result = generateExerciseDraftRequestSchema.safeParse({
+      activityId: "1103f461-2efe-46c2-a238-00b310037494",
+      level: "B2",
+      type: "essay",
+      topicZhTw: "正式職場溝通",
+      targetSkillIds: ["B2.register.formal"],
+      instructionsZhTw: "",
+      orderIndex: 20,
+      idempotencyKey: "phase8-generation-contract",
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
 
 describe("validation schemas", () => {
   it("accepts the unified API error format", () => {

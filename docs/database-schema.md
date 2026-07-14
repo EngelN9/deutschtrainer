@@ -88,14 +88,14 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 
 ## 7. 內容治理與系統表
 
-| Table              | 主要欄位                                                                                                                                                                                                           | 關聯與索引                                                    | RLS                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------- |
-| content_versions   | id, entity_type, entity_id, version, diff_json, created_by, status                                                                                                                                                 | index(entity_type,entity_id,version)                          | editor/reviewer/admin         |
-| content_reviews    | id, entity_type, entity_id, reviewer_id, status, reason, reviewed_at                                                                                                                                               | index(entity_type,entity_id,status)                           | reviewer/admin                |
-| ai_generation_jobs | id, requested_by, target_entity_type, level, topic, skill_ids, exercise_type, status, output_json, validation_errors_json                                                                                          | index(status,created_at)                                      | editor/reviewer/admin         |
-| ai_usage_logs      | id, user_id, request_id, idempotency_key, feature, model, provider_request_id, provider_attempt, input_tokens, output_tokens, estimated_cost, latency_ms, success, cached, logical_request, error_code, created_at | unique(request_id,provider_attempt), daily-limit indexes      | self read; service-only write |
-| feature_flags      | id, key, description, enabled, audience_json, updated_by                                                                                                                                                           | unique(key)                                                   | admin write, backend read     |
-| audit_logs         | id, actor_user_id, action, entity_type, entity_id, metadata_json, ip_hash, user_agent_hash, created_at                                                                                                             | index(actor_user_id,created_at), index(entity_type,entity_id) | admin only                    |
+| Table              | 主要欄位                                                                                                                                                                                                           | 關聯與索引                                                     | RLS                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------- |
+| content_versions   | id, entity_type, entity_id, version, snapshot_json, change_summary, source_type, created_by, created_at                                                                                                            | unique(entity_type,entity_id,version), descending entity index | content-team read; RPC/service write         |
+| content_reviews    | id, entity_type, entity_id, content_version_id, requested_by, reviewer_id, status, request_notes, review_notes, created_at, reviewed_at                                                                            | one pending review per entity/version, queue index             | content-team read; role RPC write            |
+| ai_generation_jobs | id, requested_by, activity_id, target_entity_type, level, exercise_type, topic_zh_tw, target_skill_ids, request_json, status, output_json, validation_errors_json, provider, model, idempotency_key, error_code    | unique(requested_by,idempotency_key), status/requester indexes | requester/reviewer/admin read; service write |
+| ai_usage_logs      | id, user_id, request_id, idempotency_key, feature, model, provider_request_id, provider_attempt, input_tokens, output_tokens, estimated_cost, latency_ms, success, cached, logical_request, error_code, created_at | unique(request_id,provider_attempt), daily-limit indexes       | self read; service-only write                |
+| feature_flags      | id, key, description, enabled, audience_json, updated_by                                                                                                                                                           | unique(key)                                                    | admin write, backend read                    |
+| audit_logs         | id, actor_user_id, action, entity_type, entity_id, metadata_json, ip_hash, user_agent_hash, created_at                                                                                                             | index(actor_user_id,created_at), index(entity_type,entity_id)  | admin only                                   |
 
 ## 8. RLS 策略摘要
 
@@ -105,6 +105,8 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 - AI 題目的參考答案與 grading notes 不透過 published `exercise_answers` policy 暴露給 anon/authenticated client。
 - 聽力公開資料只包含教學 metadata；德語逐字稿、繁中翻譯與理解題保存在 `listening_asset_content`，只允許 service role 讀取。
 - 使用者錄音只存於 private `speaking-audio` bucket 的 owner UUID 目錄；signed URL、轉錄結果與刪除操作都必須驗證 owner。
+- 課程與題目 draft mutation 不提供直接 authenticated policy；保存、送審、審核及發布只能經角色 RPC。
+- AI 生成題目在 approved review 前不可發布；核心內容的 published 轉換由 trigger 強制寫入 audit log。
 - reviewer 可讀取審核所需內容，但不得看到不必要的使用者敏感資料。
 - admin 可管理角色、feature flags、audit 與成本統計。
 - service role 僅後端使用；前端永遠不用 service role。

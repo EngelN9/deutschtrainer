@@ -31,6 +31,8 @@
 - writing：published prompt 公開讀；prompt rules 僅 service role；submission/version 只允許 owner 讀取，準備、批改與失敗狀態只經 service-role RPC 寫入。
 - listening：published metadata 公開讀；逐字稿、正解與 TTS 指令僅 service role；生成音訊只能透過後端短效 signed URL 讀取。
 - speaking：錄音只能上傳到 `speaking-audio/{auth.uid()}/...`；metadata、submission 與 Storage object 只允許 owner 讀取及刪除。
+- content governance：learner 不可讀取版本／審核／AI job；課程與題目沒有 authenticated 直接 mutation policy，只能經角色驗證 RPC 寫入。
+- publishing：content_editor 送審、reviewer 核准、admin 發布；相同版本沒有 approved review 時，RPC 與資料庫 trigger 都拒絕發布。
 - conversation：只允許 owner；必要審核需使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
 - audit_logs：admin only。
@@ -54,6 +56,8 @@
 - 作文行內 offset、原文字串、skill、rubric 一致性、first/second pass reference 與 repeated errors 均經業務驗證。
 - TTS 後端依 `listeningAssetId` 讀取逐字稿，不接受 client 任意文字；cache key 包含素材版本、voice、model 與內容。
 - STT 後端驗證 prompt、owner Storage path、MIME、duration 與實際 object；回饋必須包含非精確發音評分聲明。
+- AI 題目生成只接受 activity、level、題型、可信 skill code 與編輯 brief；模型不得提供 UUID、status 或 review decision。
+- AI 題目輸出經 Structured Output、Zod、題型一致性、德文／繁中及禁止內容檢查，成功後仍固定寫成 `ai_generated + draft`。
 - 快取 key 包含 learner、exercise/version、正規化回答、prompt/version 與 schema/version，避免跨使用者回饋洩漏。
 
 ## 6. Rate Limit
@@ -64,6 +68,7 @@
 - AI 作文：依方案限制，例如免費 10/day。
 - TTS：依受信任內容 hash 快取，預設免費 20/day；cache hit 不占新生成額度。
 - STT：預設免費 10/day。
+- AI 題目草稿：內容編輯與 admin 預設 20/rolling 24h；idempotent replay 不重複計數。
 - 對話：受 scenario maximumTurns 與 daily limit 限制。
 
 ## 7. 隱私與資料保留
@@ -86,6 +91,7 @@
 - feature flag 修改。
 - 管理員查看敏感系統狀態。
 - AI 生成草稿核准。
+- 課程或題目保存、送審及所有 published 狀態轉換。
 
 ## 9. 前端錯誤顯示
 

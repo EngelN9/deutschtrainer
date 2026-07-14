@@ -218,3 +218,13 @@
 - AI 內容不得直接發布。
 - 非管理員不可進入管理功能。
 - 所有發布操作寫入 audit log。
+
+目前狀態：Pass。
+
+- `content_editor` 可建立／修改草稿及送審，`reviewer` 可核准／退回，只有 `admin` 可發布。
+- 課程與題目寫入集中於 security-definer RPC，每次保存建立不可變 `content_versions` 快照。
+- AI 題目只支援受約束的單選、填空與改錯草稿；Structured Output、Zod 與語意檢查後仍固定為 `ai_generated + draft`。
+- 發布前必須存在同版本的 approved review；資料庫 trigger 對所有核心內容發布寫入 `audit_logs`。
+- Next.js 後台完成總覽、課程、題目、審核、AI 工作與操作紀錄六個工作區。
+- 四角色本機整合測試驗證 learner/editor/reviewer/admin 的拒絕與允許路徑、冪等 AI 草稿及 audit actor。
+- 詳見 `docs/phase-8-admin-console.md`。

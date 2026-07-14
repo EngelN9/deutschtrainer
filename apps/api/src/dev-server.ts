@@ -10,6 +10,13 @@ import {
 } from "./audio/openAiAudioProvider";
 import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
 import { readApiConfig } from "./config";
+import { ContentGenerationService } from "./content-generation/contentGenerationService";
+import {
+  DeterministicContentGenerationProvider,
+  OpenAiContentGenerationProvider,
+  UnavailableContentGenerationProvider,
+} from "./content-generation/openAiContentGenerationProvider";
+import { SupabaseContentGenerationRepository } from "./content-generation/supabaseContentGenerationRepository";
 import { ResponseEvaluationService } from "./evaluation/evaluationService";
 import {
   DeterministicEvaluationProvider,
@@ -98,11 +105,36 @@ const audioService = new AudioLearningService({
   dailyTtsLimit: config.audioTtsDailyFreeLimit,
   dailyTranscriptionLimit: config.audioTranscriptionDailyFreeLimit,
 });
+const contentGenerationRepository = new SupabaseContentGenerationRepository(
+  config.supabaseUrl,
+  config.supabaseServiceRoleKey,
+);
+const contentGenerationProvider = config.fakeEvaluationMode
+  ? new DeterministicContentGenerationProvider()
+  : config.openAiApiKey
+    ? new OpenAiContentGenerationProvider({
+        apiKey: config.openAiApiKey,
+        model: config.openAiModel,
+        timeoutMs: config.openAiTimeoutMs,
+      })
+    : new UnavailableContentGenerationProvider(config.openAiModel);
+const contentGenerationService = new ContentGenerationService({
+  repository: contentGenerationRepository,
+  provider: contentGenerationProvider,
+  dailyLimit: config.contentGenerationDailyFreeLimit,
+  inputCostPerMillion: config.inputCostPerMillion,
+  outputCostPerMillion: config.outputCostPerMillion,
+});
 const handleRequest = createApiHandler({
   evaluationService,
   writingService,
   audioService,
-  aiConfigured: provider.configured && writingProvider.configured && audioProvider.configured,
+  contentGenerationService,
+  aiConfigured:
+    provider.configured &&
+    writingProvider.configured &&
+    audioProvider.configured &&
+    contentGenerationProvider.configured,
 });
 
 const server = createServer(async (incoming, outgoing) => {

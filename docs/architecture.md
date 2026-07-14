@@ -107,7 +107,7 @@ AI 題型流程：
 | POST   | /reviews/:reviewId/complete | CompleteReviewRequest          | CompleteReviewResponse          | learner self                     | 60/min             | no               | yes         |
 | POST   | /ai/evaluate-response       | EvaluateResponseRequest        | EvaluateResponseResponse        | learner self                     | 20/rolling 24h     | learner scoped   | yes         |
 | POST   | /ai/evaluate-writing        | EvaluateWritingRequest         | EvaluateWritingResponse         | learner self                     | 10/day free tier   | no               | yes         |
-| POST   | /ai/generate-practice       | GeneratePracticeRequest        | GeneratePracticeResponse        | editor or backend review flow    | 20/hour            | no               | yes         |
+| POST   | /admin/ai/exercise-drafts   | GenerateExerciseDraftRequest   | GenerateExerciseDraftResponse   | content_editor or admin          | 20/rolling 24h     | replay only      | yes         |
 | POST   | /audio/text-to-speech       | TextToSpeechRequest            | TextToSpeechResponse            | learner self or editor           | 60/day free tier   | yes by text hash | yes         |
 | POST   | /audio/transcribe           | TranscribeRequest              | TranscribeResponse              | learner self                     | 30/day free tier   | no               | yes         |
 | POST   | /conversations              | CreateConversationRequest      | CreateConversationResponse      | learner self                     | 20/day free tier   | no               | yes         |

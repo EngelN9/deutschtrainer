@@ -1,10 +1,53 @@
 import { describe, expect, it } from "@jest/globals";
 import {
   aiEvaluationFeedbackSchema,
+  generatedExerciseDraftSchema,
   createAiEvaluationFeedbackJsonSchema,
   createWritingFeedbackJsonSchema,
   writingFeedbackSchema,
 } from "./index";
+
+describe("generatedExerciseDraftSchema", () => {
+  it("requires one correct option and mandatory human review", () => {
+    const draft = generatedExerciseDraftSchema.parse({
+      type: "multiple_choice",
+      titleZhTw: "正式提問",
+      instructionZhTw: "請選擇正確答案。",
+      promptDe: "Welche Formulierung ist höflich?",
+      estimatedSeconds: 45,
+      difficulty: 2,
+      options: [
+        { label: "A", textDe: "Könnten Sie helfen?", textZhTw: null, isCorrect: true },
+        { label: "B", textDe: "Hilf sofort!", textZhTw: null, isCorrect: false },
+      ],
+      acceptedAnswers: [],
+      explanationZhTw: null,
+      validationNotes: ["需要人工確認語域。"],
+      requiresHumanReview: true,
+    });
+
+    expect(draft.requiresHumanReview).toBe(true);
+    expect(draft.options.filter((option) => option.isCorrect)).toHaveLength(1);
+  });
+
+  it("rejects output that attempts to skip review", () => {
+    const result = generatedExerciseDraftSchema.safeParse({
+      type: "fill_blank",
+      titleZhTw: "介系詞",
+      instructionZhTw: "請填空。",
+      promptDe: "Ich warte ___ den Bus.",
+      estimatedSeconds: 30,
+      difficulty: 2,
+      options: [],
+      acceptedAnswers: ["auf"],
+      explanationZhTw: null,
+      validationNotes: [],
+      requiresHumanReview: false,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
 
 describe("AI schemas", () => {
   it("validates structured AI evaluation feedback", () => {

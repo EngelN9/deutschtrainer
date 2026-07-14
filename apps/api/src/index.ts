@@ -24,6 +24,17 @@ export {
   UnavailableAudioProvider,
 } from "./audio/openAiAudioProvider";
 export { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
+export {
+  ContentGenerationService,
+  validateGeneratedDraft,
+} from "./content-generation/contentGenerationService";
+export {
+  ContentGenerationProviderError,
+  DeterministicContentGenerationProvider,
+  OpenAiContentGenerationProvider,
+  UnavailableContentGenerationProvider,
+} from "./content-generation/openAiContentGenerationProvider";
+export { SupabaseContentGenerationRepository } from "./content-generation/supabaseContentGenerationRepository";
 export { ResponseEvaluationService, validateFeedback } from "./evaluation/evaluationService";
 export {
   DeterministicEvaluationProvider,
