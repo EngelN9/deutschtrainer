@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { evaluateWritingResponseSchema } from "@deutschtrainer/validation";
+import {
+  deleteWritingSubmissionResponseSchema,
+  evaluateWritingResponseSchema,
+  writingWorkspaceResponseSchema,
+} from "@deutschtrainer/validation";
 
 const supabaseUrl = requireEnvironment("SUPABASE_URL");
 const anonKey = requireEnvironment("SUPABASE_ANON_KEY");
@@ -128,6 +132,15 @@ try {
   assert.equal(submissionResult.data.status, "completed");
   assert.equal(submissionResult.data.current_version_id, second.versionId);
 
+  const workspaceA = await getWorkspace(tokenA);
+  const workspaceB = await getWorkspace(tokenB);
+  const workspaceSubmission = workspaceA.submissions.find(
+    (submission) => submission.id === first.submissionId,
+  );
+  assert.equal(workspaceA.prompts.length, 4);
+  assert.equal(workspaceSubmission?.versions.length, 2);
+  assert.equal(workspaceB.submissions.length, 0);
+
   const crossUserSubmissions = await learnerB
     .from("writing_submissions")
     .select("id")
@@ -153,13 +166,30 @@ try {
   });
   assert.ok([401, 403, 404].includes(directRpcResponse.status));
 
+  const directDeleteResponse = await fetch(
+    `${supabaseUrl}/rest/v1/rpc/delete_own_writing_submission`,
+    {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        authorization: `Bearer ${tokenA}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ p_submission_id: first.submissionId }),
+    },
+  );
+  assert.ok([401, 403, 404].includes(directDeleteResponse.status));
+
+  const crossUserDelete = await fetch(`${apiBaseUrl}/writing/submissions/${first.submissionId}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${tokenB}` },
+  });
+  assert.equal(crossUserDelete.status, 404);
+
   const usageBeforeDelete = await countRows(admin, "ai_usage_logs", learnerProfileId);
   assert.equal(usageBeforeDelete, 2);
-  const deleteResult = await learnerA.rpc("delete_own_writing_submission", {
-    p_submission_id: first.submissionId,
-  });
-  assertDatabaseSuccess(deleteResult.error, "delete own writing submission");
-  assert.equal(deleteResult.data, true);
+  const deleted = await deleteSubmission(tokenA, first.submissionId);
+  assert.equal(deleted.deleted, true);
   assert.equal(await countRows(admin, "writing_submissions", learnerProfileId), 0);
   assert.equal(await countRows(admin, "writing_versions", learnerProfileId), 0);
   assert.equal(await countRows(admin, "ai_feedback", learnerProfileId), 0);
@@ -180,7 +210,11 @@ try {
         anonymousProtectedRuleStatus: protectedRulesResponse.status,
         crossUserSubmissionRows: crossUserSubmissions.data.length,
         crossUserVersionRows: crossUserVersions.data.length,
+        apiWorkspaceVersions: workspaceSubmission?.versions.length,
+        crossUserWorkspaceSubmissions: workspaceB.submissions.length,
         authenticatedDirectRpcStatus: directRpcResponse.status,
+        authenticatedDirectDeleteStatus: directDeleteResponse.status,
+        crossUserDeleteStatus: crossUserDelete.status,
         usageMetadataRetainedAfterDelete: usageBeforeDelete,
       },
       null,
@@ -231,6 +265,27 @@ async function evaluate(accessToken: string, body: Record<string, unknown>) {
     throw new Error(`Writing evaluation failed (${response.status}): ${await response.text()}`);
   }
   return evaluateWritingResponseSchema.parse(await response.json());
+}
+
+async function getWorkspace(accessToken: string) {
+  const response = await fetch(`${apiBaseUrl}/users/me/writing`, {
+    headers: { authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Writing workspace failed (${response.status}): ${await response.text()}`);
+  }
+  return writingWorkspaceResponseSchema.parse(await response.json());
+}
+
+async function deleteSubmission(accessToken: string, submissionId: string) {
+  const response = await fetch(`${apiBaseUrl}/writing/submissions/${submissionId}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Writing delete failed (${response.status}): ${await response.text()}`);
+  }
+  return deleteWritingSubmissionResponseSchema.parse(await response.json());
 }
 
 async function countRows(

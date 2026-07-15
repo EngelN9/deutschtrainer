@@ -1,7 +1,12 @@
 import type { AiPromptMessage } from "@deutschtrainer/ai-prompts";
 import type { WritingFeedback } from "@deutschtrainer/ai-schemas";
 import type { ErrorType, WritingDiffChange, WritingPrompt } from "@deutschtrainer/shared-types";
-import type { EvaluateWritingRequest, EvaluateWritingResponse } from "@deutschtrainer/validation";
+import type {
+  DeleteWritingSubmissionResponse,
+  EvaluateWritingRequest,
+  EvaluateWritingResponse,
+  WritingWorkspaceResponse,
+} from "@deutschtrainer/validation";
 import type { AuthenticatedLearner } from "../evaluation/types";
 
 export interface ProtectedWritingPrompt extends WritingPrompt {
@@ -86,6 +91,7 @@ export interface WritingUsageLogInput {
 
 export interface WritingRepository {
   authenticate(accessToken: string): Promise<AuthenticatedLearner | undefined>;
+  getWorkspace(learnerId: string): Promise<WritingWorkspaceResponse>;
   findByIdempotency(
     learnerId: string,
     idempotencyKey: string,
@@ -100,6 +106,7 @@ export interface WritingRepository {
   recordFeedback(input: WritingFeedbackRecordInput): Promise<WritingFeedbackRecordResult>;
   markEvaluationFailed(learnerId: string, versionId: string): Promise<void>;
   recordUsage(input: WritingUsageLogInput): Promise<void>;
+  deleteSubmission(learnerId: string, submissionId: string): Promise<void>;
 }
 
 export interface ProviderWritingInput {
@@ -127,5 +134,10 @@ export interface WritingProvider {
 }
 
 export interface WritingService {
+  getWorkspace(accessToken: string): Promise<WritingWorkspaceResponse>;
   evaluate(accessToken: string, request: EvaluateWritingRequest): Promise<EvaluateWritingResponse>;
+  deleteSubmission(
+    accessToken: string,
+    submissionId: string,
+  ): Promise<DeleteWritingSubmissionResponse>;
 }

@@ -1,9 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
+  audioLearningWorkspaceResponseSchema,
   speechComparisonChangeSchema,
   speakingFeedbackSchema,
   speechWordTimingSchema,
-  type RevealListeningTranscriptRequest,
+  type AudioLearningWorkspaceResponse,
+  type ListeningActivityRequest,
   type TranscribeRequest,
 } from "@deutschtrainer/validation";
 import type { AudioVoice, CefrLevel, ListeningKind } from "@deutschtrainer/shared-types";
@@ -21,6 +23,85 @@ import type {
   StoredListeningAttempt,
   StoredSpeakingSubmission,
 } from "./types";
+
+interface ListeningAssetRow {
+  id: string;
+  lesson_id: string;
+  level: CefrLevel;
+  kind: ListeningKind;
+  title_zh_tw: string;
+  description_zh_tw: string;
+  estimated_seconds: number;
+  keyword_hints_json: unknown;
+  comprehension_question_zh_tw: string;
+  comprehension_options_json: unknown;
+  skill_ids: string[];
+  tts_voice: "marin" | "cedar";
+  version: number;
+}
+
+interface ListeningAttemptRow {
+  id: string;
+  user_id: string;
+  listening_asset_id: string;
+  session_key: string;
+  status: AudioLearningWorkspaceResponse["listeningAttempts"][number]["status"];
+  play_count: number;
+  used_slow_speed: boolean;
+  transcript_viewed: boolean;
+  dictation_text: string | null;
+  dictation_score: number | null;
+  comprehension_answer: string | null;
+  comprehension_correct: boolean | null;
+  difficult_words: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface SpeakingPromptRow {
+  id: string;
+  lesson_id: string;
+  level: CefrLevel;
+  title_zh_tw: string;
+  instruction_zh_tw: string;
+  target_de: string;
+  translation_zh_tw: string;
+  skill_ids: string[];
+  maximum_seconds: number;
+  version: number;
+}
+
+interface SpeakingSubmissionRow {
+  id: string;
+  user_id: string;
+  speaking_prompt_id: string;
+  audio_asset_id: string;
+  status: AudioLearningWorkspaceResponse["speakingSubmissions"][number]["status"];
+  transcript_de: string | null;
+  word_timings_json: unknown;
+  comparison_json: unknown;
+  feedback_json: unknown;
+  words_per_minute: number | string | null;
+  model: string | null;
+  error_code: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AudioAssetRow {
+  id: string;
+  owner_user_id: string | null;
+  listening_asset_id: string | null;
+  storage_bucket: "listening-audio" | "speaking-audio";
+  storage_path: string;
+  source_type: "uploaded" | "generated" | "licensed";
+  license: string;
+  content_type: string;
+  duration_ms: number;
+  voice: "marin" | "cedar" | null;
+  model: string | null;
+  created_at: string;
+}
 
 export class SupabaseAudioRepository implements AudioRepository {
   private readonly client: SupabaseClient;
@@ -51,6 +132,81 @@ export class SupabaseAudioRepository implements AudioRepository {
       profileId: profileResult.data.id,
       timezone: profileResult.data.timezone,
     };
+  }
+
+  async getWorkspace(learnerId: string): Promise<AudioLearningWorkspaceResponse> {
+    const [listeningResult, attemptsResult, promptsResult, submissionsResult, audioResult] =
+      await Promise.all([
+        this.client
+          .from("listening_assets")
+          .select(
+            "id, lesson_id, level, kind, title_zh_tw, description_zh_tw, estimated_seconds, keyword_hints_json, comprehension_question_zh_tw, comprehension_options_json, skill_ids, tts_voice, version",
+          )
+          .eq("status", "published")
+          .eq("review_status", "approved")
+          .is("deleted_at", null)
+          .order("level")
+          .limit(100),
+        this.client
+          .from("listening_attempts")
+          .select(
+            "id, user_id, listening_asset_id, session_key, status, play_count, used_slow_speed, transcript_viewed, dictation_text, dictation_score, comprehension_answer, comprehension_correct, difficult_words, created_at, updated_at",
+          )
+          .eq("user_id", learnerId)
+          .order("updated_at", { ascending: false })
+          .limit(200),
+        this.client
+          .from("speaking_prompts")
+          .select(
+            "id, lesson_id, level, title_zh_tw, instruction_zh_tw, target_de, translation_zh_tw, skill_ids, maximum_seconds, version",
+          )
+          .eq("status", "published")
+          .eq("review_status", "approved")
+          .is("deleted_at", null)
+          .order("level")
+          .limit(100),
+        this.client
+          .from("speaking_submissions")
+          .select(
+            "id, user_id, speaking_prompt_id, audio_asset_id, status, transcript_de, word_timings_json, comparison_json, feedback_json, words_per_minute, model, error_code, created_at, updated_at",
+          )
+          .eq("user_id", learnerId)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        this.client
+          .from("audio_assets")
+          .select(
+            "id, owner_user_id, listening_asset_id, storage_bucket, storage_path, source_type, license, content_type, duration_ms, voice, model, created_at",
+          )
+          .eq("owner_user_id", learnerId)
+          .order("created_at", { ascending: false })
+          .limit(200),
+      ]);
+    assertFirstDatabaseError(
+      [
+        listeningResult.error,
+        attemptsResult.error,
+        promptsResult.error,
+        submissionsResult.error,
+        audioResult.error,
+      ],
+      "無法載入聽說訓練工作區。",
+    );
+    return audioLearningWorkspaceResponseSchema.parse({
+      listeningAssets: ((listeningResult.data ?? []) as ListeningAssetRow[]).map(
+        mapWorkspaceListeningAsset,
+      ),
+      listeningAttempts: ((attemptsResult.data ?? []) as ListeningAttemptRow[]).map(
+        mapWorkspaceListeningAttempt,
+      ),
+      speakingPrompts: ((promptsResult.data ?? []) as SpeakingPromptRow[]).map(
+        mapWorkspaceSpeakingPrompt,
+      ),
+      speakingSubmissions: ((submissionsResult.data ?? []) as SpeakingSubmissionRow[]).map(
+        mapWorkspaceSpeakingSubmission,
+      ),
+      audioAssets: ((audioResult.data ?? []) as AudioAssetRow[]).map(mapWorkspaceAudioAsset),
+    });
   }
 
   async getListeningAsset(assetId: string): Promise<ProtectedListeningAsset | undefined> {
@@ -213,47 +369,21 @@ export class SupabaseAudioRepository implements AudioRepository {
 
   async recordListeningActivity(
     learnerId: string,
-    request: RevealListeningTranscriptRequest,
+    request: ListeningActivityRequest,
   ): Promise<string> {
-    const existingResult = await this.client
-      .from("listening_attempts")
-      .select("id, listening_asset_id, play_count, used_slow_speed")
-      .eq("user_id", learnerId)
-      .eq("session_key", request.sessionKey)
-      .maybeSingle();
-    assertDatabaseResult(existingResult.error, "無法讀取聽力練習進度。");
-    if (existingResult.data) {
-      if (existingResult.data.listening_asset_id !== request.listeningAssetId) {
-        throw new ApiError("VALIDATION_ERROR", "聽力練習識別碼與素材不一致。", 409, false);
-      }
-      const update = await this.client
-        .from("listening_attempts")
-        .update({
-          play_count: Math.min(1000, existingResult.data.play_count + request.playIncrement),
-          used_slow_speed: existingResult.data.used_slow_speed || request.usedSlowSpeed,
-          transcript_viewed: true,
-        })
-        .eq("id", existingResult.data.id);
-      assertDatabaseResult(update.error, "無法更新聽力練習進度。");
-      return existingResult.data.id;
-    }
-    const insert = await this.client
-      .from("listening_attempts")
-      .insert({
-        user_id: learnerId,
-        listening_asset_id: request.listeningAssetId,
-        session_key: request.sessionKey,
-        play_count: request.playIncrement,
-        used_slow_speed: request.usedSlowSpeed,
-        transcript_viewed: true,
-      })
-      .select("id")
-      .single();
-    assertDatabaseResult(insert.error, "無法建立聽力練習進度。");
-    if (!insert.data) {
+    const result = await this.client.rpc("record_listening_activity_service", {
+      p_user_id: learnerId,
+      p_listening_asset_id: request.listeningAssetId,
+      p_session_key: request.sessionKey,
+      p_play_increment: request.playIncrement,
+      p_used_slow_speed: request.usedSlowSpeed,
+      p_transcript_viewed: request.transcriptViewed,
+    });
+    assertDatabaseResult(result.error, "無法保存聽力練習進度。");
+    if (typeof result.data !== "string") {
       throw new ApiError("DATABASE_ERROR", "聽力練習進度未回傳。", 500, true);
     }
-    return insert.data.id;
+    return result.data;
   }
 
   async findListeningAttemptByIdempotency(
@@ -470,6 +600,97 @@ export class SupabaseAudioRepository implements AudioRepository {
   }
 }
 
+function mapWorkspaceListeningAsset(row: ListeningAssetRow) {
+  return {
+    id: row.id,
+    lessonId: row.lesson_id,
+    level: row.level,
+    kind: row.kind,
+    titleZhTw: row.title_zh_tw,
+    descriptionZhTw: row.description_zh_tw,
+    estimatedSeconds: row.estimated_seconds,
+    keywordHints: readStringArray(row.keyword_hints_json),
+    comprehensionQuestionZhTw: row.comprehension_question_zh_tw,
+    comprehensionOptions: readListeningOptions(row.comprehension_options_json),
+    skillIds: row.skill_ids,
+    ttsVoice: row.tts_voice,
+    version: row.version,
+  };
+}
+
+function mapWorkspaceListeningAttempt(row: ListeningAttemptRow) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    listeningAssetId: row.listening_asset_id,
+    sessionKey: row.session_key,
+    status: row.status,
+    playCount: row.play_count,
+    usedSlowSpeed: row.used_slow_speed,
+    transcriptViewed: row.transcript_viewed,
+    ...(row.dictation_text ? { dictationText: row.dictation_text } : {}),
+    ...(row.dictation_score !== null ? { dictationScore: row.dictation_score } : {}),
+    ...(row.comprehension_answer ? { comprehensionAnswer: row.comprehension_answer } : {}),
+    ...(row.comprehension_correct !== null
+      ? { comprehensionCorrect: row.comprehension_correct }
+      : {}),
+    difficultWords: row.difficult_words,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapWorkspaceSpeakingPrompt(row: SpeakingPromptRow) {
+  return {
+    id: row.id,
+    lessonId: row.lesson_id,
+    level: row.level,
+    titleZhTw: row.title_zh_tw,
+    instructionZhTw: row.instruction_zh_tw,
+    targetDe: row.target_de,
+    translationZhTw: row.translation_zh_tw,
+    skillIds: row.skill_ids,
+    maximumSeconds: row.maximum_seconds,
+    version: row.version,
+  };
+}
+
+function mapWorkspaceSpeakingSubmission(row: SpeakingSubmissionRow) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    speakingPromptId: row.speaking_prompt_id,
+    audioAssetId: row.audio_asset_id,
+    status: row.status,
+    ...(row.transcript_de ? { transcriptDe: row.transcript_de } : {}),
+    wordTimings: speechWordTimingSchema.array().parse(row.word_timings_json),
+    comparison: speechComparisonChangeSchema.array().parse(row.comparison_json),
+    ...(row.feedback_json ? { feedback: speakingFeedbackSchema.parse(row.feedback_json) } : {}),
+    ...(row.words_per_minute !== null ? { wordsPerMinute: Number(row.words_per_minute) } : {}),
+    ...(row.model ? { model: row.model } : {}),
+    ...(row.error_code ? { errorCode: row.error_code } : {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapWorkspaceAudioAsset(row: AudioAssetRow) {
+  return {
+    id: row.id,
+    ...(row.owner_user_id ? { ownerUserId: row.owner_user_id } : {}),
+    ...(row.listening_asset_id ? { listeningAssetId: row.listening_asset_id } : {}),
+    storageBucket: row.storage_bucket,
+    storagePath: row.storage_path,
+    sourceType: row.source_type,
+    license: row.license,
+    contentType: row.content_type,
+    durationMs: row.duration_ms,
+    ...(row.voice ? { voice: row.voice } : {}),
+    ...(row.model ? { model: row.model } : {}),
+    createdAt: row.created_at,
+  };
+}
+
 function mapGeneratedAudio(row: {
   id: string;
   storage_path: string;
@@ -500,6 +721,37 @@ function assertDatabaseResult(
   if (error) {
     throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
   }
+}
+
+function assertFirstDatabaseError(
+  errors: Array<{ code?: string; message: string } | null>,
+  message: string,
+): void {
+  const error = errors.find(Boolean);
+  if (error) {
+    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+  }
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
+    : [];
+}
+
+function readListeningOptions(value: unknown): Array<{ key: string; textZhTw: string }> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      return [];
+    }
+    const record = entry as Record<string, unknown>;
+    return typeof record.key === "string" && typeof record.textZhTw === "string"
+      ? [{ key: record.key, textZhTw: record.textZhTw }]
+      : [];
+  });
 }
 
 function isDuplicateError(error: { message: string; statusCode?: string | undefined }): boolean {

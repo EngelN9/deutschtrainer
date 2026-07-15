@@ -13,8 +13,15 @@ import {
   type ErrorType,
   type WritingDiffChange,
 } from "@deutschtrainer/shared-types";
-import type { EvaluateWritingRequest, EvaluateWritingResponse } from "@deutschtrainer/validation";
+import type {
+  DeleteWritingSubmissionResponse,
+  EvaluateWritingRequest,
+  EvaluateWritingResponse,
+  WritingWorkspaceResponse,
+} from "@deutschtrainer/validation";
+import type { AuthenticatedLearner } from "../evaluation/types";
 import { ApiError } from "../errors";
+import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import { WritingProviderError, type WritingProviderErrorCode } from "./openAiWritingProvider";
 import type {
   PreparedWritingVersion,
@@ -33,6 +40,8 @@ export interface WritingEvaluationServiceOptions {
   dailyLimit: number;
   inputCostPerMillion: number;
   outputCostPerMillion: number;
+  privateRequestsPerMinute?: number;
+  rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
   requestId?: () => string;
 }
@@ -52,10 +61,19 @@ export interface WritingFeedbackValidationResult {
 export class WritingEvaluationService implements WritingService {
   private readonly now: () => Date;
   private readonly requestId: () => string;
+  private readonly rateLimiter: PrivateRequestRateLimiter;
 
   constructor(private readonly options: WritingEvaluationServiceOptions) {
     this.now = options.now ?? (() => new Date());
     this.requestId = options.requestId ?? randomUUID;
+    this.rateLimiter =
+      options.rateLimiter ??
+      new PrivateRequestRateLimiter(options.privateRequestsPerMinute ?? 60, this.now);
+  }
+
+  async getWorkspace(accessToken: string): Promise<WritingWorkspaceResponse> {
+    const learner = await this.requireLearner(accessToken);
+    return this.options.repository.getWorkspace(learner.profileId);
   }
 
   async evaluate(
@@ -63,10 +81,7 @@ export class WritingEvaluationService implements WritingService {
     request: EvaluateWritingRequest,
   ): Promise<EvaluateWritingResponse> {
     const requestId = this.requestId();
-    const learner = await this.options.repository.authenticate(accessToken);
-    if (!learner) {
-      throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
-    }
+    const learner = await this.requireLearner(accessToken);
 
     const existing = await this.options.repository.findByIdempotency(
       learner.profileId,
@@ -200,6 +215,16 @@ export class WritingEvaluationService implements WritingService {
       prepared,
       previousErrorTypes,
     );
+  }
+
+  async deleteSubmission(
+    accessToken: string,
+    submissionId: string,
+  ): Promise<DeleteWritingSubmissionResponse> {
+    const requestId = this.requestId();
+    const learner = await this.requireLearner(accessToken);
+    await this.options.repository.deleteSubmission(learner.profileId, submissionId);
+    return { requestId, deleted: true };
   }
 
   private async evaluateWithProvider(
@@ -383,6 +408,15 @@ export class WritingEvaluationService implements WritingService {
   ): Promise<void> {
     await this.options.repository.markEvaluationFailed(learnerId, versionId);
     await this.options.repository.recordUsage(usage);
+  }
+
+  private async requireLearner(accessToken: string): Promise<AuthenticatedLearner> {
+    const learner = await this.options.repository.authenticate(accessToken);
+    if (!learner) {
+      throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
+    }
+    this.rateLimiter.assertAllowed(learner.profileId);
+    return learner;
   }
 }
 

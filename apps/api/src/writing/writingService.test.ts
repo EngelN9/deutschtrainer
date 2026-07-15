@@ -63,6 +63,38 @@ const feedback: WritingFeedback = {
 };
 
 describe("WritingEvaluationService", () => {
+  it("loads an owner-scoped workspace through the repository", async () => {
+    const getWorkspace = jest.fn(async () => ({ prompts: [], submissions: [] }));
+    const service = createService(
+      createRepository({ getWorkspace }),
+      new UnavailableWritingProvider("gpt-test"),
+    );
+
+    const result = await service.getWorkspace("valid-token");
+
+    expect(result).toEqual({ prompts: [], submissions: [] });
+    expect(getWorkspace).toHaveBeenCalledWith("6ff91bf7-37d7-4f24-8682-8ee5d3020a5f");
+  });
+
+  it("deletes only through the authenticated learner repository boundary", async () => {
+    const deleteSubmission = jest.fn(async () => undefined);
+    const service = createService(
+      createRepository({ deleteSubmission }),
+      new UnavailableWritingProvider("gpt-test"),
+    );
+
+    const result = await service.deleteSubmission(
+      "valid-token",
+      "2980a456-9b89-4841-a3ba-47e307e7bf9c",
+    );
+
+    expect(result).toEqual({ requestId: "writing-request-test", deleted: true });
+    expect(deleteSubmission).toHaveBeenCalledWith(
+      "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f",
+      "2980a456-9b89-4841-a3ba-47e307e7bf9c",
+    );
+  });
+
   it("saves version one before recording schema-validated feedback", async () => {
     const events: string[] = [];
     const usage: WritingUsageLogInput[] = [];
@@ -242,6 +274,7 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
       profileId: "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f",
       timezone: "Asia/Taipei",
     }),
+    getWorkspace: async () => ({ prompts: [], submissions: [] }),
     findByIdempotency: async () => undefined,
     getPrompt: async () => prompt,
     getSubmissionContext: async () => undefined,
@@ -253,6 +286,7 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
     }),
     markEvaluationFailed: async () => undefined,
     recordUsage: async () => undefined,
+    deleteSubmission: async () => undefined,
     ...overrides,
   };
 }

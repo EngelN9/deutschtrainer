@@ -1,18 +1,22 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  audioLearningWorkspaceResponseSchema,
   apiErrorResponseSchema,
   completeReviewRequestSchema,
   courseListResponseSchema,
+  deleteWritingSubmissionResponseSchema,
   evaluateResponseRequestSchema,
   evaluateWritingRequestSchema,
   fixedExerciseSchema,
   generateExerciseDraftRequestSchema,
   learningRecordSnapshotSchema,
+  listeningActivityResponseSchema,
   onboardingRequestSchema,
   submitAttemptRequestSchema,
   submitDictationRequestSchema,
   textToSpeechRequestSchema,
   transcribeRequestSchema,
+  writingWorkspaceResponseSchema,
 } from "./index";
 
 describe("generateExerciseDraftRequestSchema", () => {
@@ -48,6 +52,30 @@ describe("generateExerciseDraftRequestSchema", () => {
 });
 
 describe("validation schemas", () => {
+  it("accepts the Phase 10 workspace and mutation response contracts", () => {
+    const writing = writingWorkspaceResponseSchema.parse({ prompts: [], submissions: [] });
+    const audio = audioLearningWorkspaceResponseSchema.parse({
+      listeningAssets: [],
+      listeningAttempts: [],
+      speakingPrompts: [],
+      speakingSubmissions: [],
+      audioAssets: [],
+    });
+    const activity = listeningActivityResponseSchema.parse({
+      requestId: "phase10-activity",
+      attemptId: "2f48dbbe-2e97-4f4f-a795-d8d0cda0bfc2",
+    });
+    const deletion = deleteWritingSubmissionResponseSchema.parse({
+      requestId: "phase10-delete",
+      deleted: true,
+    });
+
+    expect(writing.submissions).toEqual([]);
+    expect(audio.listeningAttempts).toEqual([]);
+    expect(activity.attemptId).toBe("2f48dbbe-2e97-4f4f-a795-d8d0cda0bfc2");
+    expect(deletion.deleted).toBe(true);
+  });
+
   it("accepts the unified API error format", () => {
     const parsed = apiErrorResponseSchema.parse({
       error: {

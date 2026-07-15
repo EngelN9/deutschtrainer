@@ -254,3 +254,25 @@
 - Mobile 不再直接查詢課程、attempt、mastery、review 或 lesson progress table。
 - 雙帳號整合測試驗證後端 0 分、冪等回放、`401`、跨帳號 `404`、下一次複習及舊 RPC `404`。
 - 詳見 `docs/phase-9-api-boundary.md`。
+
+## Phase 10：寫作與聽說工作區 API
+
+交付：
+
+- 私人作文與聽說 workspace API。
+- 作文 owner deletion API。
+- 聽力播放遙測 API 與原子 service wrapper。
+- Mobile 寫作／聽說結構化 repository API 化。
+- 共用私人請求 rate limiter。
+
+驗收：
+
+- 第二位使用者不可讀取或刪除第一位使用者的作文、聽力、口說或 audio metadata。
+- authenticated 不可直接執行作文刪除或聽力遙測 RPC。
+- Mobile 僅以 Supabase Storage RLS 處理 owner binary，上層結構化資料均經 API。
+
+目前狀態：Pass。
+
+- 四個受保護端點具有獨立 Zod response contract、統一錯誤與 `no-store`。
+- 雙帳號整合測試驗證作文兩版、聽力／口說 workspace 隔離、跨帳號 `404`、舊 RPC 撤權及 owner deletion。
+- 詳見 `docs/phase-10-workspace-api.md`。

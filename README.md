@@ -61,6 +61,7 @@ pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
 pnpm --filter @deutschtrainer/api verify:learning-api:local
+pnpm --filter @deutschtrainer/api verify:workspaces:local
 pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:admin:local
 ```
@@ -79,5 +80,6 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 7: private TTS playback, listening telemetry, protected transcripts, server-scored dictation, microphone fallback, recording/STT, assisted speaking feedback, analytics, cross-user isolation, and deletion complete.
 - Phase 8: role-gated course and exercise editing, immutable content versions, review decisions, review-required AI drafts, admin-only publishing, and audit trails complete.
 - Phase 9: published course APIs, server-authoritative fixed grading, private progress/review APIs, per-user rate limiting, idempotent replay, and Mobile core-data API migration complete.
+- Phase 10: private writing/audio workspaces, API-backed writing deletion and listening telemetry, shared learner rate limiting, and Mobile structured-data API migration complete.
 
-See `docs/phase-9-api-boundary.md` for the current learner-data API boundary, security model, and local integration evidence.
+See `docs/phase-10-workspace-api.md` for the current writing/audio API boundary, security model, and local integration evidence.

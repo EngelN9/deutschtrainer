@@ -1,12 +1,14 @@
 import { randomUUID } from "node:crypto";
 import {
   apiErrorResponseSchema,
+  audioLearningWorkspaceResponseSchema,
   completeReviewRequestSchema,
   completeReviewResponseSchema,
   courseDetailResponseSchema,
   courseListRequestSchema,
   courseListResponseSchema,
   databaseUuidSchema,
+  deleteWritingSubmissionResponseSchema,
   deleteSpeakingSubmissionResponseSchema,
   evaluateResponseRequestSchema,
   evaluateResponseResponseSchema,
@@ -15,6 +17,8 @@ import {
   generateExerciseDraftRequestSchema,
   generateExerciseDraftResponseSchema,
   lessonDetailResponseSchema,
+  listeningActivityRequestSchema,
+  listeningActivityResponseSchema,
   progressResponseSchema,
   revealListeningTranscriptRequestSchema,
   revealListeningTranscriptResponseSchema,
@@ -28,6 +32,7 @@ import {
   textToSpeechResponseSchema,
   transcribeRequestSchema,
   transcribeResponseSchema,
+  writingWorkspaceResponseSchema,
 } from "@deutschtrainer/validation";
 import type { AudioLearningServiceContract } from "./audio/types";
 import type { ContentGenerationServiceContract } from "./content-generation/types";
@@ -169,6 +174,56 @@ export function createApiHandler(options: ApiHandlerOptions) {
           parsed.data,
         );
         return jsonResponse(completeReviewResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/writing") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.writingService.getWorkspace(accessToken);
+        return jsonResponse(writingWorkspaceResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const deleteWritingMatch = url.pathname.match(/^\/writing\/submissions\/([^/]+)$/);
+    if (request.method === "DELETE" && deleteWritingMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const submissionId = parseDatabaseUuid(deleteWritingMatch[1], "作文提交 ID 格式不正確。");
+        const result = await options.writingService.deleteSubmission(accessToken, submissionId);
+        return jsonResponse(deleteWritingSubmissionResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/audio-learning") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.audioService.getWorkspace(accessToken);
+        return jsonResponse(audioLearningWorkspaceResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/listening/activity") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = listeningActivityRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "聽力操作格式不正確。");
+        }
+        const result = await options.audioService.recordActivity(accessToken, parsed.data);
+        return jsonResponse(listeningActivityResponseSchema.parse(result), 200);
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }

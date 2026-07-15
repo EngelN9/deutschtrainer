@@ -34,6 +34,6 @@ pnpm start
 
 Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `api` after starting the local API and Supabase stack.
 
-Remote courses, progress, review, fixed grading, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
+Remote courses, progress, review, fixed grading, writing, listening/speaking workspaces, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
-Supabase remains in Mobile for authentication, owner-scoped uploads, and the writing/audio repositories that will move behind later API endpoints.
+Supabase remains in Mobile for authentication, onboarding/profile data, and owner-scoped recording uploads/removal. Structured writing and audio-learning data now use the backend API.
