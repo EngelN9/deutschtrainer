@@ -1853,37 +1853,61 @@ export type Database = {
           audio_settings_json: Json;
           created_at: string;
           daily_minutes: number;
+          daily_reminder_enabled: boolean;
+          daily_reminder_time: string;
+          goal_complete_enabled: boolean;
           id: string;
+          inactivity_days: number;
+          inactivity_reminder_enabled: boolean;
           learning_goals_json: Json;
+          new_course_enabled: boolean;
           notifications_enabled: boolean;
+          review_reminder_enabled: boolean;
           target_level: Database["public"]["Enums"]["cefr_level"];
           theme: string;
           updated_at: string;
           user_id: string;
+          writing_complete_enabled: boolean;
         };
         Insert: {
           audio_settings_json?: Json;
           created_at?: string;
           daily_minutes?: number;
+          daily_reminder_enabled?: boolean;
+          daily_reminder_time?: string;
+          goal_complete_enabled?: boolean;
           id?: string;
+          inactivity_days?: number;
+          inactivity_reminder_enabled?: boolean;
           learning_goals_json?: Json;
+          new_course_enabled?: boolean;
           notifications_enabled?: boolean;
+          review_reminder_enabled?: boolean;
           target_level?: Database["public"]["Enums"]["cefr_level"];
           theme?: string;
           updated_at?: string;
           user_id: string;
+          writing_complete_enabled?: boolean;
         };
         Update: {
           audio_settings_json?: Json;
           created_at?: string;
           daily_minutes?: number;
+          daily_reminder_enabled?: boolean;
+          daily_reminder_time?: string;
+          goal_complete_enabled?: boolean;
           id?: string;
+          inactivity_days?: number;
+          inactivity_reminder_enabled?: boolean;
           learning_goals_json?: Json;
+          new_course_enabled?: boolean;
           notifications_enabled?: boolean;
+          review_reminder_enabled?: boolean;
           target_level?: Database["public"]["Enums"]["cefr_level"];
           theme?: string;
           updated_at?: string;
           user_id?: string;
+          writing_complete_enabled?: boolean;
         };
         Relationships: [
           {
@@ -2284,6 +2308,17 @@ export type Database = {
         };
         Returns: Json;
       };
+      complete_onboarding_service: {
+        Args: {
+          p_current_level: Database["public"]["Enums"]["cefr_level"];
+          p_daily_minutes: number;
+          p_learning_goals: Json;
+          p_notifications_enabled: boolean;
+          p_target_level: Database["public"]["Enums"]["cefr_level"];
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
       content_course_snapshot: { Args: { p_course_id: string }; Returns: Json };
       content_exercise_snapshot: {
         Args: { p_exercise_id: string };
@@ -2453,6 +2488,22 @@ export type Database = {
           p_version_id: string;
         };
         Returns: Json;
+      };
+      update_notification_preferences_service: {
+        Args: {
+          p_daily_reminder_enabled: boolean;
+          p_daily_reminder_time: string;
+          p_goal_complete_enabled: boolean;
+          p_inactivity_days: number;
+          p_inactivity_reminder_enabled: boolean;
+          p_new_course_enabled: boolean;
+          p_notifications_enabled: boolean;
+          p_review_reminder_enabled: boolean;
+          p_timezone: string;
+          p_user_id: string;
+          p_writing_complete_enabled: boolean;
+        };
+        Returns: boolean;
       };
     };
     Enums: {

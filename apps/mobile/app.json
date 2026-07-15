@@ -18,6 +18,7 @@
           "enableBackgroundPlayback": false
         }
       ],
+      "expo-notifications",
       "expo-asset"
     ],
     "experiments": {

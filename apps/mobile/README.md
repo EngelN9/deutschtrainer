@@ -6,6 +6,8 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 
 - Supabase email/password auth and persisted sessions.
 - First-run CEFR level, study-time, goal, and notification setup.
+- Personal notification settings with master and per-event switches, reminder time, inactivity interval, timezone, permission state, and system-settings recovery.
+- Timezone-aware local daily, due-review, inactivity, writing-complete, new-course, and goal-complete notifications with per-day/event deduplication.
 - Protected Expo Router navigation.
 - Home dashboard and B1-C2 course map.
 - Unit and lesson details.
@@ -36,4 +38,4 @@ Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `api` aft
 
 Remote courses, progress, review, fixed grading, writing, listening/speaking workspaces, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
-Supabase remains in Mobile for authentication, onboarding/profile data, and owner-scoped recording uploads/removal. Structured writing and audio-learning data now use the backend API.
+Supabase remains in Mobile only for authentication and owner-scoped recording uploads/removal. Profile, onboarding, preferences, learning records, writing, and audio-learning structured data use the backend API.

@@ -6,6 +6,7 @@ Node backend for learner data, AI evaluation, audio processing, and content-gove
 
 - `GET /health`: service and AI-provider readiness.
 - `/courses`, `/lessons`, `/attempts`, `/users/me/progress`, and `/users/me/reviews`: published course delivery and owner-scoped learning records.
+- `GET /users/me/settings`, `PUT /users/me/onboarding`, and `PUT /users/me/notification-preferences`: owner-scoped profile, learning setup, and notification preferences.
 - `GET /users/me/writing` and `DELETE /writing/submissions/:id`: owner-scoped writing workspace and deletion.
 - `POST /ai/evaluate-response`: AI grading for published `translation` and `free_response` exercises.
 - `POST /ai/evaluate-writing`: versioned long-form writing evaluation with inline feedback.
@@ -34,6 +35,7 @@ pnpm --filter @deutschtrainer/api verify:writing:local
 pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:workspaces:local
+pnpm --filter @deutschtrainer/api verify:settings:local
 ```
 
 `verify:local` requires a running local Supabase stack, a running API, and `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the current shell. It creates and removes temporary users while checking evaluation, replay, cache, persistence, RLS, protected answers, and RPC permissions.
@@ -41,3 +43,5 @@ pnpm --filter @deutschtrainer/api verify:workspaces:local
 `verify:writing:local` additionally checks first- and second-pass feedback, immutable text versions, stored diffs, protected prompt rules, cross-user RLS, direct-RPC denial, and user deletion behavior.
 
 `verify:workspaces:local` runs the writing and audio two-user suites together, including API workspace isolation, owner deletion, listening telemetry, Storage RLS, and legacy authenticated-RPC denial.
+
+`verify:settings:local` verifies API onboarding, timezone and reminder persistence, two-user isolation, revoked direct table writes, and service-only settings RPCs.

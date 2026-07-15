@@ -10,7 +10,7 @@ interface ApiRequestOptions {
   authenticated?: boolean;
   body?: unknown;
   fallbackMessage: string;
-  method?: "DELETE" | "GET" | "POST";
+  method?: "DELETE" | "GET" | "POST" | "PUT";
 }
 
 export async function requestApi<T>(

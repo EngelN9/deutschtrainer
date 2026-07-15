@@ -1,6 +1,6 @@
 # DeutschTrainer Monorepo
 
-DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, API-backed course navigation, server-authoritative deterministic and AI-assisted grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, private listening/speaking practice, and learning analytics.
+DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional Chinese users. The current implementation covers authentication/onboarding, API-backed course navigation, server-authoritative deterministic and AI-assisted grading, cross-device learning records, skill mastery, spaced review, error history, versioned writing, private listening/speaking practice, learning analytics, and timezone-aware local learning reminders.
 
 ## Workspace
 
@@ -64,6 +64,7 @@ pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:workspaces:local
 pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:admin:local
+pnpm --filter @deutschtrainer/api verify:settings:local
 ```
 
 Local mobile web is available at `http://localhost:8081`; the admin console uses `http://localhost:3000`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
@@ -81,5 +82,6 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 8: role-gated course and exercise editing, immutable content versions, review decisions, review-required AI drafts, admin-only publishing, and audit trails complete.
 - Phase 9: published course APIs, server-authoritative fixed grading, private progress/review APIs, per-user rate limiting, idempotent replay, and Mobile core-data API migration complete.
 - Phase 10: private writing/audio workspaces, API-backed writing deletion and listening telemetry, shared learner rate limiting, and Mobile structured-data API migration complete.
+- Phase 11: API-backed onboarding and notification preferences, timezone-aware local reminders, event deduplication, and personal notification settings complete with native-device follow-up.
 
-See `docs/phase-10-workspace-api.md` for the current writing/audio API boundary, security model, and local integration evidence.
+See `docs/phase-11-notifications.md` for the notification boundary, scheduling model, and local integration evidence.

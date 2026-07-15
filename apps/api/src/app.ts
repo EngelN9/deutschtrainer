@@ -19,6 +19,8 @@ import {
   lessonDetailResponseSchema,
   listeningActivityRequestSchema,
   listeningActivityResponseSchema,
+  notificationPreferencesResponseSchema,
+  onboardingRequestSchema,
   progressResponseSchema,
   revealListeningTranscriptRequestSchema,
   revealListeningTranscriptResponseSchema,
@@ -32,6 +34,8 @@ import {
   textToSpeechResponseSchema,
   transcribeRequestSchema,
   transcribeResponseSchema,
+  updateNotificationPreferencesRequestSchema,
+  userSettingsResponseSchema,
   writingWorkspaceResponseSchema,
 } from "@deutschtrainer/validation";
 import type { AudioLearningServiceContract } from "./audio/types";
@@ -39,6 +43,7 @@ import type { ContentGenerationServiceContract } from "./content-generation/type
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
 import type { LearningDataServiceContract } from "./learning-data/types";
+import type { SettingsServiceContract } from "./settings/types";
 import type { WritingService } from "./writing/types";
 
 export interface ApiHandlerOptions {
@@ -47,6 +52,7 @@ export interface ApiHandlerOptions {
   audioService: AudioLearningServiceContract;
   contentGenerationService: ContentGenerationServiceContract;
   learningDataService: LearningDataServiceContract;
+  settingsService: SettingsServiceContract;
   aiConfigured: boolean;
   requestId?: () => string;
 }
@@ -174,6 +180,52 @@ export function createApiHandler(options: ApiHandlerOptions) {
           parsed.data,
         );
         return jsonResponse(completeReviewResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/settings") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.settingsService.getSettings(accessToken);
+        return jsonResponse(userSettingsResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "PUT" && url.pathname === "/users/me/onboarding") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = onboardingRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "初次設定格式不正確。");
+        }
+        const result = await options.settingsService.completeOnboarding(accessToken, parsed.data);
+        return jsonResponse(userSettingsResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "PUT" && url.pathname === "/users/me/notification-preferences") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = updateNotificationPreferencesRequestSchema.safeParse(
+          await readJsonBody(request),
+        );
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "通知偏好格式不正確。");
+        }
+        const result = await options.settingsService.updateNotificationPreferences(
+          accessToken,
+          parsed.data,
+        );
+        return jsonResponse(notificationPreferencesResponseSchema.parse(result), 200);
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }
@@ -435,6 +487,6 @@ function jsonResponse(
 function withCors(response: Response): Response {
   response.headers.set("access-control-allow-origin", "*");
   response.headers.set("access-control-allow-headers", "authorization, content-type");
-  response.headers.set("access-control-allow-methods", "GET, POST, DELETE, OPTIONS");
+  response.headers.set("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS");
   return response;
 }
