@@ -1,8 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../auth/useAuthStore";
 import { useProgressStore } from "../progress/useProgressStore";
+import { useConnectivityStore } from "../offline/connectivityStore";
 import { mobileEnv } from "../../lib/env";
-import { createEmptyLearningRecordSnapshot } from "./learningRecordsModel";
+import {
+  createEmptyLearningRecordSnapshot,
+  mergeOfflineLearningRecords,
+} from "./learningRecordsModel";
 import { getRemoteLearningRecords } from "./learningRecordsRepository";
 
 export function useLearningRecords() {
@@ -10,10 +14,11 @@ export function useLearningRecords() {
   const localRecords = useProgressStore((state) =>
     profile ? state.byUserId[profile.id]?.learningRecords : undefined,
   );
+  const connectivity = useConnectivityStore((state) => state.status);
   const query = useQuery({
     queryKey: learningRecordsQueryKey(profile?.id),
     queryFn: getRemoteLearningRecords,
-    enabled: Boolean(profile && mobileEnv.contentSource === "api"),
+    enabled: Boolean(profile && mobileEnv.contentSource === "api" && connectivity !== "offline"),
     staleTime: 30 * 1000,
     retry: 1,
   });
@@ -22,6 +27,15 @@ export function useLearningRecords() {
     return {
       ...query,
       data: localRecords ?? createEmptyLearningRecordSnapshot(),
+      isError: false,
+      isLoading: false,
+    };
+  }
+
+  if (connectivity === "offline") {
+    return {
+      ...query,
+      data: mergeOfflineLearningRecords(query.data, localRecords),
       isError: false,
       isLoading: false,
     };

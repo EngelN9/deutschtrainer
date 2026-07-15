@@ -163,9 +163,14 @@ export class LearningDataService implements LearningDataServiceContract {
       return toReplayResponse(existing);
     }
 
+    this.assertSubmittedAt(request.submittedAt);
+
     const exercise = await this.repository.getFixedExercise(request.exerciseId);
     if (!exercise) {
       throw new ApiError("CONTENT_NOT_PUBLISHED", "找不到可作答的已發布固定題。", 404, false);
+    }
+    if (request.exerciseVersion && request.exerciseVersion !== exercise.version) {
+      throw new ApiError("VALIDATION_ERROR", "題目已更新，請更新下載內容後重新作答。", 409, false);
     }
     if (review && review.exerciseId !== exercise.id) {
       throw new ApiError("VALIDATION_ERROR", "複習項目與題目不一致。", 400, false);
@@ -179,6 +184,25 @@ export class LearningDataService implements LearningDataServiceContract {
       ...(review ? { reviewId: review.id } : {}),
     });
     return toSubmitAttemptResponse(recorded, gradingResult);
+  }
+
+  private assertSubmittedAt(submittedAt?: string): void {
+    if (!submittedAt) {
+      return;
+    }
+
+    const submittedTime = new Date(submittedAt).getTime();
+    const now = this.now().getTime();
+    const oldestAllowed = now - 30 * 24 * 60 * 60 * 1000;
+    const newestAllowed = now + 5 * 60 * 1000;
+    if (submittedTime < oldestAllowed || submittedTime > newestAllowed) {
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "離線作答時間必須在最近 30 天內，且不可晚於目前時間。",
+        400,
+        false,
+      );
+    }
   }
 
   private async requireLearner(accessToken: string): Promise<AuthenticatedLearningUser> {

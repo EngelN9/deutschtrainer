@@ -13,6 +13,7 @@ import { useProgressStore } from "../src/features/progress/useProgressStore";
 import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
 import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 import { useUserSettings } from "../src/features/settings/useUserSettings";
+import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { MainNavigation } from "../src/components/MainNavigation";
@@ -95,6 +96,7 @@ export default function HomeScreen() {
         <MessageBanner message={errorMessage} tone="error" />
         <MessageBanner message={noticeMessage} tone="info" />
         <MessageBanner message={learningRecordsQuery.error?.message ?? null} tone="error" />
+        <OfflineStatusBand />
         <View style={styles.goalBand}>
           <View style={styles.goalIcon}>
             <Target color="#FFFFFF" size={23} strokeWidth={2.4} />

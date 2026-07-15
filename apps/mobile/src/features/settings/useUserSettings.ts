@@ -10,7 +10,7 @@ export function useUserSettings() {
   const profile = useAuthStore((state) => state.profile);
   return useQuery({
     queryKey: userSettingsQueryKey(profile?.id),
-    queryFn: getUserSettings,
+    queryFn: () => getUserSettings(profile?.authUserId),
     enabled: Boolean(profile),
     staleTime: 30 * 1000,
     retry: 1,
@@ -22,7 +22,7 @@ export function useUpdateNotificationPreferences() {
   const profile = useAuthStore((state) => state.profile);
   return useMutation({
     mutationFn: (request: UpdateNotificationPreferencesRequest) =>
-      updateNotificationPreferences(request),
+      updateNotificationPreferences(request, profile?.authUserId),
     onSuccess: (response) => {
       queryClient.setQueryData<UserSettingsResponse>(
         userSettingsQueryKey(profile?.id),

@@ -423,7 +423,7 @@ export interface CatalogCourse extends Course {
 
 export interface CourseCatalog {
   courses: CatalogCourse[];
-  source: "api" | "mock" | "supabase";
+  source: "api" | "mock" | "offline" | "supabase";
 }
 
 export interface ExerciseProgressResult {

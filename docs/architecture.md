@@ -149,6 +149,10 @@ AI 題型流程：
 
 離線不支援 AI 批改、AI 對話、STT、即時題目生成。同步需避免重複 attempt，並保留衝突狀態供重試。
 
+Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。課程目錄規模目前受控，pending attempt 上限為 200 筆；每次讀取均重新通過 Zod 驗證，重啟時把中斷的 `syncing` 恢復為 `pending`。當單一 profile 的下載內容接近 5 MB、需要跨資料查詢，或待同步量超出此上限時，應遷移至 SQLite，而不擴大單一 JSON item。
+
+固定題在裝置上立即評分並保存本機進度；同步佇列依原始 `submittedAt` 由舊到新呼叫同一個 server-authoritative `POST /attempts`。API 重新載入已發布題目與答案後評分，service-only RPC 保存原始作答時間並以該時間安排複習。回補限最近 30 天，未來誤差最多 5 分鐘；`400/404/409` 保留為 conflict，網路、rate limit 與登入錯誤保留為 failed，使用者可重試或明確捨棄。
+
 ## 7. 狀態與資料存取
 
 - TanStack Query 管理 server state、loading、empty、error、retry。
@@ -156,7 +160,7 @@ AI 題型流程：
 - React Hook Form + Zod 管理表單。
 - API client 只呼叫 backend；不得直接從 UI 呼叫 Supabase table。
 - DB row type、API DTO、UI ViewModel 分離。
-- Phase 9 已將課程、固定作答、進度與複習移至 API；Phase 10 再將作文／音訊結構化資料與遙測移至 API；Phase 11 將 profile、onboarding 與通知偏好移至 API。
+- Phase 9 已將課程、固定作答、進度與複習移至 API；Phase 10 再將作文／音訊結構化資料與遙測移至 API；Phase 11 將 profile、onboarding 與通知偏好移至 API；Phase 12 在不繞過 API 權威評分的前提下加入下載與重連同步。
 - Mobile 的 Supabase client 僅保留 Auth 與 owner-scoped Storage binary 操作；Storage 路徑仍受 JWT 與 RLS 限制。
 
 ### 通知排程

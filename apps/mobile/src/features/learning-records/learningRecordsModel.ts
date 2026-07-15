@@ -36,6 +36,65 @@ export function createEmptyLearningRecordSnapshot(): LearningRecordSnapshot {
   };
 }
 
+export function mergeOfflineLearningRecords(
+  remote: LearningRecordSnapshot | undefined,
+  local: LearningRecordSnapshot | undefined,
+): LearningRecordSnapshot {
+  if (!remote) {
+    return local ?? createEmptyLearningRecordSnapshot();
+  }
+  if (!local) {
+    return remote;
+  }
+
+  const attempts = uniqueBy(
+    [...remote.attempts, ...local.attempts],
+    (attempt) => attempt.idempotencyKey,
+  ).sort(
+    (left, right) => new Date(right.submittedAt).getTime() - new Date(left.submittedAt).getTime(),
+  );
+  const lessonProgress = [...remote.lessonProgress];
+  for (const localProgress of local.lessonProgress) {
+    const index = lessonProgress.findIndex(
+      (progress) => progress.lessonId === localProgress.lessonId,
+    );
+    if (index < 0) {
+      lessonProgress.push(localProgress);
+      continue;
+    }
+
+    const previous = lessonProgress[index];
+    const completedExerciseIds = unique([
+      ...previous.completedExerciseIds,
+      ...localProgress.completedExerciseIds,
+    ]);
+    const completionPercent = Math.max(previous.completionPercent, localProgress.completionPercent);
+    const completedAt = earliest(previous.completedAt, localProgress.completedAt);
+    lessonProgress[index] = {
+      ...previous,
+      status: completionPercent >= 100 ? "completed" : "in_progress",
+      completionPercent,
+      completedExerciseIds,
+      correctExerciseCount: Math.max(
+        previous.correctExerciseCount,
+        localProgress.correctExerciseCount,
+      ),
+      attemptedExerciseCount: completedExerciseIds.length,
+      lastPracticedAt: latest(previous.lastPracticedAt, localProgress.lastPracticedAt),
+      ...(completedAt ? { completedAt } : {}),
+    };
+  }
+
+  return {
+    attempts,
+    errors: uniqueBy([...remote.errors, ...local.errors], (error) => error.id),
+    mastery: remote.mastery.length > 0 ? remote.mastery : local.mastery,
+    reviews: remote.reviews.length > 0 ? remote.reviews : local.reviews,
+    lessonProgress,
+    skillNames: { ...local.skillNames, ...remote.skillNames },
+  };
+}
+
 export function recordLocalLearningAttempt(
   current: LearningRecordSnapshot,
   input: LearningAttemptInput,
@@ -249,4 +308,28 @@ function formatValue(value: unknown): string {
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function uniqueBy<T>(values: T[], key: (value: T) => string): T[] {
+  const seen = new Set<string>();
+  return values.filter((value) => {
+    const id = key(value);
+    if (seen.has(id)) {
+      return false;
+    }
+    seen.add(id);
+    return true;
+  });
+}
+
+function latest(left: string | undefined, right: string | undefined): string | undefined {
+  if (!left) return right;
+  if (!right) return left;
+  return new Date(left).getTime() >= new Date(right).getTime() ? left : right;
+}
+
+function earliest(left: string | undefined, right: string | undefined): string | undefined {
+  if (!left) return right;
+  if (!right) return left;
+  return new Date(left).getTime() <= new Date(right).getTime() ? left : right;
 }

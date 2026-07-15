@@ -14,6 +14,7 @@
     "verify:workspaces:local": "pnpm run verify:writing:local && pnpm run verify:audio:local",
     "verify:admin:local": "tsx scripts/verify-admin-e2e.ts",
     "verify:learning-api:local": "tsx scripts/verify-learning-api-e2e.ts",
+    "verify:offline-sync:local": "tsx scripts/verify-offline-sync-e2e.ts",
     "verify:settings:local": "tsx scripts/verify-settings-e2e.ts"
   },
   "dependencies": {
