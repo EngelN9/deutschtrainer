@@ -176,6 +176,72 @@ export const onboardingRequestSchema = z
   });
 export type OnboardingRequest = z.infer<typeof onboardingRequestSchema>;
 
+export const notificationTimeSchema = z
+  .string()
+  .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, "提醒時間必須使用 HH:mm 格式。");
+
+export const timeZoneSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .refine((value) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+      return true;
+    } catch {
+      return false;
+    }
+  }, "時區格式不正確。");
+
+export const notificationPreferencesSchema = z.object({
+  notificationsEnabled: z.boolean(),
+  dailyReminderEnabled: z.boolean(),
+  dailyReminderTime: notificationTimeSchema,
+  reviewReminderEnabled: z.boolean(),
+  inactivityReminderEnabled: z.boolean(),
+  inactivityDays: z.number().int().min(2).max(14),
+  writingCompleteEnabled: z.boolean(),
+  newCourseEnabled: z.boolean(),
+  goalCompleteEnabled: z.boolean(),
+  timezone: timeZoneSchema,
+  updatedAt: z.string().datetime({ offset: true }),
+});
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+
+export const updateNotificationPreferencesRequestSchema = notificationPreferencesSchema.omit({
+  updatedAt: true,
+});
+export type UpdateNotificationPreferencesRequest = z.infer<
+  typeof updateNotificationPreferencesRequestSchema
+>;
+
+export const userProfileSchema = z.object({
+  id: databaseUuidSchema,
+  authUserId: databaseUuidSchema,
+  displayName: z.string().max(80),
+  role: z.enum(["learner", "content_editor", "reviewer", "admin"]),
+  timezone: timeZoneSchema,
+  onboardingCompleted: z.boolean(),
+});
+
+export const userSettingsResponseSchema = z.object({
+  profile: userProfileSchema,
+  learning: z.object({
+    currentLevel: cefrLevelSchema,
+    targetLevel: cefrLevelSchema,
+    dailyMinutes: z.number().int().min(5).max(240),
+    learningGoals: z.array(learningGoalSchema).max(5),
+  }),
+  notifications: notificationPreferencesSchema,
+});
+export type UserSettingsResponse = z.infer<typeof userSettingsResponseSchema>;
+
+export const notificationPreferencesResponseSchema = z.object({
+  notifications: notificationPreferencesSchema,
+});
+export type NotificationPreferencesResponse = z.infer<typeof notificationPreferencesResponseSchema>;
+
 export const gradingPolicySchema = z.object({
   caseSensitive: z.boolean(),
   ignorePunctuation: z.boolean(),

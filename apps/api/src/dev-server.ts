@@ -27,6 +27,8 @@ import { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRep
 import { LearningDataService } from "./learning-data/learningDataService";
 import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
 import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
+import { SettingsService } from "./settings/settingsService";
+import { SupabaseSettingsRepository } from "./settings/supabaseSettingsRepository";
 import { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
 import { WritingEvaluationService } from "./writing/writingService";
 import {
@@ -74,6 +76,10 @@ const privateRequestRateLimiter = new PrivateRequestRateLimiter(
 );
 const learningDataService = new LearningDataService({
   repository: new SupabaseLearningDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  rateLimiter: privateRequestRateLimiter,
+});
+const settingsService = new SettingsService({
+  repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
 });
 const writingRepository = new SupabaseWritingRepository(
@@ -144,6 +150,7 @@ const handleRequest = createApiHandler({
   audioService,
   contentGenerationService,
   learningDataService,
+  settingsService,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&

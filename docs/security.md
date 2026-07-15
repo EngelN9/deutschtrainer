@@ -23,7 +23,7 @@
 
 ## 3. RLS 規則
 
-- profiles：使用者可讀寫自己的 profile；admin 可管理角色。
+- profiles/preferences/levels：Mobile 經 API 讀取；onboarding 與通知偏好只透過 service-role-only RPC 原子寫入，authenticated 沒有 table insert/update 權限；admin 仍可管理角色。
 - course content：published 可公開讀；draft/pending_review/approved 僅內容角色。
 - attempts/progress/reviews：API 先驗證 access token 並以 profile ID 篩選；寫入集中於 service-role-only transaction RPC。
 - AI feedback/usage：只允許 owner 讀取；`record_ai_attempt` 僅 service role 可執行，learner 不可繞過 API 寫入分數。
@@ -72,7 +72,7 @@
 - AI 題目草稿：內容編輯與 admin 預設 20/rolling 24h；idempotent replay 不重複計數。
 - 對話：受 scenario maximumTurns 與 daily limit 限制。
 
-Phase 9 與 Phase 10 的私人學習／工作區 API 在單一 runtime 內採每位 profile 60/min sliding window；正式多執行個體部署仍需由 gateway 或共享 rate-limit store 提供全域限制。
+Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 內採每位 profile 60/min sliding window；正式多執行個體部署仍需由 gateway 或共享 rate-limit store 提供全域限制。
 
 ## 7. 隱私與資料保留
 

@@ -153,3 +153,13 @@ pnpm test
 - 聽說驗證 API 遙測、workspace owner filter、另一位使用者零筆 attempt/submission/audio metadata，以及 Storage RLS 與 owner deletion。
 - authenticated 直接呼叫 `delete_own_writing_submission` 與 `record_listening_activity` 必須回傳 `403/404`。
 - repository/service 單元測試驗證 owner profile 傳遞、workspace response、mutation response 與共用 rate limiter。
+
+## 15. Phase 11 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:settings:local` 建立兩位臨時 learner。
+- 驗證 unauthenticated settings `401`、owner onboarding、程度／每日目標、通知時間與 IANA timezone persistence。
+- 驗證第二位 learner 保持獨立預設值，且 RLS 查詢第一位偏好為 0 rows。
+- 驗證 authenticated table mutation `403`、service wrapper `403/404`，以及 service role 的 execute/read privilege。
+- Notification plan 單元測試固定時鐘，驗證 DST-safe timezone conversion、同日去重、優先順序與 master disable。
+- Expo Web production export 必須使用 no-op runtime；native typecheck 必須編譯 Expo Notifications permission、channel、date trigger 與 deep-link listener。
+- 發行前以 Android/iOS 實機驗證允許／拒絕權限、通知送達、點擊 deep link、旅行後 timezone 更新及系統重開機後行為。

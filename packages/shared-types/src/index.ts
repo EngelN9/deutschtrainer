@@ -164,6 +164,14 @@ export interface UserPreferences {
   dailyMinutes: number;
   targetLevel: CefrLevel;
   notificationsEnabled: boolean;
+  dailyReminderEnabled: boolean;
+  dailyReminderTime: string;
+  reviewReminderEnabled: boolean;
+  inactivityReminderEnabled: boolean;
+  inactivityDays: number;
+  writingCompleteEnabled: boolean;
+  newCourseEnabled: boolean;
+  goalCompleteEnabled: boolean;
   preferredTheme: "system" | "light" | "dark";
   learningGoals: LearningGoal[];
 }

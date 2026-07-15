@@ -276,3 +276,30 @@
 - 四個受保護端點具有獨立 Zod response contract、統一錯誤與 `no-store`。
 - 雙帳號整合測試驗證作文兩版、聽力／口說 workspace 隔離、跨帳號 `404`、舊 RPC 撤權及 owner deletion。
 - 詳見 `docs/phase-10-workspace-api.md`。
+
+## Phase 11：通知偏好與本機提醒
+
+交付：
+
+- 個人設定、onboarding 與通知偏好 API。
+- 每日學習、到期複習與多日未學習本機排程。
+- 作文完成、新課程發布與每日目標完成事件通知。
+- master/per-event 開關、提醒時間、未學習天數、時區與系統權限狀態。
+- 同日排程合併與事件 ledger 去重。
+
+驗收：
+
+- 第二位使用者不可讀取或修改第一位使用者偏好。
+- authenticated 不可直接 insert/update profile、preferences 或 levels，也不可執行 service wrappers。
+- 關閉 master switch 後不保留任何排程提醒。
+- 同一時區日期最多一筆排程提醒；事件通知以穩定 key 去重。
+- Web 不載入 native notification module；Android/iOS 使用明確 channel、權限與 deep link。
+
+目前狀態：Pass with device follow-up。
+
+- 三個受保護設定端點具有獨立 Zod contract、統一錯誤與 `no-store`。
+- Mobile profile/onboarding/preferences 不再直接操作 Supabase table。
+- 雙帳號整合測試驗證 C1-C2 onboarding、Europe/Berlin 時區、21:30 提醒、跨帳號零資料、table write `403` 與 service RPC `404`。
+- 純函式測試驗證 timezone conversion、每日去重、review/inactivity precedence 與 master switch。
+- iOS/Android 實機通知權限、排程送達及 deep link 仍需發行前 device matrix 驗證。
+- 詳見 `docs/phase-11-notifications.md`。

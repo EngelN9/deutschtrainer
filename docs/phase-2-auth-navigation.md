@@ -14,6 +14,7 @@ Phase 2 implements account and navigation foundations only. It does not implemen
 - Added React Native session persistence with AsyncStorage.
 - Added shared Zod schemas for sign-in, sign-up, forgot password, and onboarding.
 - Added mobile auth service, profile repository, onboarding repository, and Zustand auth store.
+- Phase 11 later moved profile and onboarding persistence behind the authenticated API and service-only database functions.
 - Added protected route logic for guest, onboarding, and authenticated app screens.
 - Added public screens:
   - `/welcome`

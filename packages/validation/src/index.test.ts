@@ -11,11 +11,14 @@ import {
   generateExerciseDraftRequestSchema,
   learningRecordSnapshotSchema,
   listeningActivityResponseSchema,
+  notificationPreferencesSchema,
   onboardingRequestSchema,
   submitAttemptRequestSchema,
   submitDictationRequestSchema,
   textToSpeechRequestSchema,
   transcribeRequestSchema,
+  updateNotificationPreferencesRequestSchema,
+  userSettingsResponseSchema,
   writingWorkspaceResponseSchema,
 } from "./index";
 
@@ -149,6 +152,52 @@ describe("validation schemas", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("validates notification preferences, timezone, and settings response", () => {
+    const notifications = {
+      notificationsEnabled: true,
+      dailyReminderEnabled: true,
+      dailyReminderTime: "20:30",
+      reviewReminderEnabled: true,
+      inactivityReminderEnabled: true,
+      inactivityDays: 3,
+      writingCompleteEnabled: true,
+      newCourseEnabled: false,
+      goalCompleteEnabled: true,
+      timezone: "Asia/Taipei",
+    };
+
+    expect(updateNotificationPreferencesRequestSchema.parse(notifications)).toEqual(notifications);
+    expect(
+      notificationPreferencesSchema.safeParse({
+        ...notifications,
+        dailyReminderTime: "25:10",
+        updatedAt: "2026-07-15T08:00:00.000Z",
+      }).success,
+    ).toBe(false);
+    expect(
+      userSettingsResponseSchema.parse({
+        profile: {
+          id: "00000000-0000-4000-8000-000000000001",
+          authUserId: "00000000-0000-4000-8000-000000000002",
+          displayName: "Learner",
+          role: "learner",
+          timezone: "Asia/Taipei",
+          onboardingCompleted: true,
+        },
+        learning: {
+          currentLevel: "B1",
+          targetLevel: "B2",
+          dailyMinutes: 20,
+          learningGoals: ["exam_preparation"],
+        },
+        notifications: {
+          ...notifications,
+          updatedAt: "2026-07-15T08:00:00.000Z",
+        },
+      }).notifications.timezone,
+    ).toBe("Asia/Taipei");
   });
 
   it("rejects a fixed exercise without a usable answer", () => {

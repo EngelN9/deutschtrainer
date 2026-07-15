@@ -16,8 +16,10 @@ import {
   subscribeToAuthChanges,
 } from "./authService";
 import { toUserFacingError } from "../../lib/userFacingErrors";
+import { useLearningSetupStore } from "../../state/useLearningSetupStore";
+import { requestNotificationPermission } from "../notifications/notificationRuntime";
 import { completeOnboarding as persistOnboarding } from "../onboarding/onboardingRepository";
-import { fetchCurrentProfile } from "../profile/profileRepository";
+import { fetchCurrentSettings } from "../profile/profileRepository";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -81,12 +83,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ errorMessage: null, noticeMessage: null, status: "loading" });
 
     try {
-      await persistOnboarding(input);
-      const profile = await fetchCurrentProfile();
+      const settings = await persistOnboarding(input);
+      if (input.notificationsEnabled) {
+        await requestNotificationPermission().catch(() => "denied" as const);
+      }
+      applyLearningSettings(settings);
       set({
         errorMessage: null,
         noticeMessage: "初次設定已完成。",
-        profile,
+        profile: settings.profile,
         status: "authenticated",
       });
     } catch (error) {
@@ -166,8 +171,9 @@ async function applySession(
   }
 
   try {
-    const profile = await fetchCurrentProfile();
-    set({ profile, session, status: "authenticated" });
+    const settings = await fetchCurrentSettings();
+    applyLearningSettings(settings);
+    set({ profile: settings.profile, session, status: "authenticated" });
   } catch (error) {
     set({
       errorMessage: toUserFacingError(error),
@@ -176,4 +182,15 @@ async function applySession(
       status: "authenticated",
     });
   }
+}
+
+function applyLearningSettings(settings: {
+  learning: {
+    currentLevel: "B1" | "B2" | "C1" | "C2";
+    targetLevel: "B1" | "B2" | "C1" | "C2";
+  };
+}): void {
+  const learningSetup = useLearningSetupStore.getState();
+  learningSetup.setCurrentLevel(settings.learning.currentLevel);
+  learningSetup.setTargetLevel(settings.learning.targetLevel);
 }

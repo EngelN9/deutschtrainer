@@ -182,3 +182,21 @@
 - learner A 的作文 workspace 有 2 個版本，learner B submissions 為 0；跨帳號刪除回傳 404。
 - learner A 的 audio workspace 有 1 筆 listening attempt、1 筆 speaking submission 與 1 筆 owner audio metadata，learner B 均為 0。
 - 舊 authenticated 作文刪除與聽力遙測 RPC 實測回傳 `403`；service wrappers 僅 service role 有 execute privilege。
+
+## 13. Phase 11 驗收
+
+- `GET /users/me/settings` 只回傳登入者的 profile、程度、每日目標與通知偏好。
+- `PUT /users/me/onboarding` 原子保存 current/target level、每日分鐘、學習目標與 onboarding 狀態。
+- `PUT /users/me/notification-preferences` 驗證 HH:mm、IANA timezone、2-14 天未學習區間與各事件開關。
+- authenticated 不可直接 update profile、insert/update preferences 或 levels，也不可執行兩個 service wrappers。
+- 每日、複習與未學習排程在同一時區日期最多一筆；關閉 master switch 時排程為空。
+- 作文完成、新課程與每日目標事件具有穩定 dedupe key。
+- Web 必須安全降級；iOS/Android 必須建立權限流程、Android channel 與通知 deep link。
+
+目前結果：Pass with device follow-up。
+
+- learner A 完成 C1-C2 onboarding 並保存 45 分鐘目標、21:30、7 天與 Europe/Berlin；learner B 保持未 onboarding 與預設設定。
+- learner B 直接查詢 learner A preferences 得到 0 rows；learner A 直接 PATCH preferences 回傳 `403`。
+- authenticated 直接呼叫 settings service wrapper 回傳 `404`；service role 的兩個 wrapper execute privilege 均為 true。
+- Notification plan 單元測試驗證 Asia/Taipei 絕對時間、每日唯一、review/inactivity precedence 與 master disable。
+- iOS/Android 實機的 permission prompt、OS delivery、重開機保留與 deep link 仍需 device matrix 驗證。

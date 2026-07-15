@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
-import { BookOpen, Clock3, LogOut, RotateCcw, Target } from "lucide-react-native";
+import { BookOpen, Clock3, LogOut, RotateCcw, Settings, Target } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { calculateLearningAnalytics } from "@deutschtrainer/learning-engine";
@@ -12,6 +12,7 @@ import { getLessonCompletionPercent } from "../src/features/progress/progressMod
 import { useProgressStore } from "../src/features/progress/useProgressStore";
 import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
 import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
+import { useUserSettings } from "../src/features/settings/useUserSettings";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { MainNavigation } from "../src/components/MainNavigation";
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const targetLevel = useLearningSetupStore((state) => state.targetLevel);
   const catalogQuery = useCourseCatalog();
   const learningRecordsQuery = useLearningRecords();
+  const settingsQuery = useUserSettings();
   const userProgress = useProgressStore((state) =>
     profile ? state.byUserId[profile.id] : undefined,
   );
@@ -66,17 +68,25 @@ export default function HomeScreen() {
   const weakestSkill = learningRecords?.mastery.toSorted(
     (left, right) => left.masteryScore - right.masteryScore,
   )[0];
+  const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
 
   return (
     <AuthGate mode="protected">
       <ContentScreen
         action={
-          <IconButton
-            accessibilityLabel="登出帳號"
-            icon={LogOut}
-            onPress={() => void signOut()}
-            tone="danger"
-          />
+          <View style={styles.headerActions}>
+            <IconButton
+              accessibilityLabel="開啟個人設定"
+              icon={Settings}
+              onPress={() => router.push("/settings" as Href)}
+            />
+            <IconButton
+              accessibilityLabel="登出帳號"
+              icon={LogOut}
+              onPress={() => void signOut()}
+              tone="danger"
+            />
+          </View>
         }
         description="把今天的時間用在真正會影響德語表達的技能上。"
         eyebrow="今日學習"
@@ -91,7 +101,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.goalCopy}>
             <Text style={styles.goalLabel}>今日目標</Text>
-            <Text style={styles.goalValue}>完成 1 堂課 · 約 20 分鐘</Text>
+            <Text style={styles.goalValue}>完成 1 堂課 · 約 {dailyMinutes} 分鐘</Text>
             <Text style={styles.goalMeta}>今天已完成 {completedToday} 題</Text>
           </View>
         </View>
@@ -254,6 +264,10 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
     lineHeight: 23,
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: spacingTokens.sm,
   },
   lessonMeta: {
     color: colorTokens.mutedText,
