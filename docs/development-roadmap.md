@@ -329,3 +329,27 @@
 - 本機 migration reset、毫秒級 timestamp、兩技能 review schedule、冪等 replay、stale `400` 與 direct RPC `404` 實測通過。
 - Android/iOS 飛航模式、process kill/relaunch、背景切換、低儲存與 reconnect race 仍需 device matrix 驗證。
 - 詳見 `docs/phase-12-offline-sync.md`。
+
+## Phase 13：單字與文法知識庫
+
+交付：
+
+- B1-C2 單字與文法公開搜尋 API。
+- 德語／繁中搜尋、CEFR 篩選、分頁與 published-only 邊界。
+- 單字詞形、搭配、語域、地區、例句及近反義資訊。
+- 文法繁中詳解、規則、例句、常見錯誤、先備主題與相關技能。
+- Mobile 知識庫、單字詳情、文法詳情與精確相關練習導覽。
+
+驗收：
+
+- 所有 request/response 具有獨立 Zod schema，無效篩選回傳 `400`。
+- draft/rejected/archived 內容不可由 API 取得；不存在或未發布 detail 回傳 `404`。
+- 10 個 seed 文法主題均有規則、翻譯例句與中文母語者常見錯誤對照。
+- 德語與繁中搜尋、分頁、CEFR 篩選及相關練習均可操作。
+- 390 px 與桌面寬度無文字遮擋或水平溢出。
+
+目前狀態：Pass。
+
+- 本機 E2E 實測 50 筆單字、published status、分頁、`die Miete` 繁中搜尋、`B1.nebensatz` 文法搜尋、詳細內容與各 6 筆相關練習。
+- invalid difficulty 回傳 `400`，未知 UUID 回傳 `404`。
+- 詳見 `docs/phase-13-knowledge-library.md`。

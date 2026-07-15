@@ -216,3 +216,18 @@
 - API service 驗證合法 `submittedAt` 原樣傳遞，過舊與未來 timestamp 回傳 `VALIDATION_ERROR 400`。
 - 本機 E2E 驗證 attempt timestamp 毫秒一致、所有技能 review 從原始時間排程、replay 為同一 attempt、stale exercise `409`、stale timestamp `400`、authenticated RPC `404`。
 - Android/iOS 實機的飛航模式、關閉重開、背景 reconnect、低儲存與多筆 queue 尚待 device matrix 驗證。
+
+## 15. Phase 13 驗收
+
+- `GET /vocabulary` 與 `GET /grammar-topics` 只回傳 published 內容，支援德語／繁中搜尋、CEFR 篩選及有界分頁。
+- `GET /vocabulary/:id` 必須包含詞形、繁中釋義、德語例句、搭配、語域與地區等規格欄位。
+- `GET /grammar-topics/:id` 必須包含繁中詳解、結構化規則、德語／繁中例句、正誤對照及常見錯誤解釋。
+- 無效 filter 回傳 `400`；不存在或未發布 detail 回傳 `404`。
+- Mobile 提供 loading、empty、error、retry、offline 狀態，以及可存取的模式、程度與分頁控制。
+- 相關練習必須開啟指定 exercise，不得只返回不相關的課程首頁。
+
+目前結果：Pass。
+
+- 本機 E2E 驗證 50 筆 published 單字、繁中搜尋、分頁、cache header、完整單字 metadata、10 個文法主題的規則／例句／錯誤及相關練習。
+- `die Miete` 與 `B1.nebensatz` 各解析 6 筆相關練習；invalid difficulty 為 `400`，未知 UUID 為 `404`。
+- API 與 Mobile typecheck、共享 schema 測試及 390 px／桌面 Playwright 巡檢通過。

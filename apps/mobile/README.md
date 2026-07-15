@@ -10,6 +10,7 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 - Timezone-aware local daily, due-review, inactivity, writing-complete, new-course, and goal-complete notifications with per-day/event deduplication.
 - Protected Expo Router navigation.
 - Home dashboard and B1-C2 course map.
+- Searchable B1-C2 vocabulary and grammar libraries with Traditional Chinese details, CEFR filters, pagination, and related-exercise links.
 - Unit and lesson details.
 - Multiple choice, multiple select, fill blank, sentence order, matching, and error correction.
 - Deterministic grading with partial credit where applicable.
@@ -39,8 +40,8 @@ pnpm start
 
 Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `api` after starting the local API and Supabase stack.
 
-Remote courses, progress, review, fixed grading, writing, listening/speaking workspaces, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
+Remote courses, vocabulary, grammar, progress, review, fixed grading, writing, listening/speaking workspaces, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
 After a course is downloaded, its reading content and deterministic fixed exercises remain available offline. AI evaluation, scheduled-review completion, TTS/STT, writing evaluation, and real-time generation remain online-only. Pending fixed attempts are capped at 200 per profile and sync oldest-first when connectivity returns.
 
-Supabase remains in Mobile only for authentication and owner-scoped recording uploads/removal. Profile, onboarding, preferences, learning records, writing, and audio-learning structured data use the backend API.
+Supabase remains in Mobile only for authentication and owner-scoped recording uploads/removal. Profile, onboarding, preferences, learning records, vocabulary, grammar, writing, and audio-learning structured data use the backend API.

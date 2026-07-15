@@ -9,6 +9,8 @@ import {
   evaluateWritingRequestSchema,
   fixedExerciseSchema,
   generateExerciseDraftRequestSchema,
+  grammarTopicDetailResponseSchema,
+  grammarTopicListRequestSchema,
   learningRecordSnapshotSchema,
   listeningActivityResponseSchema,
   notificationPreferencesSchema,
@@ -19,6 +21,8 @@ import {
   transcribeRequestSchema,
   updateNotificationPreferencesRequestSchema,
   userSettingsResponseSchema,
+  vocabularyDetailResponseSchema,
+  vocabularyListRequestSchema,
   writingWorkspaceResponseSchema,
 } from "./index";
 
@@ -154,6 +158,77 @@ describe("validation schemas", () => {
 
     expect(catalog.source).toBe("api");
     expect(review.answer).toBe("weil");
+  });
+
+  it("normalizes knowledge-library pagination and validates detailed content", () => {
+    expect(vocabularyListRequestSchema.parse({ level: "B1" })).toMatchObject({
+      level: "B1",
+      page: 1,
+      pageSize: 20,
+    });
+    expect(grammarTopicListRequestSchema.parse({ query: "從句", pageSize: 10 }).page).toBe(1);
+
+    const exercise = {
+      id: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
+      lessonId: "3d4ba9d8-1718-4e59-af67-10c3639ba0f2",
+      lessonTitleZhTw: "說明原因與讓步",
+      title: "連接詞填空",
+      level: "B1" as const,
+      type: "fill_blank" as const,
+    };
+    const vocabulary = vocabularyDetailResponseSchema.parse({
+      item: {
+        id: "4d4ba9d8-1718-4e59-af67-10c3639ba0f3",
+        lemma: "obwohl",
+        partOfSpeech: "Konjunktion",
+        principalParts: [],
+        reflexive: false,
+        level: "B1",
+        definitionsZhTw: ["雖然、儘管"],
+        exampleSentences: ["Obwohl es regnet, gehen wir spazieren."],
+        collocations: [],
+        synonyms: ["obgleich"],
+        antonyms: [],
+        register: "neutral",
+        region: "general",
+        version: 1,
+      },
+      relatedExercises: [exercise],
+    });
+    const grammar = grammarTopicDetailResponseSchema.parse({
+      topic: {
+        id: "5d4ba9d8-1718-4e59-af67-10c3639ba0f4",
+        code: "B1.nebensatz",
+        titleZhTw: "從句動詞末位",
+        titleDe: "Verbendstellung im Nebensatz",
+        level: "B1",
+        shortExplanationZhTw: "連接詞會把變位動詞推到句末。",
+        fullExplanationZhTw: "先辨識主從句邊界，再把變位動詞放在從句末位。",
+        rules: [
+          {
+            titleZhTw: "基本語序",
+            explanationZhTw: "從屬連接詞後，變位動詞位於從句末位。",
+            patternDe: "Konjunktion + ... + Verb",
+          },
+        ],
+        examples: [{ textDe: "..., weil es regnet.", translationZhTw: "因為正在下雨。" }],
+        commonMistakes: [
+          {
+            incorrectDe: "..., weil es regnet stark.",
+            correctDe: "..., weil es stark regnet.",
+            explanationZhTw: "regnet 必須位於從句末位。",
+          },
+        ],
+        relatedSkillIds: ["B1.word_order.subordinate_clause"],
+        prerequisiteTopicIds: [],
+        difficulty: 2,
+        version: 1,
+      },
+      relatedExercises: [exercise],
+    });
+
+    expect(vocabulary.item.lemma).toBe("obwohl");
+    expect(grammar.topic.rules).toHaveLength(1);
   });
 
   it("rejects onboarding when target level is below current level", () => {

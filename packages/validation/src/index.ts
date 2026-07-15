@@ -434,6 +434,160 @@ export const lessonDetailResponseSchema = z.object({
 });
 export type LessonDetailResponse = z.infer<typeof lessonDetailResponseSchema>;
 
+export const vocabularyRegisterSchema = z.enum(["neutral", "formal", "informal", "academic"]);
+export const vocabularyRegionSchema = z.enum(["DE", "AT", "CH", "general"]);
+
+export const vocabularyItemSchema = z.object({
+  id: databaseUuidSchema,
+  lemma: z.string().min(1).max(200),
+  partOfSpeech: z.string().min(1).max(100),
+  gender: z.enum(["der", "die", "das"]).optional(),
+  plural: z.string().min(1).max(200).optional(),
+  principalParts: z.array(z.string().min(1).max(200)).max(8),
+  separablePrefix: z.string().min(1).max(100).optional(),
+  reflexive: z.boolean(),
+  governingCase: z.enum(["nominative", "accusative", "dative", "genitive"]).optional(),
+  requiredPreposition: z.string().min(1).max(100).optional(),
+  level: cefrLevelSchema,
+  frequencyRank: z.number().int().positive().optional(),
+  definitionsZhTw: z.array(z.string().min(1).max(500)).min(1).max(12),
+  exampleSentences: z.array(z.string().min(1).max(1000)).min(1).max(20),
+  collocations: z.array(z.string().min(1).max(300)).max(30),
+  synonyms: z.array(z.string().min(1).max(200)).max(30),
+  antonyms: z.array(z.string().min(1).max(200)).max(30),
+  register: vocabularyRegisterSchema,
+  region: vocabularyRegionSchema,
+  audioUrl: z.string().url().optional(),
+  version: z.number().int().positive(),
+});
+export type VocabularyItemResponse = z.infer<typeof vocabularyItemSchema>;
+
+export const vocabularySummarySchema = vocabularyItemSchema.pick({
+  id: true,
+  lemma: true,
+  partOfSpeech: true,
+  gender: true,
+  level: true,
+  definitionsZhTw: true,
+  register: true,
+  region: true,
+  version: true,
+});
+
+export const vocabularyListRequestSchema = z
+  .object({
+    level: cefrLevelSchema.optional(),
+    query: z.string().trim().max(80).optional(),
+    partOfSpeech: z.string().trim().min(1).max(100).optional(),
+    register: vocabularyRegisterSchema.optional(),
+    region: vocabularyRegionSchema.optional(),
+    page: z.number().int().min(1).max(10_000).default(1),
+    pageSize: z.number().int().min(1).max(50).default(20),
+  })
+  .strict();
+export type VocabularyListRequest = z.infer<typeof vocabularyListRequestSchema>;
+
+export const vocabularyListResponseSchema = z.object({
+  items: z.array(vocabularySummarySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive().max(50),
+  facets: z.object({
+    partsOfSpeech: z.array(z.string().min(1)),
+    registers: z.array(vocabularyRegisterSchema),
+    regions: z.array(vocabularyRegionSchema),
+  }),
+});
+export type VocabularyListResponse = z.infer<typeof vocabularyListResponseSchema>;
+
+export const grammarRuleSchema = z.object({
+  titleZhTw: z.string().min(1).max(200),
+  explanationZhTw: z.string().min(1).max(1000),
+  patternDe: z.string().min(1).max(500).optional(),
+});
+
+export const grammarExampleSchema = z.object({
+  textDe: z.string().min(1).max(1000),
+  translationZhTw: z.string().min(1).max(1000),
+  noteZhTw: z.string().min(1).max(1000).optional(),
+});
+
+export const grammarCommonMistakeSchema = z.object({
+  incorrectDe: z.string().min(1).max(1000),
+  correctDe: z.string().min(1).max(1000),
+  explanationZhTw: z.string().min(1).max(1000),
+});
+
+export const grammarTopicSchema = z.object({
+  id: databaseUuidSchema,
+  code: z.string().min(1).max(200),
+  titleZhTw: z.string().min(1).max(200),
+  titleDe: z.string().min(1).max(200),
+  level: cefrLevelSchema,
+  shortExplanationZhTw: z.string().min(1).max(1000),
+  fullExplanationZhTw: z.string().min(1).max(5000),
+  rules: z.array(grammarRuleSchema).min(1).max(20),
+  examples: z.array(grammarExampleSchema).min(1).max(30),
+  commonMistakes: z.array(grammarCommonMistakeSchema).min(1).max(20),
+  relatedSkillIds: z.array(z.string().min(1)).max(30),
+  prerequisiteTopicIds: z.array(z.string().min(1)).max(30),
+  difficulty: z.number().int().min(1).max(5),
+  version: z.number().int().positive(),
+});
+export type GrammarTopicResponse = z.infer<typeof grammarTopicSchema>;
+
+export const grammarTopicSummarySchema = grammarTopicSchema.pick({
+  id: true,
+  code: true,
+  titleZhTw: true,
+  titleDe: true,
+  level: true,
+  shortExplanationZhTw: true,
+  difficulty: true,
+  version: true,
+});
+
+export const grammarTopicListRequestSchema = z
+  .object({
+    level: cefrLevelSchema.optional(),
+    query: z.string().trim().max(80).optional(),
+    difficulty: z.number().int().min(1).max(5).optional(),
+    page: z.number().int().min(1).max(10_000).default(1),
+    pageSize: z.number().int().min(1).max(50).default(20),
+  })
+  .strict();
+export type GrammarTopicListRequest = z.infer<typeof grammarTopicListRequestSchema>;
+
+export const grammarTopicListResponseSchema = z.object({
+  items: z.array(grammarTopicSummarySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive().max(50),
+  difficulties: z.array(z.number().int().min(1).max(5)),
+});
+export type GrammarTopicListResponse = z.infer<typeof grammarTopicListResponseSchema>;
+
+export const knowledgeExerciseLinkSchema = z.object({
+  id: databaseUuidSchema,
+  lessonId: databaseUuidSchema,
+  lessonTitleZhTw: z.string().min(1),
+  title: z.string().min(1),
+  level: cefrLevelSchema,
+  type: exerciseTypeSchema,
+});
+
+export const vocabularyDetailResponseSchema = z.object({
+  item: vocabularyItemSchema,
+  relatedExercises: z.array(knowledgeExerciseLinkSchema).max(20),
+});
+export type VocabularyDetailResponse = z.infer<typeof vocabularyDetailResponseSchema>;
+
+export const grammarTopicDetailResponseSchema = z.object({
+  topic: grammarTopicSchema,
+  relatedExercises: z.array(knowledgeExerciseLinkSchema).max(20),
+});
+export type GrammarTopicDetailResponse = z.infer<typeof grammarTopicDetailResponseSchema>;
+
 export const attemptModeSchema = z.enum(["lesson", "review", "practice", "placement"]);
 
 export const fixedGradingResultSchema = z.object({

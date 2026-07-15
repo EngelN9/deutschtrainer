@@ -66,6 +66,7 @@ pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:admin:local
 pnpm --filter @deutschtrainer/api verify:settings:local
 pnpm --filter @deutschtrainer/api verify:offline-sync:local
+pnpm --filter @deutschtrainer/api verify:knowledge:local
 ```
 
 Local mobile web is available at `http://localhost:8081`; the admin console uses `http://localhost:3000`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
@@ -85,5 +86,6 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 10: private writing/audio workspaces, API-backed writing deletion and listening telemetry, shared learner rate limiting, and Mobile structured-data API migration complete.
 - Phase 11: API-backed onboarding and notification preferences, timezone-aware local reminders, event deduplication, and personal notification settings complete with native-device follow-up.
 - Phase 12: per-user course downloads, offline fixed-exercise grading, durable pending attempts, reconnect sync, conflict recovery, and original submission-time preservation complete with native-device follow-up.
+- Phase 13: searchable B1-C2 vocabulary and grammar libraries, structured Traditional Chinese explanations, published-only APIs, pagination, and related-exercise deep links complete.
 
-See `docs/phase-12-offline-sync.md` for the offline storage boundary, synchronization model, and local integration evidence.
+See `docs/phase-13-knowledge-library.md` for the vocabulary/grammar contracts, content model, Mobile behavior, and local integration evidence.

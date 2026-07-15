@@ -1058,6 +1058,107 @@ set
   version = excluded.version,
   updated_at = now();
 
+with grammar_details(
+  code,
+  rules_json,
+  examples_json,
+  common_mistakes_json,
+  related_skill_ids,
+  prerequisite_topic_ids
+) as (
+  values
+    (
+      'B1.nebensatz',
+      $phase13$[{"titleZhTw":"從屬連接詞後的語序","explanationZhTw":"weil、obwohl、dass 等連接詞引導從句，變位動詞位於從句末位。","patternDe":"Hauptsatz, Konjunktion + Subjekt + ... + Verb."}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Ich bleibe zu Hause, weil es stark regnet.","translationZhTw":"我待在家，因為雨下得很大。","noteZhTw":"regnet 位於 weil 從句末位。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Ich bleibe zu Hause, weil es regnet stark.","correctDe":"Ich bleibe zu Hause, weil es stark regnet.","explanationZhTw":"從句中的變位動詞 regnet 必須放在句末。"}]$phase13$::jsonb,
+      array['B1.word_order.subordinate_clause'],
+      '{}'::text[]
+    ),
+    (
+      'B1.wechselpraeposition',
+      $phase13$[{"titleZhTw":"位置與方向","explanationZhTw":"靜態位置通常使用第三格；移動的目的地或位置變化通常使用第四格。","patternDe":"Wo? + Dativ / Wohin? + Akkusativ"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Das Bild hängt an der Wand. Ich hänge das Bild an die Wand.","translationZhTw":"畫掛在牆上。我把畫掛到牆上。","noteZhTw":"第一句回答 Wo，第二句回答 Wohin。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Ich stelle den Stuhl neben dem Sofa.","correctDe":"Ich stelle den Stuhl neben das Sofa.","explanationZhTw":"stellen 表示移動到目的位置，因此使用第四格。"}]$phase13$::jsonb,
+      array['B1.case.dative', 'B1.preposition.two_way'],
+      '{}'::text[]
+    ),
+    (
+      'B1.dativ',
+      $phase13$[{"titleZhTw":"固定第三格動詞","explanationZhTw":"helfen、danken、gefallen 等常見動詞的受詞使用第三格。","patternDe":"Subjekt + Verb + Dativobjekt"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Wir helfen dem Nachbarn beim Umzug.","translationZhTw":"我們幫鄰居搬家。","noteZhTw":"dem Nachbarn 是 helfen 的第三格受詞。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Ich helfe den Nachbar.","correctDe":"Ich helfe dem Nachbarn.","explanationZhTw":"helfen 要求第三格；陽性弱變化名詞同時加上 -n。"}]$phase13$::jsonb,
+      array['B1.case.dative'],
+      '{}'::text[]
+    ),
+    (
+      'B1.formal_email',
+      $phase13$[{"titleZhTw":"正式信件框架","explanationZhTw":"使用正式稱謂、清楚說明來意、提出委婉請求，並以正式結尾收束。","patternDe":"Sehr geehrte ... / Könnten Sie ... / Mit freundlichen Grüßen"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Könnten Sie mir bitte mitteilen, ob die Stelle noch frei ist?","translationZhTw":"請問您能否告知我該職缺是否仍然開放？","noteZhTw":"Könnten Sie 讓請求保持正式且委婉。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Hey, ist der Job noch da?","correctDe":"Sehr geehrte Damen und Herren, ist die Stelle noch ausgeschrieben?","explanationZhTw":"正式求職信應避免口語稱呼與過度簡略的問法。"}]$phase13$::jsonb,
+      array['B1.writing.formal_email', 'B1.register.formal'],
+      '{}'::text[]
+    ),
+    (
+      'B1.connectors',
+      $phase13$[{"titleZhTw":"連接詞功能與語序","explanationZhTw":"先判斷原因、結果、對比或補充，再確認該連接詞是否改變後續語序。","patternDe":"weil + Verb am Ende / deshalb + Verb an Position 2"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Es regnet. Deshalb bleibe ich zu Hause.","translationZhTw":"正在下雨。因此我待在家。","noteZhTw":"deshalb 佔據第一位置，變位動詞 bleibe 緊接在後。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Deshalb ich bleibe zu Hause.","correctDe":"Deshalb bleibe ich zu Hause.","explanationZhTw":"deshalb 後仍遵守主句動詞第二位。"}]$phase13$::jsonb,
+      array['B1.writing.connectors', 'B1.interaction.opinion'],
+      array['B1.nebensatz']
+    ),
+    (
+      'B2.concession',
+      $phase13$[{"titleZhTw":"先讓步再凸顯立場","explanationZhTw":"zwar 引入承認的觀點，aber 或 jedoch 引出更重要的主要立場。","patternDe":"zwar ..., aber/jedoch ..."}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Die Umstellung ist zwar teuer, langfristig aber sinnvoll.","translationZhTw":"這項轉型固然昂貴，但長期而言是合理的。","noteZhTw":"aber 前後形成清楚的權重差異。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Zwar ist die Lösung teuer, sondern sie ist sinnvoll.","correctDe":"Zwar ist die Lösung teuer, aber sie ist sinnvoll.","explanationZhTw":"sondern 用於否定後更正；zwar 的典型搭配是 aber 或 jedoch。"}]$phase13$::jsonb,
+      array['B2.argumentation.counterargument', 'B2.writing.cohesion'],
+      array['B1.connectors']
+    ),
+    (
+      'B2.nominal_style',
+      $phase13$[{"titleZhTw":"以名詞化壓縮資訊","explanationZhTw":"正式文本可把動作改寫成名詞片語，但應避免連續堆疊造成難讀。","patternDe":"weil man prüft → aufgrund der Prüfung"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Nach eingehender Prüfung der Unterlagen erhalten Sie eine Rückmeldung.","translationZhTw":"詳細審查文件後，您會收到回覆。","noteZhTw":"Prüfung 將審查行為名詞化。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Wegen der Durchführung der Überprüfung der Daten ...","correctDe":"Weil wir die Daten überprüft haben, ...","explanationZhTw":"過多名詞化會降低可讀性；必要時改回動詞句。"}]$phase13$::jsonb,
+      array['B2.register.formal'],
+      array['B1.formal_email']
+    ),
+    (
+      'C1.reported_speech',
+      $phase13$[{"titleZhTw":"中性轉述他人主張","explanationZhTw":"新聞與學術文本使用第一虛擬式，標示內容來自他人而非作者直接背書。","patternDe":"Er sagt, die Ergebnisse seien eindeutig."}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Die Autorin erklärt, die Ergebnisse seien nicht übertragbar.","translationZhTw":"作者表示，這些結果不具可推廣性。","noteZhTw":"seien 是 sein 的第一虛擬式複數。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Die Autorin behauptet, die Ergebnisse sind eindeutig.","correctDe":"Die Autorin behauptet, die Ergebnisse seien eindeutig.","explanationZhTw":"正式中性轉述時，以 seien 與作者主張保持距離。"}]$phase13$::jsonb,
+      array['C1.writing.academic_summary'],
+      array['B1.nebensatz']
+    ),
+    (
+      'C1.academic_linking',
+      $phase13$[{"titleZhTw":"精確標示論證關係","explanationZhTw":"使用連接表達區分證據、限制、推論與結論，避免把相關性誤寫成因果。","patternDe":"Die Daten zeigen ...; daraus lässt sich jedoch nicht ableiten, dass ..."}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Die Daten weisen auf einen Zusammenhang hin; ein Kausalschluss ist jedoch nicht zulässig.","translationZhTw":"資料顯示存在關聯，但不能據此作出因果推論。","noteZhTw":"jedoch 清楚限制前句可支持的結論。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"Die Werte korrelieren, deshalb beweist die Studie die Ursache.","correctDe":"Die Werte korrelieren; daraus folgt jedoch kein eindeutiger Kausalschluss.","explanationZhTw":"相關性不足以直接證明因果關係。"}]$phase13$::jsonb,
+      array['C1.writing.academic_summary', 'C1.reading.author_stance'],
+      array['B2.concession', 'C1.reported_speech']
+    ),
+    (
+      'C2.pragmatic_marking',
+      $phase13$[{"titleZhTw":"結合字面與語境","explanationZhTw":"高階語用理解需同時分析字面內容、說話者立場、共享背景及語域落差。","patternDe":"positive Wortwahl + widersprüchlicher Kontext → mögliche Ironie"}]$phase13$::jsonb,
+      $phase13$[{"textDe":"Das war ja eine ganz hervorragende Idee – jetzt funktioniert gar nichts mehr.","translationZhTw":"這主意可真是太棒了，現在什麼都不能用了。","noteZhTw":"正面措辭與負面結果形成反諷。"}]$phase13$::jsonb,
+      $phase13$[{"incorrectDe":"hervorragend 一律表示真心稱讚。","correctDe":"hervorragend 可能因語境與語調形成反諷。","explanationZhTw":"不可只依單一詞彙判斷說話者立場。"}]$phase13$::jsonb,
+      array['C2.pragmatics.irony', 'C2.register.flexible_shift'],
+      array['C1.academic_linking']
+    )
+)
+update public.grammar_topics as topic
+set
+  rules_json = details.rules_json,
+  examples_json = details.examples_json,
+  common_mistakes_json = details.common_mistakes_json,
+  related_skill_ids = details.related_skill_ids,
+  prerequisite_topic_ids = details.prerequisite_topic_ids,
+  updated_at = now()
+from grammar_details as details
+where topic.code = details.code;
+
 with vocabulary_seed(level, lemma, part_of_speech, definition_zh_tw, example_de, frequency_rank) as (
   values
     ('B1'::public.cefr_level, 'obwohl', 'Konjunktion', '雖然、儘管', 'Obwohl es regnet, gehen wir spazieren.', 101),
@@ -1115,6 +1216,8 @@ insert into public.vocabulary (
   id,
   lemma,
   part_of_speech,
+  gender,
+  reflexive,
   level,
   frequency_rank,
   definitions_zh_tw,
@@ -1126,6 +1229,13 @@ select
   md5('vocabulary:' || level::text || ':' || lemma)::uuid,
   lemma,
   part_of_speech,
+  case
+    when lemma like 'der %' then 'der'
+    when lemma like 'die %' then 'die'
+    when lemma like 'das %' then 'das'
+    else null
+  end,
+  lemma like 'sich %',
   level,
   frequency_rank,
   array[definition_zh_tw],
@@ -1136,12 +1246,54 @@ from vocabulary_seed
 on conflict (level, lemma) do update
 set
   part_of_speech = excluded.part_of_speech,
+  gender = excluded.gender,
+  reflexive = excluded.reflexive,
   frequency_rank = excluded.frequency_rank,
   definitions_zh_tw = excluded.definitions_zh_tw,
   example_sentences = excluded.example_sentences,
   status = excluded.status,
   version = excluded.version,
   updated_at = now();
+
+with vocabulary_details(
+  level,
+  lemma,
+  plural,
+  principal_parts_json,
+  governing_case,
+  required_preposition,
+  collocations_json,
+  synonyms_json,
+  antonyms_json,
+  register,
+  region
+) as (
+  values
+    ('B1'::public.cefr_level, 'obwohl', null, '[]'::jsonb, null, null, '["obwohl + Nebensatz"]'::jsonb, '["obgleich"]'::jsonb, '[]'::jsonb, 'neutral', 'general'),
+    ('B1', 'deshalb', null, '[]'::jsonb, null, null, '["deshalb + Verb an Position 2"]'::jsonb, '["daher", "darum"]'::jsonb, '[]'::jsonb, 'neutral', 'general'),
+    ('B1', 'die Miete', 'die Mieten', '[]'::jsonb, null, null, '["Miete zahlen", "die Miete erhöhen"]'::jsonb, '[]'::jsonb, '[]'::jsonb, 'neutral', 'DE'),
+    ('B1', 'die Kaution', 'die Kautionen', '[]'::jsonb, null, null, '["eine Kaution hinterlegen", "die Kaution zurückzahlen"]'::jsonb, '["Mietsicherheit"]'::jsonb, '[]'::jsonb, 'neutral', 'DE'),
+    ('B1', 'der Mietvertrag', 'die Mietverträge', '[]'::jsonb, null, null, '["einen Mietvertrag unterschreiben", "den Mietvertrag kündigen"]'::jsonb, '[]'::jsonb, '[]'::jsonb, 'neutral', 'DE'),
+    ('B1', 'der Termin', 'die Termine', '[]'::jsonb, null, null, '["einen Termin vereinbaren", "einen Termin verschieben"]'::jsonb, '["Verabredung"]'::jsonb, '[]'::jsonb, 'neutral', 'general'),
+    ('B1', 'das Rezept', 'die Rezepte', '[]'::jsonb, null, null, '["ein Rezept ausstellen", "ein Rezept einlösen"]'::jsonb, '[]'::jsonb, '[]'::jsonb, 'neutral', 'general'),
+    ('B1', 'sich bewerben', null, '["bewirbt sich", "bewarb sich", "hat sich beworben"]'::jsonb, 'accusative', 'um', '["sich um eine Stelle bewerben", "sich bei einer Firma bewerben"]'::jsonb, '["sich bewerben um"]'::jsonb, '[]'::jsonb, 'formal', 'general'),
+    ('C1', 'ableiten', null, '["leitet ab", "leitete ab", "hat abgeleitet"]'::jsonb, null, 'aus', '["etwas aus Daten ableiten", "daraus lässt sich ableiten"]'::jsonb, '["folgern"]'::jsonb, '[]'::jsonb, 'academic', 'general'),
+    ('C2', 'mitnichten', null, '[]'::jsonb, null, null, '["mitnichten der Fall sein"]'::jsonb, '["keineswegs", "beileibe nicht"]'::jsonb, '["durchaus"]'::jsonb, 'formal', 'general')
+)
+update public.vocabulary as item
+set
+  plural = details.plural,
+  principal_parts_json = details.principal_parts_json,
+  governing_case = details.governing_case,
+  required_preposition = details.required_preposition,
+  collocations_json = details.collocations_json,
+  synonyms_json = details.synonyms_json,
+  antonyms_json = details.antonyms_json,
+  register = details.register,
+  region = details.region,
+  updated_at = now()
+from vocabulary_details as details
+where item.level = details.level and item.lemma = details.lemma;
 
 create table public._phase6_writing_prompt_seed (
   slug text primary key,

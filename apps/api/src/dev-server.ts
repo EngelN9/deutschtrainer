@@ -26,6 +26,8 @@ import {
 import { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
 import { LearningDataService } from "./learning-data/learningDataService";
 import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
+import { KnowledgeService } from "./knowledge/knowledgeService";
+import { SupabaseKnowledgeRepository } from "./knowledge/supabaseKnowledgeRepository";
 import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
 import { SettingsService } from "./settings/settingsService";
 import { SupabaseSettingsRepository } from "./settings/supabaseSettingsRepository";
@@ -78,6 +80,9 @@ const learningDataService = new LearningDataService({
   repository: new SupabaseLearningDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
 });
+const knowledgeService = new KnowledgeService(
+  new SupabaseKnowledgeRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+);
 const settingsService = new SettingsService({
   repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
@@ -150,6 +155,7 @@ const handleRequest = createApiHandler({
   audioService,
   contentGenerationService,
   learningDataService,
+  knowledgeService,
   settingsService,
   aiConfigured:
     provider.configured &&

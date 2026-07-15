@@ -243,34 +243,70 @@ export interface ReviewPolicy {
 
 export interface GrammarTopic {
   id: string;
+  code: string;
   titleZhTw: string;
   titleDe: string;
   level: CefrLevel;
   shortExplanationZhTw: string;
   fullExplanationZhTw: string;
+  rules: GrammarRule[];
+  examples: GrammarExample[];
+  commonMistakes: GrammarCommonMistake[];
   relatedSkillIds: string[];
   prerequisiteTopicIds: string[];
+  difficulty: number;
+  version: number;
+}
+
+export interface GrammarRule {
+  titleZhTw: string;
+  explanationZhTw: string;
+  patternDe?: string | undefined;
+}
+
+export interface GrammarExample {
+  textDe: string;
+  translationZhTw: string;
+  noteZhTw?: string | undefined;
+}
+
+export interface GrammarCommonMistake {
+  incorrectDe: string;
+  correctDe: string;
+  explanationZhTw: string;
 }
 
 export interface VocabularyItem {
   id: string;
   lemma: string;
   partOfSpeech: string;
-  gender?: "der" | "die" | "das";
-  plural?: string;
-  principalParts?: string[];
-  separablePrefix?: string;
-  reflexive?: boolean;
-  governingCase?: "nominative" | "accusative" | "dative" | "genitive";
-  requiredPreposition?: string;
+  gender?: "der" | "die" | "das" | undefined;
+  plural?: string | undefined;
+  principalParts: string[];
+  separablePrefix?: string | undefined;
+  reflexive: boolean;
+  governingCase?: "nominative" | "accusative" | "dative" | "genitive" | undefined;
+  requiredPreposition?: string | undefined;
   level: CefrLevel;
-  frequencyRank?: number;
+  frequencyRank?: number | undefined;
   definitionsZhTw: string[];
   exampleSentences: string[];
   collocations: string[];
+  synonyms: string[];
+  antonyms: string[];
   register: "neutral" | "formal" | "informal" | "academic";
   region: "DE" | "AT" | "CH" | "general";
-  audioUrl?: string;
+  audioUrl?: string | undefined;
+  version: number;
+}
+
+export interface KnowledgeExerciseLink {
+  id: string;
+  lessonId: string;
+  lessonTitleZhTw: string;
+  title: string;
+  level: CefrLevel;
+  type: ExerciseType;
 }
 
 export interface ExerciseOption {

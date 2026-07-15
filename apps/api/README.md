@@ -6,6 +6,7 @@ Node backend for learner data, AI evaluation, audio processing, and content-gove
 
 - `GET /health`: service and AI-provider readiness.
 - `/courses`, `/lessons`, `/attempts`, `/users/me/progress`, and `/users/me/reviews`: published course delivery and owner-scoped learning records.
+- `GET /vocabulary`, `GET /vocabulary/:id`, `GET /grammar-topics`, and `GET /grammar-topics/:id`: published B1-C2 knowledge search, details, and related exercises.
 - `GET /users/me/settings`, `PUT /users/me/onboarding`, and `PUT /users/me/notification-preferences`: owner-scoped profile, learning setup, and notification preferences.
 - `GET /users/me/writing` and `DELETE /writing/submissions/:id`: owner-scoped writing workspace and deletion.
 - `POST /ai/evaluate-response`: AI grading for published `translation` and `free_response` exercises.
@@ -37,6 +38,7 @@ pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:workspaces:local
 pnpm --filter @deutschtrainer/api verify:settings:local
 pnpm --filter @deutschtrainer/api verify:offline-sync:local
+pnpm --filter @deutschtrainer/api verify:knowledge:local
 ```
 
 `verify:local` requires a running local Supabase stack, a running API, and `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the current shell. It creates and removes temporary users while checking evaluation, replay, cache, persistence, RLS, protected answers, and RPC permissions.
@@ -48,3 +50,5 @@ pnpm --filter @deutschtrainer/api verify:offline-sync:local
 `verify:settings:local` verifies API onboarding, timezone and reminder persistence, two-user isolation, revoked direct table writes, and service-only settings RPCs.
 
 `verify:offline-sync:local` verifies original offline submission timestamps, review scheduling from that timestamp, idempotent replay, the 30-day replay window, and authenticated denial of the service-only sync RPC.
+
+`verify:knowledge:local` verifies published-only vocabulary and grammar delivery, German/Traditional Chinese search, bounded pagination, detailed metadata, structured grammar content, related exercises, cache headers, invalid filters, and missing records.
