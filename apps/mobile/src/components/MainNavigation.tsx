@@ -1,6 +1,14 @@
 import type { Href } from "expo-router";
 import { usePathname, useRouter } from "expo-router";
-import { BarChart3, BookOpen, FilePenLine, Headphones, Home, RotateCcw } from "lucide-react-native";
+import {
+  BarChart3,
+  BookOpen,
+  FilePenLine,
+  Headphones,
+  Home,
+  Library,
+  RotateCcw,
+} from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 
@@ -12,6 +20,7 @@ const items: Array<{
 }> = [
   { href: "/home", icon: Home, label: "首頁", path: "/home" },
   { href: "/courses", icon: BookOpen, label: "課程", path: "/courses" },
+  { href: "/knowledge" as Href, icon: Library, label: "知識", path: "/knowledge" },
   { href: "/writing" as Href, icon: FilePenLine, label: "寫作", path: "/writing" },
   { href: "/audio-training" as Href, icon: Headphones, label: "聽說", path: "/audio-training" },
   { href: "/reviews" as Href, icon: RotateCcw, label: "複習", path: "/reviews" },

@@ -16,6 +16,9 @@ import {
   evaluateWritingResponseSchema,
   generateExerciseDraftRequestSchema,
   generateExerciseDraftResponseSchema,
+  grammarTopicDetailResponseSchema,
+  grammarTopicListRequestSchema,
+  grammarTopicListResponseSchema,
   lessonDetailResponseSchema,
   listeningActivityRequestSchema,
   listeningActivityResponseSchema,
@@ -36,6 +39,9 @@ import {
   transcribeResponseSchema,
   updateNotificationPreferencesRequestSchema,
   userSettingsResponseSchema,
+  vocabularyDetailResponseSchema,
+  vocabularyListRequestSchema,
+  vocabularyListResponseSchema,
   writingWorkspaceResponseSchema,
 } from "@deutschtrainer/validation";
 import type { AudioLearningServiceContract } from "./audio/types";
@@ -43,6 +49,7 @@ import type { ContentGenerationServiceContract } from "./content-generation/type
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
 import type { LearningDataServiceContract } from "./learning-data/types";
+import type { KnowledgeServiceContract } from "./knowledge/types";
 import type { SettingsServiceContract } from "./settings/types";
 import type { WritingService } from "./writing/types";
 
@@ -52,6 +59,7 @@ export interface ApiHandlerOptions {
   audioService: AudioLearningServiceContract;
   contentGenerationService: ContentGenerationServiceContract;
   learningDataService: LearningDataServiceContract;
+  knowledgeService: KnowledgeServiceContract;
   settingsService: SettingsServiceContract;
   aiConfigured: boolean;
   requestId?: () => string;
@@ -112,6 +120,80 @@ export function createApiHandler(options: ApiHandlerOptions) {
         const lessonId = parseDatabaseUuid(lessonDetailMatch[1], "課堂 ID 格式不正確。");
         const result = await options.learningDataService.getLesson(lessonId);
         return jsonResponse(lessonDetailResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/vocabulary") {
+      const requestId = createRequestId();
+      try {
+        const parsed = vocabularyListRequestSchema.safeParse({
+          level: readQueryValue(url, "level"),
+          query: readQueryValue(url, "query"),
+          partOfSpeech: readQueryValue(url, "partOfSpeech"),
+          register: readQueryValue(url, "register"),
+          region: readQueryValue(url, "region"),
+          page: readQueryNumber(url, "page"),
+          pageSize: readQueryNumber(url, "pageSize"),
+        });
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "單字庫篩選格式不正確。");
+        }
+        const result = await options.knowledgeService.listVocabulary(parsed.data);
+        return jsonResponse(vocabularyListResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const vocabularyDetailMatch = url.pathname.match(/^\/vocabulary\/([^/]+)$/);
+    if (request.method === "GET" && vocabularyDetailMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const itemId = parseDatabaseUuid(vocabularyDetailMatch[1], "單字 ID 格式不正確。");
+        const result = await options.knowledgeService.getVocabularyItem(itemId);
+        return jsonResponse(vocabularyDetailResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/grammar-topics") {
+      const requestId = createRequestId();
+      try {
+        const parsed = grammarTopicListRequestSchema.safeParse({
+          level: readQueryValue(url, "level"),
+          query: readQueryValue(url, "query"),
+          difficulty: readQueryNumber(url, "difficulty"),
+          page: readQueryNumber(url, "page"),
+          pageSize: readQueryNumber(url, "pageSize"),
+        });
+        if (!parsed.success) {
+          throw validationError(parsed.error.issues[0]?.message, "文法庫篩選格式不正確。");
+        }
+        const result = await options.knowledgeService.listGrammarTopics(parsed.data);
+        return jsonResponse(grammarTopicListResponseSchema.parse(result), 200, {
+          cacheControl: "public, max-age=60, stale-while-revalidate=300",
+        });
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    const grammarDetailMatch = url.pathname.match(/^\/grammar-topics\/([^/]+)$/);
+    if (request.method === "GET" && grammarDetailMatch?.[1]) {
+      const requestId = createRequestId();
+      try {
+        const topicId = parseDatabaseUuid(grammarDetailMatch[1], "文法主題 ID 格式不正確。");
+        const result = await options.knowledgeService.getGrammarTopic(topicId);
+        return jsonResponse(grammarTopicDetailResponseSchema.parse(result), 200, {
           cacheControl: "public, max-age=60, stale-while-revalidate=300",
         });
       } catch (error) {
@@ -446,6 +528,16 @@ function parseDatabaseUuid(value: string, message: string): string {
     throw new ApiError("VALIDATION_ERROR", message, 400, false);
   }
   return parsed.data;
+}
+
+function readQueryValue(url: URL, key: string): string | undefined {
+  const value = url.searchParams.get(key)?.trim();
+  return value ? value : undefined;
+}
+
+function readQueryNumber(url: URL, key: string): number | undefined {
+  const value = readQueryValue(url, key);
+  return value === undefined ? undefined : Number(value);
 }
 
 async function readJsonBody(request: Request): Promise<unknown> {

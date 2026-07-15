@@ -173,3 +173,11 @@ pnpm test
 - 單元測試覆蓋下載隔離、fingerprint、queue cap/idempotency、sync recovery、conflict/retry、connectivity 與 remote/local progress merge。
 - Expo Web 以桌面及 390 px viewport 巡檢課程下載、離線管理、待同步狀態、長錯誤文字與水平溢出。
 - 發行前以 Android/iOS 實機驗證飛航模式、process kill/relaunch、session/settings cache、連續離線作答、reconnect race、背景切換與低儲存。
+
+## 17. Phase 13 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:knowledge:local` 對本機 Supabase 與 API 執行 published-only、cache、搜尋、篩選、分頁及 detail 驗證。
+- 單字 detail 驗證詞形、繁中釋義、例句、搭配、語域、地區與相關練習；文法 detail 驗證規則、翻譯例句、正誤對照、技能及先備主題。
+- invalid difficulty 必須回傳 `400`，未知 UUID detail 必須回傳 `404`。
+- service 單元測試固定 repository，覆蓋德語／繁中 normalization、facet、排序、pagination、alias 關聯與未發布 `404`。
+- Expo Web 以桌面及 390 px viewport 巡檢模式切換、搜尋、CEFR filter、單字 detail、文法 detail、精確相關練習及 `scrollWidth`。

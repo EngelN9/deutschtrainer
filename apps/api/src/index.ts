@@ -45,6 +45,8 @@ export {
 export { SupabaseEvaluationRepository } from "./evaluation/supabaseEvaluationRepository";
 export { LearningDataService } from "./learning-data/learningDataService";
 export { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
+export { KnowledgeService } from "./knowledge/knowledgeService";
+export { SupabaseKnowledgeRepository } from "./knowledge/supabaseKnowledgeRepository";
 export { SupabaseWritingRepository } from "./writing/supabaseWritingRepository";
 export {
   WritingEvaluationService,

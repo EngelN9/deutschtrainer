@@ -62,7 +62,8 @@ export default function ExerciseScreen() {
     ? lessonExercises.find((entry) => entry.id === exerciseId)
     : undefined;
   const isReviewSession = Boolean(reviewId && reviewExercise);
-  const exercises = isReviewSession && reviewExercise ? [reviewExercise] : lessonExercises;
+  const isFocusedPractice = Boolean(exerciseId && reviewExercise && !reviewId);
+  const exercises = reviewExercise ? [reviewExercise] : lessonExercises;
   const progress = useProgressStore((state) =>
     profile ? state.byUserId[profile.id]?.lessons[lessonId] : undefined,
   );
@@ -111,7 +112,7 @@ export default function ExerciseScreen() {
       return;
     }
 
-    if (isReviewSession) {
+    if (isReviewSession || isFocusedPractice) {
       setCurrentIndex(0);
     } else {
       const firstIncomplete = exercises.findIndex(
@@ -126,6 +127,7 @@ export default function ExerciseScreen() {
     exerciseId,
     exercises,
     hasHydrated,
+    isFocusedPractice,
     isReviewSession,
     learningRecordsQuery.isLoading,
     lessonId,
@@ -247,9 +249,10 @@ export default function ExerciseScreen() {
         mode: isReviewSession ? "review" : "lesson",
         idempotencyKey: idempotencyKey.current,
         totalExercises: lessonExercises.length,
-        exerciseIndex: isReviewSession
-          ? lessonExercises.findIndex((entry) => entry.id === exercise.id)
-          : currentIndex,
+        exerciseIndex:
+          isReviewSession || isFocusedPractice
+            ? lessonExercises.findIndex((entry) => entry.id === exercise.id)
+            : currentIndex,
         ...(reviewId ? { reviewId } : {}),
       });
       await queryClient.invalidateQueries({ queryKey: learningRecordsQueryKey(profile.id) });
@@ -266,7 +269,7 @@ export default function ExerciseScreen() {
       return;
     }
 
-    if (isReviewSession) {
+    if (isReviewSession || isFocusedPractice) {
       router.back();
       return;
     }
@@ -296,7 +299,13 @@ export default function ExerciseScreen() {
         description={exercise ? exerciseTypeLabel(exercise.type) : undefined}
         eyebrow={
           lesson
-            ? `${lesson.level} · ${isReviewSession ? "到期複習" : `${currentIndex + 1} / ${exercises.length}`}`
+            ? `${lesson.level} · ${
+                isReviewSession
+                  ? "到期複習"
+                  : isFocusedPractice
+                    ? "知識庫練習"
+                    : `${currentIndex + 1} / ${exercises.length}`
+              }`
             : "課堂練習"
         }
         onBack={() => router.back()}
@@ -416,8 +425,10 @@ export default function ExerciseScreen() {
               {isFallback
                 ? "重新批改"
                 : result
-                  ? isReviewSession
-                    ? "完成本次複習"
+                  ? isReviewSession || isFocusedPractice
+                    ? isReviewSession
+                      ? "完成本次複習"
+                      : "返回知識庫"
                     : currentIndex >= exercises.length - 1
                       ? "查看課堂結果"
                       : "下一題"
