@@ -303,3 +303,29 @@
 - 純函式測試驗證 timezone conversion、每日去重、review/inactivity precedence 與 master switch。
 - iOS/Android 實機通知權限、排程送達及 deep link 仍需發行前 device matrix 驗證。
 - 詳見 `docs/phase-11-notifications.md`。
+
+## Phase 12：離線課程與作答同步
+
+交付：
+
+- 每位 learner 隔離的課程下載、更新與移除。
+- 已下載課程離線閱讀及六種固定題本機評分。
+- durable pending attempts、重啟恢復、連線恢復自動同步。
+- 同步失敗、衝突、重試、捨棄與手動同步介面。
+- 原始作答時間回補、30 天界線與 service-role-only RPC。
+
+驗收：
+
+- 未下載內容在離線重啟後不可用；已下載內容可讀並可完成固定題。
+- AI 批改、到期複習完成、作文、TTS/STT 與即時生成在離線時明確停用。
+- 相同 idempotency key 不重複寫入，pending queue 依原始時間由舊到新同步。
+- API 必須重新評分原始答案，並以實際作答時間計算 activity 與 review schedule。
+- authenticated 不可直接執行 offline sync RPC；衝突不得被靜默刪除。
+
+目前狀態：Pass with device follow-up。
+
+- AsyncStorage snapshot 與 settings cache 均經 Zod 驗證並依 profile/auth user 隔離，pending 上限 200。
+- NetInfo、typed API errors、離線 catalog adapter、reconnect coordinator 與管理介面已完成。
+- 本機 migration reset、毫秒級 timestamp、兩技能 review schedule、冪等 replay、stale `400` 與 direct RPC `404` 實測通過。
+- Android/iOS 飛航模式、process kill/relaunch、背景切換、低儲存與 reconnect race 仍需 device matrix 驗證。
+- 詳見 `docs/phase-12-offline-sync.md`。

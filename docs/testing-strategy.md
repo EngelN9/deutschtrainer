@@ -163,3 +163,13 @@ pnpm test
 - Notification plan 單元測試固定時鐘，驗證 DST-safe timezone conversion、同日去重、優先順序與 master disable。
 - Expo Web production export 必須使用 no-op runtime；native typecheck 必須編譯 Expo Notifications permission、channel、date trigger 與 deep-link listener。
 - 發行前以 Android/iOS 實機驗證允許／拒絕權限、通知送達、點擊 deep link、旅行後 timezone 更新及系統重開機後行為。
+
+## 16. Phase 12 可執行驗證
+
+- `pnpm --filter @deutschtrainer/api verify:offline-sync:local` 建立臨時 learner，經公開課程與 authenticated API 送出離線 attempt。
+- 驗證資料庫 `submitted_at` 與原始 ISO timestamp 毫秒一致，每個技能的 review 均從該時間加上 interval。
+- 以相同 idempotency key 重送必須回傳同一 attempt；舊 exercise version 必須回傳 `409`，31 天前 timestamp 必須回傳 `400`。
+- authenticated 直接呼叫 `record_fixed_attempt_sync_service` 必須回傳 `404`。
+- 單元測試覆蓋下載隔離、fingerprint、queue cap/idempotency、sync recovery、conflict/retry、connectivity 與 remote/local progress merge。
+- Expo Web 以桌面及 390 px viewport 巡檢課程下載、離線管理、待同步狀態、長錯誤文字與水平溢出。
+- 發行前以 Android/iOS 實機驗證飛航模式、process kill/relaunch、session/settings cache、連續離線作答、reconnect race、背景切換與低儲存。

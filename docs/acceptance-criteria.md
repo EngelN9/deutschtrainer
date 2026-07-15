@@ -200,3 +200,19 @@
 - authenticated 直接呼叫 settings service wrapper 回傳 `404`；service role 的兩個 wrapper execute privilege 均為 true。
 - Notification plan 單元測試驗證 Asia/Taipei 絕對時間、每日唯一、review/inactivity precedence 與 master disable。
 - iOS/Android 實機的 permission prompt、OS delivery、重開機保留與 deep link 仍需 device matrix 驗證。
+
+## 14. Phase 12 驗收
+
+- 課程下載、更新、移除與 pending attempts 必須依 profile 隔離並通過 schema 驗證。
+- 已下載課程可離線閱讀，六種固定題可離線評分並保存；AI、到期複習完成、作文及音訊 AI 流程不得假裝離線成功。
+- 重啟後中斷的同步恢復為 pending；連線恢復後依 `submittedAt` 由舊到新自動同步。
+- 相同 idempotency key 不可重複 attempt；`400/404/409` 衝突保留到使用者重試或捨棄。
+- API 必須重新評分原始答案，回補時間限最近 30 天且不可超過未來 5 分鐘。
+- authenticated 不可執行 `record_fixed_attempt_sync_service`。
+
+目前結果：Pass with device follow-up。
+
+- Profile 隔離、nested version update、queue idempotency、restart recovery、conflict lifecycle 與 connectivity mapping 單元測試通過。
+- API service 驗證合法 `submittedAt` 原樣傳遞，過舊與未來 timestamp 回傳 `VALIDATION_ERROR 400`。
+- 本機 E2E 驗證 attempt timestamp 毫秒一致、所有技能 review 從原始時間排程、replay 為同一 attempt、stale exercise `409`、stale timestamp `400`、authenticated RPC `404`。
+- Android/iOS 實機的飛航模式、關閉重開、背景 reconnect、低儲存與多筆 queue 尚待 device matrix 驗證。

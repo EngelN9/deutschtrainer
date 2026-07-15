@@ -67,6 +67,64 @@ describe("LearningDataService", () => {
     expect(repository.lastRecorded?.gradingResult.score).toBe(0);
   });
 
+  it("preserves a valid offline submission timestamp", async () => {
+    const repository = new FakeLearningDataRepository();
+    const service = new LearningDataService({
+      repository,
+      now: () => new Date("2026-07-15T05:00:00.000Z"),
+    });
+
+    await service.submitAttempt("valid-token", {
+      exerciseId: exercise.id,
+      answer: "weil",
+      durationMs: 1200,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "phase12-offline-timestamp",
+      submittedAt: "2026-07-14T05:00:00.000Z",
+    });
+
+    expect(repository.lastRecorded?.request.submittedAt).toBe("2026-07-14T05:00:00.000Z");
+  });
+
+  it("retains a stale downloaded exercise as a conflict", async () => {
+    const service = new LearningDataService({ repository: new FakeLearningDataRepository() });
+
+    await expect(
+      service.submitAttempt("valid-token", {
+        exerciseId: exercise.id,
+        exerciseVersion: exercise.version + 1,
+        answer: "weil",
+        durationMs: 1200,
+        usedHint: false,
+        mode: "lesson",
+        idempotencyKey: "phase12-stale-exercise",
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 409 });
+  });
+
+  it.each(["2026-06-14T04:59:59.000Z", "2026-07-15T05:05:01.000Z"])(
+    "rejects an offline timestamp outside the accepted window: %s",
+    async (submittedAt) => {
+      const service = new LearningDataService({
+        repository: new FakeLearningDataRepository(),
+        now: () => new Date("2026-07-15T05:00:00.000Z"),
+      });
+
+      await expect(
+        service.submitAttempt("valid-token", {
+          exerciseId: exercise.id,
+          answer: "weil",
+          durationMs: 1200,
+          usedHint: false,
+          mode: "lesson",
+          idempotencyKey: `phase12-invalid-${submittedAt}`,
+          submittedAt,
+        }),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 400 });
+    },
+  );
+
   it("replays the first stored result for a reused idempotency key", async () => {
     const repository = new FakeLearningDataRepository();
     repository.storedAttempt = {

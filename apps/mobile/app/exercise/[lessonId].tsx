@@ -34,6 +34,9 @@ import {
   completeRemoteReview,
   submitRemoteAttempt,
 } from "../../src/features/learning-records/learningRecordsRepository";
+import { useConnectivityStore } from "../../src/features/offline/connectivityStore";
+import { useOfflineStore } from "../../src/features/offline/useOfflineStore";
+import { isNetworkApiError } from "../../src/lib/apiClient";
 import { mobileEnv } from "../../src/lib/env";
 import { toUserFacingError } from "../../src/lib/userFacingErrors";
 import { ContentScreen } from "../../src/components/ContentScreen";
@@ -65,12 +68,15 @@ export default function ExerciseScreen() {
   );
   const hasHydrated = useProgressStore((state) => state.hasHydrated);
   const recordAttempt = useProgressStore((state) => state.recordAttempt);
+  const connectivity = useConnectivityStore((state) => state.status);
+  const enqueueOfflineAttempt = useOfflineStore((state) => state.enqueueAttempt);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState<unknown>(undefined);
   const [result, setResult] = useState<GradingResult | undefined>();
   const [aiEvaluation, setAiEvaluation] = useState<EvaluateResponseResponse | undefined>();
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [saveNotice, setSaveNotice] = useState<string>();
   const [usedHint, setUsedHint] = useState(false);
   const initializedLesson = useRef<string | undefined>(undefined);
   const attemptStartedAt = useRef(Date.now());
@@ -85,6 +91,14 @@ export default function ExerciseScreen() {
   const displayPercent = exercises.length
     ? Math.round(((currentIndex + (result && !isFallback ? 1 : 0)) / exercises.length) * 100)
     : 0;
+  const offlineUnavailableMessage =
+    connectivity === "offline" && exercise
+      ? isReviewSession
+        ? "到期複習需要連線，恢復網路後即可提交。"
+        : isAiEvaluatedExercise(exercise)
+          ? "AI 批改需要連線；固定題仍可離線作答。"
+          : undefined
+      : undefined;
 
   useEffect(() => {
     const sessionId = `${lessonId}:${reviewId ?? "lesson"}:${exerciseId ?? "all"}`;
@@ -134,6 +148,7 @@ export default function ExerciseScreen() {
     idempotencyKey.current ??= `${profile.id}:${exercise.id}:${submittedAt}`;
     setSaving(true);
     setSaveError(undefined);
+    setSaveNotice(undefined);
     try {
       let gradingResult: GradingResult;
 
@@ -168,25 +183,53 @@ export default function ExerciseScreen() {
       } else if (isFixedExercise(exercise)) {
         gradingResult = gradeFixedExercise(exercise, answer);
         if (mobileEnv.contentSource === "api") {
-          const remoteResult =
-            isReviewSession && reviewId
-              ? (
-                  await completeRemoteReview(reviewId, {
-                    answer,
-                    durationMs,
-                    usedHint,
-                    idempotencyKey: idempotencyKey.current,
-                  })
-                ).attempt
-              : await submitRemoteAttempt({
-                  exerciseId: exercise.id,
-                  answer,
-                  durationMs,
-                  usedHint,
-                  mode: "lesson",
-                  idempotencyKey: idempotencyKey.current,
-                });
-          gradingResult = remoteResult.gradingResult;
+          if (isReviewSession && reviewId) {
+            const remoteResult = (
+              await completeRemoteReview(reviewId, {
+                answer,
+                durationMs,
+                usedHint,
+                idempotencyKey: idempotencyKey.current,
+              })
+            ).attempt;
+            gradingResult = remoteResult.gradingResult;
+          } else {
+            const request = {
+              exerciseId: exercise.id,
+              exerciseVersion: exercise.version,
+              answer,
+              durationMs,
+              usedHint,
+              mode: "lesson" as const,
+              idempotencyKey: idempotencyKey.current,
+              submittedAt,
+            };
+            let queued = connectivity === "offline";
+            if (!queued) {
+              try {
+                const remoteResult = await submitRemoteAttempt(request);
+                gradingResult = remoteResult.gradingResult;
+              } catch (error) {
+                if (!isNetworkApiError(error)) {
+                  throw error;
+                }
+                queued = true;
+              }
+            }
+            if (queued) {
+              await enqueueOfflineAttempt({
+                profileId: profile.id,
+                lessonId,
+                lessonTitle: lesson?.titleZhTw ?? "離線課堂",
+                exerciseTitle: exercise.title,
+                exerciseVersion: exercise.version,
+                queuedAt: new Date().toISOString(),
+                request,
+                localGradingResult: gradingResult,
+              });
+              setSaveNotice("作答已保存在裝置，恢復網路後會自動同步。");
+            }
+          }
         }
       } else {
         throw new Error("這個題型尚未開放作答。");
@@ -242,6 +285,7 @@ export default function ExerciseScreen() {
     setAiEvaluation(undefined);
     setUsedHint(false);
     setSaveError(undefined);
+    setSaveNotice(undefined);
     attemptStartedAt.current = Date.now();
     idempotencyKey.current = undefined;
   }
@@ -274,6 +318,7 @@ export default function ExerciseScreen() {
           <>
             <ProgressBar accessibilityLabel="本次課堂作答進度" percent={displayPercent} />
             <MessageBanner message={saveError ?? null} tone="error" />
+            <MessageBanner message={saveNotice ?? offlineUnavailableMessage ?? null} tone="info" />
             <View style={styles.promptSection}>
               <Text style={styles.instruction}>{exercise.instructionZhTw}</Text>
               {isAiEvaluatedExercise(exercise) && exercise.promptZhTw ? (
@@ -300,7 +345,7 @@ export default function ExerciseScreen() {
               />
             ) : isAiEvaluatedExercise(exercise) ? (
               <AiExerciseInput
-                disabled={Boolean(result) && !isFallback}
+                disabled={(Boolean(result) && !isFallback) || connectivity === "offline"}
                 exercise={exercise}
                 onChange={setAnswer}
                 value={typeof answer === "string" ? answer : ""}
@@ -361,7 +406,10 @@ export default function ExerciseScreen() {
               accessibilityLabel={
                 isFallback ? "重新提交 AI 批改" : result ? "前往下一題或結果" : "提交答案"
               }
-              disabled={!result && !isCurrentExerciseAnswered(exercise, answer)}
+              disabled={
+                (!result && !isCurrentExerciseAnswered(exercise, answer)) ||
+                Boolean(offlineUnavailableMessage)
+              }
               loading={saving}
               onPress={result && !isFallback ? continueSession : () => void submitAnswer()}
             >

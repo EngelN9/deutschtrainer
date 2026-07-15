@@ -129,6 +129,20 @@ describe("validation schemas", () => {
     expect(forged.success).toBe(false);
   });
 
+  it("accepts an ISO timestamp for an offline attempt", () => {
+    const result = submitAttemptRequestSchema.safeParse({
+      exerciseId: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
+      answer: "weil",
+      durationMs: 2000,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "phase12-offline-attempt",
+      submittedAt: "2026-07-15T08:30:00.000+08:00",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("accepts API catalog and review completion contracts", () => {
     const catalog = courseListResponseSchema.parse({ source: "api", courses: [] });
     const review = completeReviewRequestSchema.parse({

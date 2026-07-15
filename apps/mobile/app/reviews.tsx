@@ -8,8 +8,10 @@ import { AuthGate } from "../src/features/auth/AuthGate";
 import { findExerciseContext } from "../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
 import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
+import { useConnectivityStore } from "../src/features/offline/connectivityStore";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { MainNavigation } from "../src/components/MainNavigation";
+import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { StatePanel } from "../src/components/StatePanel";
 
@@ -17,6 +19,8 @@ export default function ReviewsScreen() {
   const router = useRouter();
   const recordsQuery = useLearningRecords();
   const catalogQuery = useCourseCatalog();
+  const connectivity = useConnectivityStore((state) => state.status);
+  const offline = connectivity === "offline";
   const rawDueReviews = recordsQuery.data ? getDueReviews(recordsQuery.data.reviews) : [];
   const dueReviews = rawDueReviews.filter(
     (review, index, reviews) =>
@@ -37,6 +41,10 @@ export default function ReviewsScreen() {
         eyebrow="間隔複習"
         title="今日複習"
       >
+        <MessageBanner
+          message={offline ? "到期複習需要連線，已下載課程的固定題仍可離線練習。" : null}
+          tone="info"
+        />
         <View style={styles.summaryBand}>
           <View style={styles.summaryIcon}>
             <CalendarClock color="#FFFFFF" size={24} />
@@ -78,6 +86,8 @@ export default function ReviewsScreen() {
                 <Pressable
                   accessibilityLabel={`開始複習 ${context?.exercise.title ?? "指定題目"}`}
                   accessibilityRole="button"
+                  accessibilityState={{ disabled: offline || !context }}
+                  disabled={offline || !context}
                   key={review.id}
                   onPress={() => {
                     if (!context) {
@@ -92,7 +102,11 @@ export default function ReviewsScreen() {
                       },
                     } as Href);
                   }}
-                  style={({ pressed }) => [styles.reviewItem, pressed ? styles.pressed : null]}
+                  style={({ pressed }) => [
+                    styles.reviewItem,
+                    offline ? styles.disabled : null,
+                    pressed ? styles.pressed : null,
+                  ]}
                 >
                   <View style={styles.reviewIndex}>
                     <Text style={styles.reviewIndexText}>{index + 1}</Text>
@@ -140,6 +154,9 @@ function reviewReasonLabel(reason: string) {
 }
 
 const styles = StyleSheet.create({
+  disabled: {
+    opacity: 0.5,
+  },
   emptyCopy: {
     flex: 1,
     gap: spacingTokens.xs,

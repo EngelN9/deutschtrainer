@@ -414,7 +414,7 @@ export class SupabaseLearningDataRepository implements LearningDataRepository {
   }
 
   async recordFixedAttempt(input: RecordFixedAttemptInput): Promise<RecordedFixedAttempt> {
-    const result = await this.client.rpc("record_fixed_attempt_service", {
+    const result = await this.client.rpc("record_fixed_attempt_sync_service", {
       p_user_id: input.learnerId,
       p_exercise_id: input.request.exerciseId,
       p_answer_json: toJson(input.request.answer),
@@ -427,6 +427,7 @@ export class SupabaseLearningDataRepository implements LearningDataRepository {
       p_mode: input.reviewId ? "review" : input.request.mode,
       p_idempotency_key: input.request.idempotencyKey,
       p_review_id: input.reviewId ?? null,
+      p_submitted_at: input.request.submittedAt ?? null,
     });
     assertDatabaseResult(result.error, "無法保存固定題作答與學習進度。");
     const parsed = recordAttemptResultSchema.parse(result.data);

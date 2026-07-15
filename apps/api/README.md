@@ -36,6 +36,7 @@ pnpm --filter @deutschtrainer/api verify:audio:local
 pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:workspaces:local
 pnpm --filter @deutschtrainer/api verify:settings:local
+pnpm --filter @deutschtrainer/api verify:offline-sync:local
 ```
 
 `verify:local` requires a running local Supabase stack, a running API, and `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the current shell. It creates and removes temporary users while checking evaluation, replay, cache, persistence, RLS, protected answers, and RPC permissions.
@@ -45,3 +46,5 @@ pnpm --filter @deutschtrainer/api verify:settings:local
 `verify:workspaces:local` runs the writing and audio two-user suites together, including API workspace isolation, owner deletion, listening telemetry, Storage RLS, and legacy authenticated-RPC denial.
 
 `verify:settings:local` verifies API onboarding, timezone and reminder persistence, two-user isolation, revoked direct table writes, and service-only settings RPCs.
+
+`verify:offline-sync:local` verifies original offline submission timestamps, review scheduling from that timestamp, idempotent replay, the 30-day replay window, and authenticated denial of the service-only sync RPC.

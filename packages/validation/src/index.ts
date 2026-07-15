@@ -398,7 +398,7 @@ export const catalogCourseSchema = z.object({
 });
 
 export const courseCatalogSchema = z.object({
-  source: z.enum(["api", "mock", "supabase"]),
+  source: z.enum(["api", "mock", "offline", "supabase"]),
   courses: z.array(catalogCourseSchema),
 });
 export type CourseCatalogResponse = z.infer<typeof courseCatalogSchema>;
@@ -447,11 +447,13 @@ export const fixedGradingResultSchema = z.object({
 export const submitAttemptRequestSchema = z
   .object({
     exerciseId: databaseUuidSchema,
+    exerciseVersion: z.number().int().positive().optional(),
     answer: z.unknown(),
     durationMs: z.number().int().min(0).max(3_600_000),
     usedHint: z.boolean(),
     mode: z.enum(["lesson", "practice", "placement"]),
     idempotencyKey: z.string().trim().min(12).max(200),
+    submittedAt: z.string().datetime({ offset: true }).optional(),
   })
   .strict();
 export const submitAttemptResponseSchema = z.object({

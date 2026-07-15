@@ -3,6 +3,7 @@ import type { FillBlankExercise } from "@deutschtrainer/shared-types";
 import { gradeFixedExercise } from "@deutschtrainer/grading";
 import {
   createEmptyLearningRecordSnapshot,
+  mergeOfflineLearningRecords,
   recordLocalLearningAttempt,
   type LearningAttemptInput,
 } from "./learningRecordsModel";
@@ -79,6 +80,21 @@ describe("local learning records", () => {
     expect(reviewed.reviews.filter((review) => review.status === "scheduled")).toHaveLength(1);
     expect(reviewed.reviews.find((review) => review.status === "scheduled")?.intervalDays).toBe(7);
     expect(reviewed.attempts[0].mode).toBe("review");
+  });
+
+  it("merges pending local progress into the last remote snapshot", () => {
+    const remoteInput = createInput("regnet", "remote-attempt", "2026-07-13T08:00:00.000Z");
+    const localInput = createInput("regnet", "offline-attempt", "2026-07-13T09:00:00.000Z");
+    const remote = recordLocalLearningAttempt(createEmptyLearningRecordSnapshot(), remoteInput);
+    const local = recordLocalLearningAttempt(createEmptyLearningRecordSnapshot(), localInput);
+    const merged = mergeOfflineLearningRecords(remote, local);
+
+    expect(merged.attempts.map((attempt) => attempt.idempotencyKey)).toEqual([
+      "offline-attempt",
+      "remote-attempt",
+    ]);
+    expect(merged.lessonProgress[0]?.completionPercent).toBe(100);
+    expect(merged.lessonProgress[0]?.lastPracticedAt).toBe(localInput.submittedAt);
   });
 });
 

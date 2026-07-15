@@ -83,7 +83,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ errorMessage: null, noticeMessage: null, status: "loading" });
 
     try {
-      const settings = await persistOnboarding(input);
+      const settings = await persistOnboarding(input, get().session?.user.id);
       if (input.notificationsEnabled) {
         await requestNotificationPermission().catch(() => "denied" as const);
       }
@@ -171,7 +171,7 @@ async function applySession(
   }
 
   try {
-    const settings = await fetchCurrentSettings();
+    const settings = await fetchCurrentSettings(session.user.id);
     applyLearningSettings(settings);
     set({ profile: settings.profile, session, status: "authenticated" });
   } catch (error) {

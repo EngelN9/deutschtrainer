@@ -11,11 +11,13 @@ import { requestApi } from "../../lib/apiClient";
 
 export interface SubmitRemoteAttemptInput {
   exerciseId: string;
+  exerciseVersion?: number;
   answer: unknown;
   durationMs: number;
   usedHint: boolean;
   mode: Exclude<Attempt["mode"], "review">;
   idempotencyKey: string;
+  submittedAt?: string;
 }
 
 export async function submitRemoteAttempt(
