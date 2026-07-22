@@ -34,6 +34,11 @@
     "experiments": {
       "typedRoutes": true
     },
+    "extra": {
+      "eas": {
+        "projectId": "7a303b8b-2fa8-427d-ae85-d40d49c000eb"
+      }
+    },
     "ios": {
       "bundleIdentifier": "com.deutschtrainer.app",
       "buildNumber": "1",
