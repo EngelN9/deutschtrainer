@@ -9,9 +9,15 @@ import {
   type UserSettingsResponse,
 } from "@deutschtrainer/validation";
 import { isNetworkApiError, requestApi } from "../../lib/apiClient";
+import { mobileEnv } from "../../lib/env";
+import { DEMO_AUTH_USER_ID, demoUserSettings } from "../auth/demoAuth";
 import { readCachedUserSettings, writeCachedUserSettings } from "./settingsCache";
 
 export async function getUserSettings(authUserId?: string): Promise<UserSettingsResponse> {
+  if (isDemoUser(authUserId)) {
+    return (await readCachedUserSettings(DEMO_AUTH_USER_ID)) ?? demoUserSettings;
+  }
+
   try {
     const settings = await requestApi("/users/me/settings", userSettingsResponseSchema, {
       authenticated: true,
@@ -37,6 +43,27 @@ export async function completeOnboarding(
   authUserId?: string,
 ): Promise<UserSettingsResponse> {
   const request = onboardingRequestSchema.parse(input);
+  if (isDemoUser(authUserId)) {
+    const current = await getUserSettings(DEMO_AUTH_USER_ID);
+    const settings = userSettingsResponseSchema.parse({
+      ...current,
+      profile: { ...current.profile, onboardingCompleted: true },
+      learning: {
+        currentLevel: request.currentLevel,
+        targetLevel: request.targetLevel,
+        dailyMinutes: request.dailyMinutes,
+        learningGoals: request.learningGoals,
+      },
+      notifications: {
+        ...current.notifications,
+        notificationsEnabled: request.notificationsEnabled,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+    await writeCachedUserSettings(DEMO_AUTH_USER_ID, settings);
+    return settings;
+  }
+
   const settings = await requestApi("/users/me/onboarding", userSettingsResponseSchema, {
     authenticated: true,
     body: request,
@@ -54,6 +81,19 @@ export async function updateNotificationPreferences(
   authUserId?: string,
 ): Promise<NotificationPreferencesResponse> {
   const request = updateNotificationPreferencesRequestSchema.parse(input);
+  if (isDemoUser(authUserId)) {
+    const current = await getUserSettings(DEMO_AUTH_USER_ID);
+    const notifications = notificationPreferencesResponseSchema.parse({
+      notifications: { ...request, updatedAt: new Date().toISOString() },
+    });
+    await writeCachedUserSettings(DEMO_AUTH_USER_ID, {
+      ...current,
+      profile: { ...current.profile, timezone: notifications.notifications.timezone },
+      notifications: notifications.notifications,
+    });
+    return notifications;
+  }
+
   const response = await requestApi(
     "/users/me/notification-preferences",
     notificationPreferencesResponseSchema,
@@ -75,4 +115,8 @@ export async function updateNotificationPreferences(
     }
   }
   return response;
+}
+
+function isDemoUser(authUserId?: string): boolean {
+  return mobileEnv.contentSource === "mock" && authUserId === DEMO_AUTH_USER_ID;
 }

@@ -20,10 +20,18 @@ import { useLearningSetupStore } from "../../state/useLearningSetupStore";
 import { requestNotificationPermission } from "../notifications/notificationRuntime";
 import { completeOnboarding as persistOnboarding } from "../onboarding/onboardingRepository";
 import { fetchCurrentSettings } from "../profile/profileRepository";
+import {
+  demoAuthEnabled,
+  demoUserSettings,
+  isDemoAuthActive,
+  persistDemoAuthActive,
+} from "./demoAuth";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+export type AuthMode = "demo" | "supabase" | null;
 
 interface AuthState {
+  authMode: AuthMode;
   bootstrapped: boolean;
   errorMessage: string | null;
   noticeMessage: string | null;
@@ -37,11 +45,13 @@ interface AuthState {
   signIn: (input: SignInRequest) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (input: SignUpRequest) => Promise<void>;
+  startDemo: () => Promise<void>;
 }
 
 let unsubscribeFromAuth: (() => void) | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
+  authMode: null,
   bootstrapped: false,
   errorMessage: null,
   noticeMessage: null,
@@ -57,17 +67,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ errorMessage: null, status: "loading" });
 
     try {
+      if (demoAuthEnabled && (await isDemoAuthActive())) {
+        applyLearningSettings(demoUserSettings);
+        set({
+          authMode: "demo",
+          bootstrapped: true,
+          profile: demoUserSettings.profile,
+          session: null,
+          status: "authenticated",
+        });
+        return;
+      }
+
       const session = await getCurrentSession();
       await applySession(set, session);
       set({ bootstrapped: true });
-
-      if (!unsubscribeFromAuth) {
-        unsubscribeFromAuth = subscribeToAuthChanges((nextSession) => {
-          void applySession(set, nextSession);
-        });
-      }
+      ensureAuthSubscription(set, get);
     } catch (error) {
       set({
+        authMode: null,
         bootstrapped: true,
         errorMessage: toUserFacingError(error),
         profile: null,
@@ -116,8 +134,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const result = await signInWithPassword(input);
       await applySession(set, result.session);
+      ensureAuthSubscription(set, get);
     } catch (error) {
       set({
+        authMode: null,
         errorMessage: toUserFacingError(error),
         profile: null,
         session: null,
@@ -130,8 +150,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ errorMessage: null, noticeMessage: null, status: "loading" });
 
     try {
+      if (get().authMode === "demo") {
+        await persistDemoAuthActive(false);
+        set({
+          authMode: null,
+          profile: null,
+          session: null,
+          status: "unauthenticated",
+        });
+        ensureAuthSubscription(set, get);
+        return;
+      }
+
       await signOutCurrentUser();
-      set({ profile: null, session: null, status: "unauthenticated" });
+      set({ authMode: null, profile: null, session: null, status: "unauthenticated" });
     } catch (error) {
       set({ errorMessage: toUserFacingError(error), status: "authenticated" });
     }
@@ -143,6 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const result = await signUpWithPassword(input);
       await applySession(set, result.session);
+      ensureAuthSubscription(set, get);
 
       if (!result.session) {
         set({
@@ -152,6 +185,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       set({
+        authMode: null,
+        errorMessage: toUserFacingError(error),
+        profile: null,
+        session: null,
+        status: "unauthenticated",
+      });
+    }
+  },
+
+  startDemo: async () => {
+    set({ errorMessage: null, noticeMessage: null, status: "loading" });
+
+    try {
+      await persistDemoAuthActive(true);
+      unsubscribeFromAuth?.();
+      unsubscribeFromAuth = null;
+      applyLearningSettings(demoUserSettings);
+      set({
+        authMode: "demo",
+        noticeMessage: null,
+        profile: demoUserSettings.profile,
+        session: null,
+        status: "authenticated",
+      });
+    } catch (error) {
+      set({
+        authMode: null,
         errorMessage: toUserFacingError(error),
         profile: null,
         session: null,
@@ -166,22 +226,39 @@ async function applySession(
   session: Session | null,
 ): Promise<void> {
   if (!session) {
-    set({ profile: null, session: null, status: "unauthenticated" });
+    set({ authMode: null, profile: null, session: null, status: "unauthenticated" });
     return;
   }
 
   try {
     const settings = await fetchCurrentSettings(session.user.id);
     applyLearningSettings(settings);
-    set({ profile: settings.profile, session, status: "authenticated" });
+    set({ authMode: "supabase", profile: settings.profile, session, status: "authenticated" });
   } catch (error) {
     set({
       errorMessage: toUserFacingError(error),
       profile: null,
       session,
+      authMode: "supabase",
       status: "authenticated",
     });
   }
+}
+
+function ensureAuthSubscription(
+  set: (partial: Partial<AuthState>) => void,
+  get: () => AuthState,
+): void {
+  if (unsubscribeFromAuth) {
+    return;
+  }
+
+  unsubscribeFromAuth = subscribeToAuthChanges((nextSession) => {
+    if (get().authMode === "demo") {
+      return;
+    }
+    void applySession(set, nextSession);
+  });
 }
 
 function applyLearningSettings(settings: {

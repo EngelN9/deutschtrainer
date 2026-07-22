@@ -17,11 +17,13 @@ import {
   useUpdateNotificationPreferences,
   useUserSettings,
 } from "../src/features/settings/useUserSettings";
+import { useAuthStore } from "../src/features/auth/useAuthStore";
 
 const reminderTimes = ["18:00", "20:00", "21:30"] as const;
 const inactivityDayOptions = [2, 3, 7, 14] as const;
 
 export default function SettingsScreen() {
+  const authMode = useAuthStore((state) => state.authMode);
   const settingsQuery = useUserSettings();
   const updateMutation = useUpdateNotificationPreferences();
   const [draft, setDraft] = useState<UpdateNotificationPreferencesRequest>();
@@ -82,6 +84,10 @@ export default function SettingsScreen() {
         title="通知與提醒"
       >
         <MessageBanner message={notice} tone="info" />
+        <MessageBanner
+          message={authMode === "demo" ? "Demo 設定只保存在這台裝置。" : null}
+          tone="info"
+        />
         <MessageBanner message={updateMutation.error?.message ?? null} tone="error" />
 
         {settingsQuery.isError ? (

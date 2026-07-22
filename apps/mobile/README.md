@@ -59,9 +59,11 @@ pnpm dlx eas-cli@latest build --platform android --profile preview
 
 The `preview` profile creates an internally distributed Android APK. The `production` profile keeps the store-distribution defaults. Configure the four `EXPO_PUBLIC_*` values from `.env.example` in the matching EAS environment; never add an OpenAI or Supabase service-role key to a Mobile build.
 
-The first Phase 14 preview is explicitly built with `EXPO_PUBLIC_CONTENT_SOURCE=mock`. After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with its SHA-256 checksum. Connected preview and production builds remain blocked until remote API and Supabase environments are available.
+Preview builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. It creates no Supabase session, sends no authenticated API requests, and keeps fixed-exercise progress plus preferences in AsyncStorage on the device. AI writing evaluation, knowledge search, audio training, and cloud synchronization stay hidden in Demo mode. API builds do not expose this entrance.
 
-After installing a preview build on a connected device, run the credential-free guest flow:
+After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with its SHA-256 checksum. Connected preview and production builds remain blocked until remote API and Supabase environments are available.
+
+After installing a preview build on a connected device, run the credential-free Demo learning flow:
 
 ```powershell
 maestro test .maestro/guest-smoke.yaml

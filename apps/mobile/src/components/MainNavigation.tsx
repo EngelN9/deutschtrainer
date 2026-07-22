@@ -11,6 +11,7 @@ import {
 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { useAuthStore } from "../features/auth/useAuthStore";
 
 const items: Array<{
   href: Href;
@@ -30,10 +31,15 @@ const items: Array<{
 export function MainNavigation() {
   const pathname = usePathname();
   const router = useRouter();
+  const authMode = useAuthStore((state) => state.authMode);
+  const visibleItems =
+    authMode === "demo"
+      ? items.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
+      : items;
 
   return (
     <View accessibilityRole="tablist" style={styles.navigation}>
-      {items.map((item) => {
+      {visibleItems.map((item) => {
         const active = pathname === item.path;
         const Icon = item.icon;
 

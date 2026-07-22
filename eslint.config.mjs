@@ -49,4 +49,18 @@ export default [
       ],
     },
   },
+  {
+    files: ["apps/mobile/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='toSorted']",
+          message:
+            "Array.prototype.toSorted is unavailable in the current Hermes runtime; copy the array and use sort instead.",
+        },
+      ],
+    },
+  },
 ];

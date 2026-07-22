@@ -1,13 +1,51 @@
 appId: com.deutschtrainer.app
-name: Guest authentication smoke
+name: Offline demo learning smoke
 ---
 - launchApp
 - extendedWaitUntil:
     visible: "德語 B1-C2 自學系統"
     timeout: 15000
-- tapOn: "已有帳號，登入"
-- assertVisible: "登入"
-- tapOn: "忘記密碼"
-- assertVisible: "忘記密碼"
-- tapOn: "返回登入"
-- assertVisible: "登入"
+- tapOn: "離線 Demo 試用"
+- extendedWaitUntil:
+    visible: "你好，Demo 學習者"
+    timeout: 15000
+- assertVisible: "離線 Demo：.*"
+- scrollUntilVisible:
+    element:
+      text: "課程"
+    direction: DOWN
+- tapOn: "課程"
+- assertVisible: "德語能力路徑"
+- assertVisible: "日常獨立溝通"
+- scrollUntilVisible:
+    element:
+      text: "查看 單元 1：在德語環境中處理日常事務"
+    direction: DOWN
+- tapOn: "查看 單元 1：在德語環境中處理日常事務"
+- assertVisible: "單元 1：在德語環境中處理日常事務"
+- scrollUntilVisible:
+    element:
+      text: "開啟第 1 課 說明原因與讓步"
+    direction: DOWN
+- tapOn: "開啟第 1 課 說明原因與讓步"
+- assertVisible: "說明原因與讓步"
+- scrollUntilVisible:
+    element:
+      text: "開始或繼續課堂練習"
+    direction: DOWN
+- tapOn: "開始或繼續課堂練習"
+- extendedWaitUntil:
+    visible: "連接詞單選"
+    timeout: 15000
+- tapOn: "weil"
+- scrollUntilVisible:
+    element:
+      text: "提交答案"
+    direction: DOWN
+- tapOn: "提交答案"
+- assertVisible: "答對了"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "你好，Demo 學習者"
+    timeout: 15000

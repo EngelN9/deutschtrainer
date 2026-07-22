@@ -11,9 +11,10 @@ interface AuthGateProps extends PropsWithChildren {
 
 export function AuthGate({ children, mode }: AuthGateProps) {
   useBootstrapAuth();
+  const authMode = useAuthStore((state) => state.authMode);
   const profile = useAuthStore((state) => state.profile);
-  const session = useAuthStore((state) => state.session);
   const status = useAuthStore((state) => state.status);
+  const authenticated = authMode !== null;
 
   if (status === "loading") {
     return (
@@ -25,18 +26,18 @@ export function AuthGate({ children, mode }: AuthGateProps) {
   }
 
   if (mode === "guest") {
-    if (session && profile?.onboardingCompleted) {
+    if (authenticated && profile?.onboardingCompleted) {
       return <Redirect href="/home" />;
     }
 
-    if (session) {
+    if (authenticated) {
       return <Redirect href="/onboarding" />;
     }
 
     return children;
   }
 
-  if (!session) {
+  if (!authenticated) {
     return <Redirect href="/sign-in" />;
   }
 
