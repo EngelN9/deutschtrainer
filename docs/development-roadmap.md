@@ -350,6 +350,27 @@
 
 目前狀態：Pass。
 
-- 本機 E2E 實測 50 筆單字、published status、分頁、`die Miete` 繁中搜尋、`B1.nebensatz` 文法搜尋、詳細內容與各 6 筆相關練習。
+- 本機 E2E 實測 50 筆單字、published status、分頁、`die Miete` 繁中搜尋、`B1.nebensatz` 文法搜尋；Phase 14 seed 下兩者各解析 10 筆相關練習。
 - invalid difficulty 回傳 `400`，未知 UUID 回傳 `404`。
 - 詳見 `docs/phase-13-knowledge-library.md`。
+
+## Phase 14：MVP 發行就緒
+
+交付：
+
+- 將人工核准且已發布的 seed 題目由 54 題補至 100 題。
+- 為 100 題建立可重複執行的內容數量、程度分布、題型與答案完整性驗證。
+- 設定 iOS／Android application identifier、build version、App icon、splash 與 favicon。
+- 建立 EAS internal preview／production build profiles。
+- 建立不需要帳密或 secrets 的 Maestro guest authentication smoke flow。
+
+驗收：
+
+- B1 50、B2 25、C1 13、C2 12，共 100 題 human／approved／published Exercise。
+- 每題皆有答案資料，八種既有題型至少各兩題。
+- 乾淨 Supabase reset、Expo config、EAS config、quality gates 與 production builds 通過。
+- Android／iOS 實機仍須執行權限、通知、錄音、離線重連及 Maestro device matrix。
+
+目前狀態：Pass with device follow-up。
+
+- 詳見 `docs/phase-14-mvp-release-readiness.md`。

@@ -4,6 +4,7 @@
     "slug": "deutschtrainer",
     "scheme": "deutschtrainer",
     "version": "0.1.0",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "platforms": ["ios", "android", "web"],
@@ -19,16 +20,34 @@
         }
       ],
       "expo-notifications",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#2563EB"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.deutschtrainer.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.deutschtrainer.app"
+      "package": "com.deutschtrainer.app",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
     }
   }
 }
