@@ -374,3 +374,26 @@
 目前狀態：Pass with device follow-up。
 
 - 詳見 `docs/phase-14-mvp-release-readiness.md`。
+
+## Phase 15：API Staging 發行就緒
+
+交付：
+
+- 建立可重現、可直接由 Node 執行的 API production bundle。
+- 建立非 root、含 health check 的多階段 container image。
+- staging／production 啟動時拒絕 fake AI 與非 HTTPS Supabase。
+- 支援平台注入環境變數、local `.env` 與有界 graceful shutdown。
+- 將 API bundle smoke 與 container build 納入 GitHub CI。
+
+驗收：
+
+- production bundle 不依賴 TypeScript runtime，`GET /health` 回傳有效服務狀態。
+- `APP_ENV=staging|production` 不得啟用 `AI_EVALUATION_FAKE_MODE=true`。
+- staging／production 的 `SUPABASE_URL` 必須為 HTTPS，service-role key 不得進入 image 或前端。
+- container 必須以非 root 使用者啟動、暴露明確 port 並具有 health check。
+- format、lint、typecheck、tests、bundle smoke、container build 與既有 Mobile/Admin gates 全數通過。
+
+目前狀態：Implementation complete; connected staging follow-up。
+
+- 真實 Supabase project、OpenAI API key、公開 API domain 與 EAS connected preview 仍需 credentialed deployment。
+- 詳見 `docs/phase-15-api-staging-readiness.md`。

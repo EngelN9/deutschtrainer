@@ -26,6 +26,29 @@ pnpm dev:api
 
 The default URL is `http://localhost:8787`. Without an OpenAI key, exercise evaluation returns a non-persisted fallback; writing returns a fallback while retaining the submitted version for retry. `AI_EVALUATION_FAKE_MODE=true` selects deterministic local fixtures and must not be enabled in production.
 
+## Production bundle
+
+Build and smoke-test the same self-contained Node artifact used by the container:
+
+```powershell
+pnpm --filter @deutschtrainer/api build
+pnpm --filter @deutschtrainer/api verify:bundle
+pnpm --filter @deutschtrainer/api start
+```
+
+`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures and require an HTTPS Supabase URL. `SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance.
+
+The API reads platform-provided environment variables first. For local development it also looks for `.env` in the current directory and repository root. Set `API_ENV_FILE` only when an explicit local environment-file path is needed; containers should inject secrets through their runtime rather than copy an environment file into the image.
+
+Build the container from the repository root:
+
+```powershell
+docker build --file apps/api/Dockerfile --tag deutschtrainer-api .
+docker run --rm --publish 8787:8787 --env-file .env deutschtrainer-api
+```
+
+The image runs as the unprivileged `node` user, exposes port `8787`, uses `GET /health` for its container health check, and handles `SIGINT`／`SIGTERM` with a bounded graceful shutdown.
+
 ## Verify
 
 ```powershell

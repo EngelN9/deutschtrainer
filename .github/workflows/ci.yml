@@ -29,6 +29,12 @@ jobs:
         run: pnpm typecheck
       - name: Test
         run: pnpm test
+      - name: Build API
+        run: pnpm --filter @deutschtrainer/api build
+      - name: Smoke API production bundle
+        run: pnpm --filter @deutschtrainer/api verify:bundle
+      - name: Build API container
+        run: docker build --file apps/api/Dockerfile --tag deutschtrainer-api:ci .
       - name: Expo dependency compatibility
         working-directory: apps/mobile
         run: pnpm exec expo install --check
