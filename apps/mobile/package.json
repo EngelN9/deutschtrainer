@@ -8,6 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "export:android": "expo export --platform android",
     "export:web": "expo export --platform web",
     "typecheck": "tsc --noEmit"
   },
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.17",
+    "babel-preset-expo": "57.0.3",
     "typescript": "~6.0.3"
   }
 }
