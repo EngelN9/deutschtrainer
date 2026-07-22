@@ -7,7 +7,13 @@ import {
   userSettingsResponseSchema,
 } from "@deutschtrainer/validation";
 
-loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
+try {
+  loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
+} catch (error) {
+  if (!isMissingFileError(error)) {
+    throw error;
+  }
+}
 
 const supabaseUrl = requireEnvironment("SUPABASE_URL");
 const anonKey = requireEnvironment("SUPABASE_ANON_KEY");
@@ -220,4 +226,13 @@ function assertDatabaseSuccess(
   operation: string,
 ): asserts error is null {
   assert.equal(error, null, `${operation}: ${error?.message ?? "unknown database error"}`);
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "ENOENT"
+  );
 }
