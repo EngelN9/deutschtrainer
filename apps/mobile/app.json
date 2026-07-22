@@ -41,7 +41,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.deutschtrainer.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -49,7 +49,7 @@
     },
     "android": {
       "package": "com.deutschtrainer.app",
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/icon.png"

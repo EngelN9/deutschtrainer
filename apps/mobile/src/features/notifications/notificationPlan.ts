@@ -105,7 +105,7 @@ export function buildReminderPlan(
     }
   }
 
-  return [...plans.values()].toSorted(
+  return [...plans.values()].sort(
     (left, right) => new Date(left.fireAt).getTime() - new Date(right.fireAt).getTime(),
   );
 }

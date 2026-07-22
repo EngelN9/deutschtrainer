@@ -1,8 +1,7 @@
 appId: com.deutschtrainer.app
 name: Offline demo learning smoke
 ---
-- launchApp:
-    clearState: true
+- launchApp
 - extendedWaitUntil:
     visible: "德語 B1-C2 自學系統"
     timeout: 15000

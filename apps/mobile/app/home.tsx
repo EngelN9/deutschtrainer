@@ -67,9 +67,9 @@ export default function HomeScreen() {
     learningRecords?.attempts.filter(
       (attempt) => localDateKey(new Date(attempt.submittedAt)) === today,
     ).length ?? 0;
-  const weakestSkill = learningRecords?.mastery.toSorted(
-    (left, right) => left.masteryScore - right.masteryScore,
-  )[0];
+  const weakestSkill = learningRecords
+    ? [...learningRecords.mastery].sort((left, right) => left.masteryScore - right.masteryScore)[0]
+    : undefined;
   const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
 
   async function handleSignOut() {

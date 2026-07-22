@@ -26,7 +26,7 @@ export function NotificationCoordinator() {
     const attempts = recordsQuery.data?.attempts ?? [];
     const lastActivityAt = attempts
       .map((attempt) => attempt.submittedAt)
-      .toSorted()
+      .sort()
       .at(-1);
     const dueReviewCount =
       recordsQuery.data?.reviews.filter(
@@ -100,7 +100,7 @@ async function reconcilePublishedCourses(
   enabled: boolean,
 ): Promise<void> {
   const storageKey = `${courseSnapshotPrefix}${profileId}`;
-  const currentIds = courses.map((course) => course.id).toSorted();
+  const currentIds = courses.map((course) => course.id).sort();
   const previousIds = await readCourseIds(storageKey);
   await AsyncStorage.setItem(storageKey, JSON.stringify(currentIds));
   if (!enabled || previousIds === undefined) {

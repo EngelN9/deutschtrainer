@@ -55,7 +55,7 @@ export function AnnotatedWritingText({
 function createSegments(text: string, errors: InlineError[]): TextSegment[] {
   const segments: TextSegment[] = [];
   let cursor = 0;
-  for (const error of errors.toSorted((left, right) => left.startOffset - right.startOffset)) {
+  for (const error of [...errors].sort((left, right) => left.startOffset - right.startOffset)) {
     if (error.startOffset > cursor) {
       segments.push({ text: text.slice(cursor, error.startOffset) });
     }

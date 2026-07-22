@@ -31,9 +31,11 @@ export default function AnalyticsScreen() {
   const writingQuery = useWritingWorkspace();
   const audioQuery = useAudioLearningWorkspace();
   const analytics = recordsQuery.data ? calculateLearningAnalytics(recordsQuery.data) : undefined;
-  const weakestSkills = recordsQuery.data?.mastery
-    .toSorted((left, right) => left.masteryScore - right.masteryScore)
-    .slice(0, 5);
+  const weakestSkills = recordsQuery.data
+    ? [...recordsQuery.data.mastery]
+        .sort((left, right) => left.masteryScore - right.masteryScore)
+        .slice(0, 5)
+    : undefined;
   const maximumDailyAttempts = Math.max(
     1,
     ...(analytics?.dailyActivity.map((day) => day.attemptCount) ?? []),
@@ -45,7 +47,7 @@ export default function AnalyticsScreen() {
     writingErrorCounts.set(error.type, (writingErrorCounts.get(error.type) ?? 0) + 1);
   }
   const commonWritingErrors = [...writingErrorCounts.entries()]
-    .toSorted((left, right) => right[1] - left[1])
+    .sort((left, right) => right[1] - left[1])
     .slice(0, 5);
   const completedListening =
     audioQuery.data?.listeningAttempts.filter((attempt) => attempt.status === "completed") ?? [];
