@@ -25,6 +25,7 @@ import { StatePanel } from "../src/components/StatePanel";
 export default function HomeScreen() {
   const router = useRouter();
   const errorMessage = useAuthStore((state) => state.errorMessage);
+  const authMode = useAuthStore((state) => state.authMode);
   const noticeMessage = useAuthStore((state) => state.noticeMessage);
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
@@ -71,6 +72,13 @@ export default function HomeScreen() {
   )[0];
   const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
 
+  async function handleSignOut() {
+    await signOut();
+    if (useAuthStore.getState().authMode === null) {
+      router.replace("/welcome");
+    }
+  }
+
   return (
     <AuthGate mode="protected">
       <ContentScreen
@@ -84,7 +92,7 @@ export default function HomeScreen() {
             <IconButton
               accessibilityLabel="登出帳號"
               icon={LogOut}
-              onPress={() => void signOut()}
+              onPress={() => void handleSignOut()}
               tone="danger"
             />
           </View>
@@ -95,6 +103,14 @@ export default function HomeScreen() {
       >
         <MessageBanner message={errorMessage} tone="error" />
         <MessageBanner message={noticeMessage} tone="info" />
+        <MessageBanner
+          message={
+            authMode === "demo"
+              ? "離線 Demo：課程、固定題與學習進度可用，資料只保存在這台裝置；AI 寫作、聽說與雲端同步尚未開放。"
+              : null
+          }
+          tone="info"
+        />
         <MessageBanner message={learningRecordsQuery.error?.message ?? null} tone="error" />
         <OfflineStatusBand />
         <View style={styles.goalBand}>

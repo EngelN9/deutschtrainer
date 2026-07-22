@@ -6,8 +6,8 @@ import { useAuthStore } from "../src/features/auth/useAuthStore";
 
 export default function IndexRoute() {
   useBootstrapAuth();
+  const authMode = useAuthStore((state) => state.authMode);
   const profile = useAuthStore((state) => state.profile);
-  const session = useAuthStore((state) => state.session);
   const status = useAuthStore((state) => state.status);
 
   if (status === "loading") {
@@ -19,7 +19,7 @@ export default function IndexRoute() {
     );
   }
 
-  if (!session) {
+  if (!authMode) {
     return <Redirect href="/welcome" />;
   }
 

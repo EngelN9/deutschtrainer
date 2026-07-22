@@ -6,6 +6,7 @@ import { courseCatalogQueryKey } from "../courses/useCourseCatalog";
 import { learningRecordsQueryKey } from "../learning-records/useLearningRecords";
 import { connectivityStatusFromState, useConnectivityStore } from "./connectivityStore";
 import { useOfflineStore } from "./useOfflineStore";
+import { mobileEnv } from "../../lib/env";
 
 export function OfflineCoordinator() {
   const queryClient = useQueryClient();
@@ -24,7 +25,12 @@ export function OfflineCoordinator() {
   }, [hydrate, setConnectivity]);
 
   useEffect(() => {
-    if (!hasHydrated || connectivity !== "online" || !profileId) {
+    if (
+      mobileEnv.contentSource !== "api" ||
+      !hasHydrated ||
+      connectivity !== "online" ||
+      !profileId
+    ) {
       return;
     }
 
