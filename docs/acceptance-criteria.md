@@ -240,3 +240,16 @@
 - EAS `preview` profile 產生 internal Android APK；`production` profile 保留 store distribution 預設。
 - Maestro guest smoke 不依賴帳密或 secrets，覆蓋歡迎、登入、忘記密碼與返回登入。
 - 本機可自動化檢查須通過；Android／iOS 權限、通知、錄音、離線與安裝式 smoke 保留為 device follow-up。
+
+目前結果：Android Preview guest smoke pass；其餘為 device follow-up。
+
+## 17. Phase 15 驗收
+
+- API 必須產生不依賴 TypeScript runtime 的 production bundle，並可由 plain Node 啟動。
+- bundle smoke 必須對實際 production artifact 執行 `GET /health` 並驗證服務契約。
+- `APP_ENV=staging|production` 必須拒絕 fake AI、非 HTTPS Supabase 與缺少的 service-role key。
+- container final image 必須以非 root 使用者執行、具有 health check 並處理 `SIGINT`／`SIGTERM`。
+- GitHub CI 必須建置及 smoke production bundle，並成功建置 API container。
+- 真實 service-role／OpenAI secrets 不得寫入 image、source、Mobile/Admin public variables 或 release assets。
+
+目前結果：Local pass；connected staging follow-up。

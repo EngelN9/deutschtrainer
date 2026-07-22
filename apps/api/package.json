@@ -6,8 +6,11 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
+    "build": "esbuild src/dev-server.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/server.mjs --sourcemap",
     "dev": "tsx watch src/dev-server.ts",
+    "start": "node dist/server.mjs",
     "typecheck": "tsc --noEmit",
+    "verify:bundle": "node scripts/verify-production-bundle.mjs",
     "verify:local": "tsx scripts/verify-local-e2e.ts",
     "verify:writing:local": "tsx scripts/verify-writing-e2e.ts",
     "verify:audio:local": "tsx scripts/verify-audio-e2e.ts",
@@ -31,6 +34,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "esbuild": "0.25.12",
     "tsx": "4.20.6",
     "typescript": "5.9.3"
   }

@@ -57,6 +57,8 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm dev:api
+pnpm --filter @deutschtrainer/api build
+pnpm --filter @deutschtrainer/api verify:bundle
 pnpm dev:mobile
 pnpm dev:admin
 pnpm supabase:status
@@ -89,5 +91,6 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 12: per-user course downloads, offline fixed-exercise grading, durable pending attempts, reconnect sync, conflict recovery, and original submission-time preservation complete with native-device follow-up.
 - Phase 13: searchable B1-C2 vocabulary and grammar libraries, structured Traditional Chinese explanations, published-only APIs, pagination, and related-exercise deep links complete.
 - Phase 14: 100 approved human exercises, release identifiers and artwork, EAS preview/production profiles, content-readiness verification, and a versioned native guest smoke flow complete with device follow-up.
+- Phase 15: deployment-safe API configuration, a self-contained Node production bundle, container packaging, graceful shutdown, and CI bundle/container verification complete.
 
-See `docs/phase-14-mvp-release-readiness.md` for the content threshold, EAS configuration, native smoke flow, and remaining device handoff.
+See `docs/phase-15-api-staging-readiness.md` for the production bundle, container contract, staging environment boundary, and credentialed deployment handoff.

@@ -1,6 +1,6 @@
 import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "node:http";
+import { resolve } from "node:path";
 import { loadEnvFile } from "node:process";
-import { fileURLToPath } from "node:url";
 import { createApiHandler } from "./app";
 import { AudioLearningService } from "./audio/audioService";
 import {
@@ -9,7 +9,7 @@ import {
   UnavailableAudioProvider,
 } from "./audio/openAiAudioProvider";
 import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
-import { readApiConfig } from "./config";
+import { assertApiDeploymentConfig, readApiConfig } from "./config";
 import { ContentGenerationService } from "./content-generation/contentGenerationService";
 import {
   DeterministicContentGenerationProvider,
@@ -39,18 +39,10 @@ import {
   UnavailableWritingProvider,
 } from "./writing/openAiWritingProvider";
 
-try {
-  loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
-} catch (error) {
-  if (!isMissingFileError(error)) {
-    throw error;
-  }
-}
+loadLocalEnvironmentFile();
 
 const config = readApiConfig();
-if (!config.supabaseServiceRoleKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required by the API server.");
-}
+assertApiDeploymentConfig(config);
 
 const repository = new SupabaseEvaluationRepository(
   config.supabaseUrl,
@@ -197,9 +189,33 @@ const server = createServer(async (incoming, outgoing) => {
   }
 });
 
-server.listen(config.port, () => {
-  console.log(`Deutschtrainer API listening on http://localhost:${config.port}`);
+server.listen(config.port, config.host, () => {
+  console.log(
+    `Deutschtrainer API listening on http://${config.host}:${config.port} (${config.appEnv})`,
+  );
 });
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => shutdown(signal));
+}
+
+function shutdown(signal: NodeJS.Signals): void {
+  console.log(`Deutschtrainer API received ${signal}; shutting down.`);
+  const forcedShutdown = setTimeout(() => {
+    server.closeAllConnections();
+    process.exit(1);
+  }, 10_000);
+  forcedShutdown.unref();
+
+  server.close((error) => {
+    clearTimeout(forcedShutdown);
+    if (error) {
+      console.error("Deutschtrainer API shutdown failed.", error);
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+}
 
 function readRequestBody(request: IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -233,4 +249,22 @@ function isMissingFileError(error: unknown): boolean {
     "code" in error &&
     (error as { code?: unknown }).code === "ENOENT"
   );
+}
+
+function loadLocalEnvironmentFile(): void {
+  const explicitPath = process.env.API_ENV_FILE?.trim();
+  const candidates = explicitPath
+    ? [resolve(process.cwd(), explicitPath)]
+    : [resolve(process.cwd(), ".env"), resolve(process.cwd(), "..", "..", ".env")];
+
+  for (const candidate of new Set(candidates)) {
+    try {
+      loadEnvFile(candidate);
+      return;
+    } catch (error) {
+      if (!isMissingFileError(error)) {
+        throw error;
+      }
+    }
+  }
 }

@@ -1,4 +1,8 @@
+export type AppEnvironment = "local" | "test" | "staging" | "production";
+
 export interface ApiConfig {
+  appEnv: AppEnvironment;
+  host: string;
   port: number;
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
@@ -20,6 +24,8 @@ export interface ApiConfig {
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   return {
+    appEnv: readAppEnvironment(env.APP_ENV),
+    host: env.HOST?.trim() || "127.0.0.1",
     port: readPositiveInteger(env.PORT, 8787),
     supabaseUrl: env.SUPABASE_URL ?? "http://127.0.0.1:54321",
     supabaseServiceRoleKey: cleanSecret(env.SUPABASE_SERVICE_ROLE_KEY),
@@ -46,11 +52,49 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   };
 }
 
+export function assertApiDeploymentConfig(config: ApiConfig): void {
+  if (!config.supabaseServiceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required by the API server.");
+  }
+
+  if (config.appEnv === "local" || config.appEnv === "test") {
+    return;
+  }
+
+  if (config.fakeEvaluationMode) {
+    throw new Error("AI_EVALUATION_FAKE_MODE must be false in staging and production.");
+  }
+
+  let supabaseUrl: URL;
+  try {
+    supabaseUrl = new URL(config.supabaseUrl);
+  } catch {
+    throw new Error("SUPABASE_URL must be a valid absolute URL.");
+  }
+
+  if (supabaseUrl.protocol !== "https:") {
+    throw new Error("SUPABASE_URL must use HTTPS in staging and production.");
+  }
+}
+
 function cleanSecret(value: string | undefined): string {
   if (!value || value.startsWith("replace-with-")) {
     return "";
   }
   return value.trim();
+}
+
+function readAppEnvironment(value: string | undefined): AppEnvironment {
+  const normalized = value?.trim() || "local";
+  if (
+    normalized === "local" ||
+    normalized === "test" ||
+    normalized === "staging" ||
+    normalized === "production"
+  ) {
+    return normalized;
+  }
+  throw new Error("APP_ENV must be one of local, test, staging, or production.");
 }
 
 function readPositiveInteger(value: string | undefined, fallback: number): number {
