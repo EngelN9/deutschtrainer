@@ -8,6 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "export:android": "expo export --platform android",
+    "export:web": "expo export --platform web",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -31,6 +33,7 @@
     "expo-linking": "~57.0.3",
     "expo-notifications": "~57.0.6",
     "expo-router": "57.0.7",
+    "expo-splash-screen": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "lucide-react-native": "1.24.0",
     "react": "19.2.3",
@@ -46,6 +49,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.17",
+    "babel-preset-expo": "57.0.3",
     "typescript": "~6.0.3"
   }
 }

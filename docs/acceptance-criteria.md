@@ -229,5 +229,14 @@
 目前結果：Pass。
 
 - 本機 E2E 驗證 50 筆 published 單字、繁中搜尋、分頁、cache header、完整單字 metadata、10 個文法主題的規則／例句／錯誤及相關練習。
-- `die Miete` 與 `B1.nebensatz` 各解析 6 筆相關練習；invalid difficulty 為 `400`，未知 UUID 為 `404`。
+- `die Miete` 與 `B1.nebensatz` 在 Phase 14 seed 各解析 10 筆相關練習；invalid difficulty 為 `400`，未知 UUID 為 `404`。
 - API 與 Mobile typecheck、共享 schema 測試及 390 px／桌面 Playwright 巡檢通過。
+
+## 16. Phase 14 驗收
+
+- Seed 必須精確包含 100 題 `human`／`approved`／`published` Exercise：B1 50、B2 25、C1 13、C2 12。
+- 100 題均有 `exercise_answers` row，八種既有題型至少各兩題。
+- Mobile 同時具有 iOS bundle identifier、Android application ID、build version 與正式圖示資產。
+- EAS `preview` profile 產生 internal Android APK；`production` profile 保留 store distribution 預設。
+- Maestro guest smoke 不依賴帳密或 secrets，覆蓋歡迎、登入、忘記密碼與返回登入。
+- 本機可自動化檢查須通過；Android／iOS 權限、通知、錄音、離線與安裝式 smoke 保留為 device follow-up。

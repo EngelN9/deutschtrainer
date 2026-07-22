@@ -141,6 +141,7 @@ drop table if exists public._phase3_exercise_seed;
 drop table if exists public._phase3_lesson_seed;
 drop table if exists public._phase5_ai_exercise_seed;
 drop table if exists public._phase6_writing_prompt_seed;
+drop table if exists public._mvp_release_exercise_seed;
 
 create table public._phase3_lesson_seed (
   slug text primary key,
@@ -978,6 +979,647 @@ set
   explanation_zh_tw = excluded.explanation_zh_tw,
   updated_at = now();
 
+create table public._mvp_release_exercise_seed (
+  slug text primary key,
+  lesson_slug text not null,
+  sequence integer not null,
+  type public.exercise_type not null,
+  title text not null,
+  prompt_de text not null,
+  accepted_answers text[] not null,
+  segments text[] not null,
+  explanation_zh_tw text not null,
+  unique (lesson_slug, sequence)
+);
+
+insert into public._mvp_release_exercise_seed values
+  (
+    'b1-gruende-release-01',
+    'b1-gruende',
+    1,
+    'fill_blank',
+    '讓步從句填空',
+    'Obwohl das Wetter schlecht ___, gehen wir spazieren.',
+    array['ist'],
+    '{}'::text[],
+    'obwohl 引導的從句以變位動詞 ist 收尾。'
+  ),
+  (
+    'b1-gruende-release-02',
+    'b1-gruende',
+    2,
+    'error_correction',
+    '原因從句改錯',
+    'Weil ich bin krank, bleibe ich zu Hause.',
+    array['Weil ich krank bin, bleibe ich zu Hause.'],
+    '{}'::text[],
+    'weil 從句的變位動詞 bin 必須移到句末。'
+  ),
+  (
+    'b1-gruende-release-03',
+    'b1-gruende',
+    3,
+    'sentence_order',
+    '延誤原因排序',
+    'Ordne die Satzteile zu einem vollständigen Satz.',
+    '{}'::text[],
+    array['Ich komme später,', 'weil', 'der Zug Verspätung hat.'],
+    'weil 引導原因從句，hat 位於從句最後。'
+  ),
+  (
+    'b1-gruende-release-04',
+    'b1-gruende',
+    4,
+    'fill_blank',
+    '結果連接詞填空',
+    'Es regnet stark. ___ fahre ich mit dem Fahrrad zur Arbeit.',
+    array['Trotzdem'],
+    '{}'::text[],
+    'trotzdem 表示結果與前句預期相反，後方維持主句倒裝語序。'
+  ),
+  (
+    'b1-wohnung-release-01',
+    'b1-wohnung',
+    1,
+    'fill_blank',
+    '位置三格填空',
+    'Die Schlüssel liegen auf ___ Tisch.',
+    array['dem'],
+    '{}'::text[],
+    'liegen 描述靜態位置，auf 後使用第三格 dem Tisch。'
+  ),
+  (
+    'b1-wohnung-release-02',
+    'b1-wohnung',
+    2,
+    'error_correction',
+    '方向四格改錯',
+    'Ich stelle die Lampe auf dem Tisch.',
+    array['Ich stelle die Lampe auf den Tisch.'],
+    '{}'::text[],
+    'stellen 表示移動到目的地，auf 後使用第四格 den Tisch。'
+  ),
+  (
+    'b1-wohnung-release-03',
+    'b1-wohnung',
+    3,
+    'sentence_order',
+    '租屋付款排序',
+    'Ordne die Satzteile zu einem vollständigen Satz.',
+    '{}'::text[],
+    array['Die Kaution', 'muss', 'vor dem Einzug', 'bezahlt werden.'],
+    '情態動詞 muss 位於第二位，完成式不定詞群 bezahlt werden 位於句末。'
+  ),
+  (
+    'b1-wohnung-release-04',
+    'b1-wohnung',
+    4,
+    'fill_blank',
+    '搬家方向填空',
+    'Wir ziehen nächsten Monat in ___ neue Wohnung.',
+    array['die'],
+    '{}'::text[],
+    'in 表示移動目的地時使用第四格；陰性單數為 die neue Wohnung。'
+  ),
+  (
+    'b1-gesundheit-release-01',
+    'b1-gesundheit',
+    1,
+    'fill_blank',
+    '症狀搭配填空',
+    'Ich leide seit zwei Tagen ___ starkem Husten.',
+    array['unter'],
+    '{}'::text[],
+    'leiden unter 是固定搭配，unter 後接第三格。'
+  ),
+  (
+    'b1-gesundheit-release-02',
+    'b1-gesundheit',
+    2,
+    'error_correction',
+    '症狀格位改錯',
+    'Seit Montag habe ich starke Husten.',
+    array['Seit Montag habe ich starken Husten.'],
+    '{}'::text[],
+    'Husten 是陽性第四格，無冠詞時形容詞使用 -en。'
+  ),
+  (
+    'b1-gesundheit-release-03',
+    'b1-gesundheit',
+    3,
+    'sentence_order',
+    '更改預約排序',
+    'Ordne die Satzteile zu einer höflichen Bitte.',
+    '{}'::text[],
+    array['Könnten Sie', 'den Termin', 'bitte', 'auf Mittwoch verschieben?'],
+    'Könnten Sie 構成委婉問句，主要動詞 verschieben 位於句末。'
+  ),
+  (
+    'b1-gesundheit-release-04',
+    'b1-gesundheit',
+    4,
+    'fill_blank',
+    '看診流程填空',
+    'Der Arzt hat mir ein Rezept ___.',
+    array['ausgestellt', 'verschrieben'],
+    '{}'::text[],
+    'ein Rezept ausstellen 與 ein Rezept verschreiben 都是自然的醫療搭配。'
+  ),
+  (
+    'b1-bewerbung-release-01',
+    'b1-bewerbung',
+    1,
+    'fill_blank',
+    '附件說明填空',
+    'Im Anhang ___ Sie meinen Lebenslauf und meine Zeugnisse.',
+    array['finden'],
+    '{}'::text[],
+    '正式信件常用 Im Anhang finden Sie ... 指示附件內容。'
+  ),
+  (
+    'b1-bewerbung-release-02',
+    'b1-bewerbung',
+    2,
+    'error_correction',
+    '反身搭配改錯',
+    'Hiermit bewerbe ich um die ausgeschriebene Stelle.',
+    array['Hiermit bewerbe ich mich um die ausgeschriebene Stelle.'],
+    '{}'::text[],
+    'sich bewerben um 是固定反身搭配，第一人稱需要 mich。'
+  ),
+  (
+    'b1-bewerbung-release-03',
+    'b1-bewerbung',
+    3,
+    'sentence_order',
+    '面試意願排序',
+    'Ordne die Satzteile zu einem formellen Satz.',
+    '{}'::text[],
+    array['Für ein persönliches Gespräch', 'stehe ich Ihnen', 'gern', 'zur Verfügung.'],
+    'zur Verfügung stehen 是正式信件中表達可配合面談的常見搭配。'
+  ),
+  (
+    'b1-bewerbung-release-04',
+    'b1-bewerbung',
+    4,
+    'fill_blank',
+    '能力搭配填空',
+    'Ich verfüge ___ gute Deutschkenntnisse.',
+    array['über'],
+    '{}'::text[],
+    'verfügen über + 第四格表示具備某項能力或資源。'
+  ),
+  (
+    'b1-meinung-release-01',
+    'b1-meinung',
+    1,
+    'fill_blank',
+    '觀點對比填空',
+    'Einerseits spart Homeoffice Zeit, ___ fehlt oft der direkte Austausch.',
+    array['andererseits'],
+    '{}'::text[],
+    'einerseits 與 andererseits 成對呈現兩個相對觀點。'
+  ),
+  (
+    'b1-meinung-release-02',
+    'b1-meinung',
+    2,
+    'error_correction',
+    '意見表達改錯',
+    'Meiner Meinung sollten Busse günstiger sein.',
+    array['Meiner Meinung nach sollten Busse günstiger sein.'],
+    '{}'::text[],
+    '固定表達為 meiner Meinung nach，nach 不可省略。'
+  ),
+  (
+    'b1-meinung-release-03',
+    'b1-meinung',
+    3,
+    'sentence_order',
+    '公共交通立場排序',
+    'Ordne die Satzteile zu einem vollständigen Satz.',
+    '{}'::text[],
+    array['Ich bin der Ansicht,', 'dass', 'öffentliche Verkehrsmittel', 'günstiger sein sollten.'],
+    'dass 從句將情態動詞結構 sein sollten 放在句末。'
+  ),
+  (
+    'b2-argumente-release-01',
+    'b2-argumente',
+    1,
+    'fill_blank',
+    '讓步結構填空',
+    'Zwar verursacht die Umstellung Kosten, langfristig ist sie ___ sinnvoll.',
+    array['jedoch', 'aber'],
+    '{}'::text[],
+    'zwar 通常與 jedoch 或 aber 搭配，用來先承認一點再凸顯主張。'
+  ),
+  (
+    'b2-argumente-release-02',
+    'b2-argumente',
+    2,
+    'error_correction',
+    '讓步搭配改錯',
+    'Zwar spart die Lösung Zeit, sondern sie erhöht die Kosten.',
+    array['Zwar spart die Lösung Zeit, aber sie erhöht die Kosten.'],
+    '{}'::text[],
+    'zwar 搭配 aber；sondern 只用於否定後的更正。'
+  ),
+  (
+    'b2-argumente-release-03',
+    'b2-argumente',
+    3,
+    'sentence_order',
+    '反方觀點排序',
+    'Ordne die Satzteile zu einem sachlichen Einwand.',
+    '{}'::text[],
+    array['Dagegen lässt sich einwenden,', 'dass', 'die langfristigen Kosten', 'noch nicht berücksichtigt wurden.'],
+    'dagegen lässt sich einwenden 是正式引入反方觀點的非人稱表達。'
+  ),
+  (
+    'b2-argumente-release-04',
+    'b2-argumente',
+    4,
+    'fill_blank',
+    '反駁表達填空',
+    'Dem Einwand ist ___, dass die Daten aus mehreren Jahren stammen.',
+    array['entgegenzuhalten'],
+    '{}'::text[],
+    'jemandem etwas entgegenhalten 可用於正式回應反方論點。'
+  ),
+  (
+    'b2-argumente-release-05',
+    'b2-argumente',
+    5,
+    'error_correction',
+    '從句位置改錯',
+    'Dieses Argument überzeugt nur teilweise, weil fehlen aktuelle Daten.',
+    array['Dieses Argument überzeugt nur teilweise, weil aktuelle Daten fehlen.'],
+    '{}'::text[],
+    'weil 從句維持主詞在前，變位動詞 fehlen 位於句末。'
+  ),
+  (
+    'b2-argumente-release-06',
+    'b2-argumente',
+    6,
+    'sentence_order',
+    '權衡結論排序',
+    'Ordne die Satzteile zu einer abgewogenen Schlussfolgerung.',
+    '{}'::text[],
+    array['Insgesamt überwiegen die Vorteile,', 'sofern', 'klare Regeln', 'für die Umsetzung gelten.'],
+    'sofern 引導條件從句，gelten 位於句末。'
+  ),
+  (
+    'b2-argumente-release-07',
+    'b2-argumente',
+    7,
+    'fill_blank',
+    '條件連接詞填空',
+    'Die Maßnahme kann erfolgreich sein, vorausgesetzt, ___ alle Beteiligten zustimmen.',
+    array['dass'],
+    '{}'::text[],
+    'vorausgesetzt, dass 引導實現主張所需的條件。'
+  ),
+  (
+    'b2-arbeitsplatz-release-01',
+    'b2-arbeitsplatz',
+    1,
+    'fill_blank',
+    '正式回覆填空',
+    'Bezüglich ___ Anfrage habe ich intern Rücksprache gehalten.',
+    array['Ihrer'],
+    '{}'::text[],
+    'bezüglich 在正式語體中常搭配第二格：bezüglich Ihrer Anfrage。'
+  ),
+  (
+    'b2-arbeitsplatz-release-02',
+    'b2-arbeitsplatz',
+    2,
+    'error_correction',
+    '間接問句改錯',
+    'Bitte teilen Sie mir mit, wann beginnt die Besprechung.',
+    array['Bitte teilen Sie mir mit, wann die Besprechung beginnt.'],
+    '{}'::text[],
+    'wann 引導間接問句，變位動詞 beginnt 位於從句末。'
+  ),
+  (
+    'b2-arbeitsplatz-release-03',
+    'b2-arbeitsplatz',
+    3,
+    'sentence_order',
+    '替代方案排序',
+    'Ordne die Satzteile zu einem professionellen Vorschlag.',
+    '{}'::text[],
+    array['Als Alternative', 'möchte ich Ihnen', 'den kommenden Montag', 'vorschlagen.'],
+    'möchte ich Ihnen ... vorschlagen 以委婉方式提出替代方案。'
+  ),
+  (
+    'b2-arbeitsplatz-release-04',
+    'b2-arbeitsplatz',
+    4,
+    'fill_blank',
+    '協商動詞填空',
+    'Wir möchten Ihnen einen alternativen Termin ___.',
+    array['vorschlagen'],
+    '{}'::text[],
+    'jemandem einen Termin vorschlagen 是提出替代日期的常見搭配。'
+  ),
+  (
+    'b2-arbeitsplatz-release-05',
+    'b2-arbeitsplatz',
+    5,
+    'error_correction',
+    '委婉請求改錯',
+    'Ich wäre Ihnen dankbar, wenn Sie könnten mir bis Freitag antworten.',
+    array['Ich wäre Ihnen dankbar, wenn Sie mir bis Freitag antworten könnten.'],
+    '{}'::text[],
+    'wenn 從句的情態動詞 könnten 應放在句末。'
+  ),
+  (
+    'b2-arbeitsplatz-release-06',
+    'b2-arbeitsplatz',
+    6,
+    'sentence_order',
+    '確認安排排序',
+    'Ordne die Satzteile zu einer formellen Bestätigung.',
+    '{}'::text[],
+    array['Hiermit bestätige ich,', 'dass', 'der vereinbarte Termin', 'wie geplant stattfindet.'],
+    'dass 從句把 stattfindet 放到句末，整體維持正式語氣。'
+  ),
+  (
+    'b2-arbeitsplatz-release-07',
+    'b2-arbeitsplatz',
+    7,
+    'fill_blank',
+    '內部協調填空',
+    'Nach interner ___ können wir Ihrem Vorschlag zustimmen.',
+    array['Rücksprache'],
+    '{}'::text[],
+    'nach interner Rücksprache 是職場中表示已完成內部協調的固定搭配。'
+  ),
+  (
+    'c1-zusammenfassung-release-01',
+    'c1-zusammenfassung',
+    1,
+    'fill_blank',
+    '研究範圍填空',
+    'Die Ergebnisse lassen sich nur insofern verallgemeinern, ___ die Stichprobe repräsentativ ist.',
+    array['als'],
+    '{}'::text[],
+    'insofern, als 精確限定前述主張成立的範圍。'
+  ),
+  (
+    'c1-zusammenfassung-release-02',
+    'c1-zusammenfassung',
+    2,
+    'error_correction',
+    '中性轉述改錯',
+    'Der Autor behauptet, die Methode ist zuverlässig.',
+    array['Der Autor behauptet, die Methode sei zuverlässig.'],
+    '{}'::text[],
+    '正式中性轉述使用第一虛擬式 sei，避免直接替主張背書。'
+  ),
+  (
+    'c1-zusammenfassung-release-03',
+    'c1-zusammenfassung',
+    3,
+    'sentence_order',
+    '研究限制排序',
+    'Ordne die Satzteile zu einer neutralen Zusammenfassung.',
+    '{}'::text[],
+    array['Der Untersuchung zufolge', 'besteht ein Zusammenhang,', 'wobei', 'die geringe Stichprobe die Aussagekraft begrenzt.'],
+    'wobei 在摘要中補充限制，避免把相關性誤寫成因果關係。'
+  ),
+  (
+    'c1-zusammenfassung-release-04',
+    'c1-zusammenfassung',
+    4,
+    'fill_blank',
+    '推論界線填空',
+    'Aus den vorliegenden Daten lässt sich kein eindeutiger Kausalschluss ___.',
+    array['ableiten'],
+    '{}'::text[],
+    'sich aus Daten ableiten lassen 是學術文本中界定推論的常見結構。'
+  ),
+  (
+    'c1-zusammenfassung-release-05',
+    'c1-zusammenfassung',
+    5,
+    'error_correction',
+    '重複連接詞改錯',
+    'Obwohl die Stichprobe klein ist, dennoch sind die Ergebnisse aussagekräftig.',
+    array['Obwohl die Stichprobe klein ist, sind die Ergebnisse dennoch aussagekräftig.'],
+    '{}'::text[],
+    'obwohl 已引導讓步從句；dennoch 可保留在主句內，但不能占用從句後的錯誤位置。'
+  ),
+  (
+    'c1-zusammenfassung-release-06',
+    'c1-zusammenfassung',
+    6,
+    'sentence_order',
+    '證據評估排序',
+    'Ordne die Satzteile zu einer präzisen Bewertung.',
+    '{}'::text[],
+    array['Die Befunde deuten zwar auf einen Effekt hin,', 'reichen jedoch nicht aus,', 'um', 'eine allgemeine Empfehlung abzuleiten.'],
+    'zwar ... jedoch 區分初步證據與證據不足，um ... zu 表示尚不能完成的推論。'
+  ),
+  (
+    'c1-zusammenfassung-release-07',
+    'c1-zusammenfassung',
+    7,
+    'fill_blank',
+    '限制表達填空',
+    'Die Aussagekraft wird dadurch ___, dass nur ein Unternehmen untersucht wurde.',
+    array['eingeschränkt', 'begrenzt'],
+    '{}'::text[],
+    'eingeschränkt 與 begrenzt 都可精確說明研究設計對結論效度的限制。'
+  ),
+  (
+    'c2-ironie-release-01',
+    'c2-ironie',
+    1,
+    'fill_blank',
+    '含蓄否定填空',
+    'Die vermeintlich innovative Lösung war ___ mehr als eine Umbenennung des alten Verfahrens.',
+    array['kaum'],
+    '{}'::text[],
+    'kaum mehr als 以克制方式否定宣傳中的創新程度。'
+  ),
+  (
+    'c2-ironie-release-02',
+    'c2-ironie',
+    2,
+    'error_correction',
+    '反諷邏輯改錯',
+    'Die vermeintlich brillante Lösung war ein voller Erfolg, da sie vollständig scheiterte.',
+    array['Die vermeintlich brillante Lösung war kein Erfolg, da sie vollständig scheiterte.'],
+    '{}'::text[],
+    'vermeintlich 標示表面評價與事實落差，後句必須維持一致的語意方向。'
+  ),
+  (
+    'c2-ironie-release-03',
+    'c2-ironie',
+    3,
+    'sentence_order',
+    '語域轉換排序',
+    'Ordne die Satzteile zu einer stilistischen Beobachtung.',
+    '{}'::text[],
+    array['Der zunächst nüchterne Bericht', 'kippt unvermittelt', 'in eine demonstrativ saloppe', 'und spöttische Polemik.'],
+    'kippt in 描述突兀的語域轉換，demonstrativ salopp 點出刻意營造的修辭效果。'
+  ),
+  (
+    'c2-ironie-release-04',
+    'c2-ironie',
+    4,
+    'fill_blank',
+    '強烈否定填空',
+    'Mitnichten ___ es sich um einen bloßen Einzelfall.',
+    array['handelt'],
+    '{}'::text[],
+    'mitnichten 置於句首時觸發倒裝：handelt es sich。'
+  ),
+  (
+    'c2-ironie-release-05',
+    'c2-ironie',
+    5,
+    'error_correction',
+    '學術語域改寫',
+    'Die Studie ist super interessant, hat aber ein paar Probleme.',
+    array['Die Studie ist äußerst aufschlussreich, weist jedoch einige methodische Schwächen auf.'],
+    '{}'::text[],
+    '高階正式語域以 aufschlussreich、jedoch 與 methodische Schwächen 取代口語模糊詞。'
+  ),
+  (
+    'c2-ironie-release-06',
+    'c2-ironie',
+    6,
+    'sentence_order',
+    '反諷評價排序',
+    'Ordne die Satzteile zu einer fein ironischen Bewertung.',
+    '{}'::text[],
+    array['Die als Jahrhundertreform angekündigte Neuerung', 'erschöpfte sich letztlich darin,', 'bekannte Probleme', 'mit neuen Etiketten zu versehen.'],
+    'sich darin erschöpfen 點出成果遠低於宣稱，形成克制但清楚的反諷。'
+  );
+
+insert into public.exercises (
+  id,
+  activity_id,
+  level,
+  type,
+  title,
+  instruction_zh_tw,
+  prompt_de,
+  payload_json,
+  skill_ids,
+  grammar_topic_ids,
+  vocabulary_ids,
+  estimated_seconds,
+  difficulty,
+  source_type,
+  review_status,
+  status,
+  version,
+  order_index
+)
+select
+  md5('deutschtrainer:exercise:' || release.slug)::uuid,
+  md5('deutschtrainer:activity:' || release.lesson_slug)::uuid,
+  lesson.level,
+  release.type,
+  release.title,
+  case release.type
+    when 'fill_blank' then '在空格中輸入正確的德語字詞。'
+    when 'error_correction' then '找出錯誤並輸入完整的正確句子。'
+    else '點選片段，排列成正確的德語句子。'
+  end,
+  release.prompt_de,
+  case
+    when release.type = 'sentence_order' then jsonb_build_object(
+      'segments', (
+        select jsonb_agg(
+          jsonb_build_object('id', 'segment-' || ordinality, 'textDe', segment)
+          order by ordinality
+        )
+        from unnest(release.segments) with ordinality as parts(segment, ordinality)
+      ),
+      'allowPartialCredit', true
+    )
+    else '{}'::jsonb
+  end,
+  lesson.skill_ids,
+  lesson.grammar_tags,
+  lesson.vocabulary_tags,
+  case release.type when 'fill_blank' then 45 when 'error_correction' then 70 else 60 end,
+  case lesson.level when 'B1' then 3 when 'B2' then 4 else 5 end,
+  'human',
+  'approved',
+  'published',
+  1,
+  20 + release.sequence
+from public._mvp_release_exercise_seed release
+join public._phase3_lesson_seed lesson on lesson.slug = release.lesson_slug
+on conflict (id) do update
+set
+  activity_id = excluded.activity_id,
+  level = excluded.level,
+  type = excluded.type,
+  title = excluded.title,
+  instruction_zh_tw = excluded.instruction_zh_tw,
+  prompt_de = excluded.prompt_de,
+  payload_json = excluded.payload_json,
+  skill_ids = excluded.skill_ids,
+  grammar_topic_ids = excluded.grammar_topic_ids,
+  vocabulary_ids = excluded.vocabulary_ids,
+  estimated_seconds = excluded.estimated_seconds,
+  difficulty = excluded.difficulty,
+  source_type = excluded.source_type,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  order_index = excluded.order_index,
+  updated_at = now(),
+  deleted_at = null;
+
+delete from public.exercise_options
+where exercise_id in (
+  select md5('deutschtrainer:exercise:' || slug)::uuid
+  from public._mvp_release_exercise_seed
+);
+
+insert into public.exercise_answers (
+  id,
+  exercise_id,
+  answer_json,
+  grading_policy_json,
+  explanation_zh_tw
+)
+select
+  md5('deutschtrainer:answer:' || release.slug)::uuid,
+  md5('deutschtrainer:exercise:' || release.slug)::uuid,
+  case
+    when release.type = 'sentence_order' then jsonb_build_object(
+      'segmentIds', (
+        select jsonb_agg('segment-' || ordinality order by ordinality)
+        from unnest(release.segments) with ordinality as parts(segment, ordinality)
+      )
+    )
+    else jsonb_build_object('acceptedAnswers', to_jsonb(release.accepted_answers))
+  end,
+  jsonb_build_object(
+    'caseSensitive', false,
+    'ignorePunctuation', true,
+    'normalizeGermanCharacters', true,
+    'allowPartialCredit', release.type = 'sentence_order',
+    'acceptedAlternatives', '[]'::jsonb
+  ),
+  release.explanation_zh_tw
+from public._mvp_release_exercise_seed release
+on conflict (exercise_id) do update
+set
+  answer_json = excluded.answer_json,
+  grading_policy_json = excluded.grading_policy_json,
+  explanation_zh_tw = excluded.explanation_zh_tw,
+  updated_at = now();
+
 insert into public.skills (
   id,
   code,
@@ -1459,6 +2101,7 @@ drop table public._phase3_exercise_seed;
 drop table public._phase3_lesson_seed;
 drop table public._phase5_ai_exercise_seed;
 drop table public._phase6_writing_prompt_seed;
+drop table public._mvp_release_exercise_seed;
 
 end;
 $phase3_seed$;

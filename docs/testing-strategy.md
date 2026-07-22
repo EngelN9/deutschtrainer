@@ -181,3 +181,11 @@ pnpm test
 - invalid difficulty 必須回傳 `400`，未知 UUID detail 必須回傳 `404`。
 - service 單元測試固定 repository，覆蓋德語／繁中 normalization、facet、排序、pagination、alias 關聯與未發布 `404`。
 - Expo Web 以桌面及 390 px viewport 巡檢模式切換、搜尋、CEFR filter、單字 detail、文法 detail、精確相關練習及 `scrollWidth`。
+
+## 18. Phase 14 可執行驗證
+
+- `verify:content-readiness:local` 驗證 100 題 human／approved／published content、CEFR 分布、題型下限與答案完整性。
+- `expo config` 與 EAS CLI `config --non-interactive` 驗證原生 app config 及 preview／production profiles。
+- Expo Doctor、Web export、Admin production build、lint、typecheck、Jest 與既有七組 Supabase/API E2E 全數回歸。
+- Maestro guest smoke 使用 internal preview build 驗證歡迎、登入與忘記密碼導覽；不使用測試帳密。
+- Android/iOS device matrix 另驗證通知權限與送達、麥克風、錄音播放、process relaunch、飛航模式與 reconnect race。

@@ -1,0 +1,13 @@
+appId: com.deutschtrainer.app
+name: Guest authentication smoke
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "德語 B1-C2 自學系統"
+    timeout: 15000
+- tapOn: "已有帳號，登入"
+- assertVisible: "登入"
+- tapOn: "忘記密碼"
+- assertVisible: "忘記密碼"
+- tapOn: "返回登入"
+- assertVisible: "登入"
