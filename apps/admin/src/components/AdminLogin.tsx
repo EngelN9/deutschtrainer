@@ -4,7 +4,13 @@ import { useState, type FormEvent } from "react";
 import { KeyRound, LoaderCircle, LogIn } from "lucide-react";
 import type { AdminRepository } from "../lib/adminRepository";
 
-export function AdminLogin({ repository }: { repository: AdminRepository }) {
+export function AdminLogin({
+  repository,
+  onSignedIn,
+}: {
+  repository: AdminRepository;
+  onSignedIn?: () => void | Promise<void>;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,6 +22,7 @@ export function AdminLogin({ repository }: { repository: AdminRepository }) {
     setSubmitting(true);
     try {
       await repository.signIn(email.trim(), password);
+      await onSignedIn?.();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "登入失敗。");
     } finally {

@@ -40,6 +40,10 @@ pnpm start
 
 Use `EXPO_PUBLIC_CONTENT_SOURCE=mock` for standalone UI development or `api` after starting the local API and Supabase stack.
 
+`EXPO_PUBLIC_APP_ENV=local` permits local HTTP endpoints. Connected `preview` and `production`
+builds require API content, non-local HTTPS API/Supabase URLs, a valid anon key, and App/API/content
+release identifiers; invalid or incomplete configuration fails during bundling.
+
 Remote courses, vocabulary, grammar, progress, review, fixed grading, writing, listening/speaking workspaces, and AI exercises require the root API server (`pnpm dev:api`) and `EXPO_PUBLIC_CONTENT_SOURCE=api`. The mobile bundle contains only the Supabase anon key and API URL; OpenAI and service-role keys remain server-only.
 
 After a course is downloaded, its reading content and deterministic fixed exercises remain available offline. AI evaluation, scheduled-review completion, TTS/STT, writing evaluation, and real-time generation remain online-only. Pending fixed attempts are capped at 200 per profile and sync oldest-first when connectivity returns.
@@ -53,17 +57,20 @@ EAS configuration lives beside this app because the repository is a monorepo:
 ```powershell
 pnpm dlx eas-cli@latest login
 pnpm dlx eas-cli@latest init
-pnpm dlx eas-cli@latest config --platform android --profile preview --non-interactive
-pnpm dlx eas-cli@latest build --platform android --profile preview
+pnpm dlx eas-cli@latest config --platform android --profile demo --non-interactive
+pnpm dlx eas-cli@latest build --platform android --profile demo
 ```
 
-The `preview` profile creates an internally distributed Android APK. The `production` profile keeps the store-distribution defaults. Configure the four `EXPO_PUBLIC_*` values from `.env.example` in the matching EAS environment; never add an OpenAI or Supabase service-role key to a Mobile build.
+The `demo` profile preserves the credential-free, internally distributed Android APK. The
+`preview` profile is reserved for connected staging and the `production` profile keeps
+store-distribution defaults. Configure the public API/Supabase URLs, anon key, and release IDs in
+the matching EAS environment; never add an OpenAI or Supabase service-role key to a Mobile build.
 
-Preview builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. It creates no Supabase session, sends no authenticated API requests, and keeps fixed-exercise progress plus preferences in AsyncStorage on the device. AI writing evaluation, knowledge search, audio training, and cloud synchronization stay hidden in Demo mode. API builds do not expose this entrance.
+Demo builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. It creates no Supabase session, sends no authenticated API requests, and keeps fixed-exercise progress plus preferences in AsyncStorage on the device. AI writing evaluation, knowledge search, audio training, and cloud synchronization stay hidden in Demo mode. Connected API builds do not expose this entrance.
 
 After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with its SHA-256 checksum. Connected preview and production builds remain blocked until remote API and Supabase environments are available.
 
-After installing a preview build on a connected device, run the credential-free Demo learning flow:
+After installing a Demo build on a connected device, run the credential-free Demo learning flow:
 
 ```powershell
 maestro test .maestro/guest-smoke.yaml

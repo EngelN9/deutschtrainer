@@ -1,10 +1,14 @@
 export interface ApiHealth {
+  aiConfigured: boolean;
+  release: string;
   status: "ok";
   service: "deutschtrainer-api";
 }
 
 export function getApiHealth(): ApiHealth {
   return {
+    aiConfigured: false,
+    release: "library",
     status: "ok",
     service: "deutschtrainer-api",
   };

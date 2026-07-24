@@ -15,7 +15,10 @@ const server = spawn(process.execPath, ["dist/server.mjs"], {
     PORT: String(port),
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "bundle-smoke-service-key",
-    OPENAI_API_KEY: "",
+    OPENAI_API_KEY: "bundle-smoke-openai-key",
+    WEB_ORIGIN: "https://bundle-smoke.example",
+    CORS_ALLOWED_ORIGINS: "https://bundle-smoke.example",
+    API_RELEASE_ID: "bundle-smoke",
     AI_EVALUATION_FAKE_MODE: "false",
   },
   stdio: ["ignore", "pipe", "pipe"],
@@ -29,7 +32,8 @@ try {
   if (
     payload.status !== "ok" ||
     payload.service !== "deutschtrainer-api" ||
-    payload.aiConfigured !== false
+    payload.aiConfigured !== true ||
+    payload.release !== "bundle-smoke"
   ) {
     throw new Error(`Unexpected health payload: ${JSON.stringify(payload)}`);
   }

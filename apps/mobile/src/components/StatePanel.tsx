@@ -2,6 +2,7 @@ import { AlertCircle, Inbox } from "lucide-react-native";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { PrimaryButton } from "./PrimaryButton";
+import { sanitizeUserFacingText } from "../lib/userFacingErrors";
 
 interface StatePanelProps {
   message: string;
@@ -11,6 +12,8 @@ interface StatePanelProps {
 }
 
 export function StatePanel({ message, onRetry, state, title }: StatePanelProps) {
+  const renderedMessage = state === "error" ? sanitizeUserFacingText(message) : message;
+
   return (
     <View style={styles.panel}>
       {state === "loading" ? (
@@ -21,7 +24,7 @@ export function StatePanel({ message, onRetry, state, title }: StatePanelProps) 
         <Inbox color={colorTokens.mutedText} size={28} />
       )}
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={styles.message}>{renderedMessage}</Text>
       {state === "error" && onRetry ? (
         <View style={styles.retry}>
           <PrimaryButton accessibilityLabel="重新載入" onPress={onRetry} variant="secondary">

@@ -4,7 +4,7 @@ Node backend for learner data, AI evaluation, audio processing, and content-gove
 
 ## Endpoints
 
-- `GET /health`: service and AI-provider readiness.
+- `GET /health`: service, AI-provider readiness, and safe API release identifier.
 - `/courses`, `/lessons`, `/attempts`, `/users/me/progress`, and `/users/me/reviews`: published course delivery and owner-scoped learning records.
 - `GET /vocabulary`, `GET /vocabulary/:id`, `GET /grammar-topics`, and `GET /grammar-topics/:id`: published B1-C2 knowledge search, details, and related exercises.
 - `GET /users/me/settings`, `PUT /users/me/onboarding`, and `PUT /users/me/notification-preferences`: owner-scoped profile, learning setup, and notification preferences.
@@ -36,7 +36,12 @@ pnpm --filter @deutschtrainer/api verify:bundle
 pnpm --filter @deutschtrainer/api start
 ```
 
-`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures and require an HTTPS Supabase URL. `SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance.
+`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures, placeholders, and
+local/HTTP service origins. They require HTTPS Supabase and Web origins, an explicit
+`CORS_ALLOWED_ORIGINS` allowlist containing `WEB_ORIGIN`, `API_RELEASE_ID`,
+`SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`. Local development retains safe loopback
+defaults. Native App requests do not need an Origin header; browser origins are never granted
+wildcard access.
 
 The API reads platform-provided environment variables first. For local development it also looks for `.env` in the current directory and repository root. Set `API_ENV_FILE` only when an explicit local environment-file path is needed; containers should inject secrets through their runtime rather than copy an environment file into the image.
 

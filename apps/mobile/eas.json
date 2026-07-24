@@ -4,15 +4,39 @@
     "appVersionSource": "local"
   },
   "build": {
-    "preview": {
+    "demo": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_APP_ENV": "local",
+        "EXPO_PUBLIC_APP_RELEASE": "offline-demo",
+        "EXPO_PUBLIC_API_RELEASE": "offline",
+        "EXPO_PUBLIC_CONTENT_RELEASE": "bundled-demo-v1",
+        "EXPO_PUBLIC_LOG_LEVEL": "warn",
         "EXPO_PUBLIC_CONTENT_SOURCE": "mock"
       },
       "android": {
         "buildType": "apk"
       }
     },
-    "production": {}
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_CONTENT_SOURCE": "api",
+        "EXPO_PUBLIC_LOG_LEVEL": "warn"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_CONTENT_SOURCE": "api",
+        "EXPO_PUBLIC_LOG_LEVEL": "warn"
+      }
+    }
   }
 }

@@ -92,5 +92,7 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 - Phase 13: searchable B1-C2 vocabulary and grammar libraries, structured Traditional Chinese explanations, published-only APIs, pagination, and related-exercise deep links complete.
 - Phase 14: 100 approved human exercises, release identifiers and artwork, EAS preview/production profiles, content-readiness verification, and a versioned native guest smoke flow complete with device follow-up.
 - Phase 15: deployment-safe API configuration, a self-contained Node production bundle, container packaging, graceful shutdown, and CI bundle/container verification complete.
+- Supplemental Stage D (local): public product/legal/support website, SEO assets, and a server-validated `/admin` route boundary complete; deployment and whole-account deletion remain explicit follow-ups.
 
 See `docs/phase-15-api-staging-readiness.md` for the production bundle, container contract, staging environment boundary, and credentialed deployment handoff.
+See `docs/supplemental-stage-d-public-site.md` for the public route boundary, Admin authorization sequence, local acceptance evidence, and remaining deployment work.
