@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Clock3, Settings as SettingsIcon } from "lucide-react-native";
+import { Bell, BellOff, Clock3, Info, Settings as SettingsIcon } from "lucide-react-native";
 import { Linking, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import type { UpdateNotificationPreferencesRequest } from "@deutschtrainer/validation";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
@@ -18,6 +18,8 @@ import {
   useUserSettings,
 } from "../src/features/settings/useUserSettings";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
+import { mobileReleaseInfo } from "../src/lib/releaseInfo";
+import { toUserFacingError } from "../src/lib/userFacingErrors";
 
 const reminderTimes = ["18:00", "20:00", "21:30"] as const;
 const inactivityDayOptions = [2, 3, 7, 14] as const;
@@ -88,11 +90,14 @@ export default function SettingsScreen() {
           message={authMode === "demo" ? "Demo 設定只保存在這台裝置。" : null}
           tone="info"
         />
-        <MessageBanner message={updateMutation.error?.message ?? null} tone="error" />
+        <MessageBanner
+          message={updateMutation.error ? toUserFacingError(updateMutation.error) : null}
+          tone="error"
+        />
 
         {settingsQuery.isError ? (
           <StatePanel
-            message={settingsQuery.error.message}
+            message={toUserFacingError(settingsQuery.error)}
             onRetry={() => void settingsQuery.refetch()}
             state="error"
             title="無法載入設定"
@@ -209,6 +214,18 @@ export default function SettingsScreen() {
               ) : null}
             </View>
 
+            <SettingsSection icon={Info} title="版本與連線診斷">
+              <DiagnosticRow
+                label="App 版本"
+                value={`${mobileReleaseInfo.appVersion} (${mobileReleaseInfo.buildVersion})`}
+              />
+              <DiagnosticRow label="環境" value={mobileReleaseInfo.appEnvironment} />
+              <DiagnosticRow label="內容來源" value={mobileReleaseInfo.contentSource} />
+              <DiagnosticRow label="App release" value={mobileReleaseInfo.appRelease} />
+              <DiagnosticRow label="API release" value={mobileReleaseInfo.apiRelease} />
+              <DiagnosticRow label="內容 release" value={mobileReleaseInfo.contentRelease} />
+            </SettingsSection>
+
             <PrimaryButton
               accessibilityLabel="保存通知偏好"
               loading={updateMutation.isPending}
@@ -220,6 +237,17 @@ export default function SettingsScreen() {
         )}
       </ContentScreen>
     </AuthGate>
+  );
+}
+
+function DiagnosticRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.diagnosticRow}>
+      <Text style={styles.systemLabel}>{label}</Text>
+      <Text selectable style={styles.diagnosticValue}>
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -327,6 +355,20 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.45,
+  },
+  diagnosticRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacingTokens.md,
+    justifyContent: "space-between",
+    minHeight: 28,
+  },
+  diagnosticValue: {
+    color: colorTokens.text,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "right",
   },
   masterBand: {
     alignItems: "center",

@@ -149,6 +149,8 @@ const handleRequest = createApiHandler({
   learningDataService,
   knowledgeService,
   settingsService,
+  allowedOrigins: config.corsAllowedOrigins,
+  apiRelease: config.apiReleaseId,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&
@@ -191,7 +193,7 @@ const server = createServer(async (incoming, outgoing) => {
 
 server.listen(config.port, config.host, () => {
   console.log(
-    `Deutschtrainer API listening on http://${config.host}:${config.port} (${config.appEnv})`,
+    `Deutschtrainer API listening on http://${config.host}:${config.port} (${config.appEnv}, release ${config.apiReleaseId})`,
   );
 });
 

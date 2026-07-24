@@ -13,6 +13,7 @@ module.exports = {
   testEnvironment: "node",
   testMatch: [
     "<rootDir>/apps/api/**/*.test.ts",
+    "<rootDir>/apps/admin/src/**/*.test.ts",
     "<rootDir>/apps/mobile/src/**/*.test.ts",
     "<rootDir>/packages/**/*.test.ts",
   ],

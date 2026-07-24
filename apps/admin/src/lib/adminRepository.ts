@@ -1,6 +1,7 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import type { ContentTeamRole } from "@deutschtrainer/shared-types";
 import {
+  apiErrorResponseSchema,
   adminCourseDraftSchema,
   adminExerciseDraftSchema,
   generateExerciseDraftRequestSchema,
@@ -10,6 +11,7 @@ import {
   type GenerateExerciseDraftRequest,
   type GenerateExerciseDraftResponse,
 } from "@deutschtrainer/validation";
+import { readAdminPublicConfig } from "./adminConfig";
 import type {
   ActivityRow,
   AdminProfile,
@@ -25,29 +27,18 @@ import type {
   GenerationJobRow,
 } from "./adminTypes";
 
-interface AdminPublicConfig {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  apiBaseUrl: string;
-}
-
 let cachedClient: SupabaseClient | undefined;
 
-export function readAdminPublicConfig(): AdminPublicConfig | undefined {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.startsWith("replace-with-")) {
-    return undefined;
-  }
-  return {
-    supabaseUrl,
-    supabaseAnonKey,
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "http://localhost:8787",
-  };
-}
-
 export function createAdminRepository(): AdminRepository | undefined {
-  const config = readAdminPublicConfig();
+  // Next.js only inlines statically referenced NEXT_PUBLIC_* values.
+  const config = readAdminPublicConfig({
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+    NEXT_PUBLIC_RELEASE_ID: process.env.NEXT_PUBLIC_RELEASE_ID,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
   if (!config) {
     return undefined;
   }
@@ -328,18 +319,17 @@ function isContentTeamRole(value: string): value is ContentTeamRole {
 
 function assertSupabase(error: { message: string } | null, message: string): void {
   if (error) {
-    throw new Error(`${message} ${error.message}`);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("DeutschTrainer admin Supabase operation failed.", {
+        message,
+        providerMessage: error.message.slice(0, 200),
+      });
+    }
+    throw new Error(message);
   }
 }
 
 function readApiErrorMessage(payload: unknown): string {
-  if (typeof payload !== "object" || payload === null || !("error" in payload)) {
-    return "";
-  }
-  const error = (payload as { error?: unknown }).error;
-  if (typeof error !== "object" || error === null || !("message" in error)) {
-    return "";
-  }
-  const message = (error as { message?: unknown }).message;
-  return typeof message === "string" ? message : "";
+  const result = apiErrorResponseSchema.safeParse(payload);
+  return result.success ? result.data.error.message : "";
 }

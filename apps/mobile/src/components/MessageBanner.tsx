@@ -1,5 +1,6 @@
 import { StyleSheet, Text } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { sanitizeUserFacingText } from "../lib/userFacingErrors";
 
 interface MessageBannerProps {
   message: string | null;
@@ -11,12 +12,14 @@ export function MessageBanner({ message, tone }: MessageBannerProps) {
     return null;
   }
 
+  const renderedMessage = tone === "error" ? sanitizeUserFacingText(message) : message;
+
   return (
     <Text
       accessibilityRole={tone === "error" ? "alert" : "text"}
       style={[styles.banner, tone === "error" ? styles.error : styles.info]}
     >
-      {message}
+      {renderedMessage}
     </Text>
   );
 }

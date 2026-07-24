@@ -62,21 +62,29 @@ export interface ApiHandlerOptions {
   knowledgeService: KnowledgeServiceContract;
   settingsService: SettingsServiceContract;
   aiConfigured: boolean;
+  allowedOrigins?: string[];
+  apiRelease?: string;
   requestId?: () => string;
 }
 
 export function createApiHandler(options: ApiHandlerOptions) {
   const createRequestId = options.requestId ?? randomUUID;
+  const allowedOrigins = new Set(options.allowedOrigins ?? []);
 
-  return async (request: Request): Promise<Response> => {
+  const handleRequest = async (request: Request): Promise<Response> => {
     if (request.method === "OPTIONS") {
-      return withCors(new Response(null, { status: 204 }));
+      return new Response(null, { status: 204 });
     }
 
     const url = new URL(request.url);
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
       return jsonResponse(
-        { status: "ok", service: "deutschtrainer-api", aiConfigured: options.aiConfigured },
+        {
+          status: "ok",
+          service: "deutschtrainer-api",
+          aiConfigured: options.aiConfigured,
+          release: options.apiRelease ?? "unknown",
+        },
         200,
       );
     }
@@ -509,6 +517,14 @@ export function createApiHandler(options: ApiHandlerOptions) {
       createRequestId(),
     );
   };
+
+  return async (request: Request): Promise<Response> => {
+    const origin = request.headers.get("origin");
+    if (request.method === "OPTIONS" && origin && !allowedOrigins.has(origin)) {
+      return new Response(null, { status: 403 });
+    }
+    return applyCorsHeaders(await handleRequest(request), origin, allowedOrigins);
+  };
 }
 
 function readBearerToken(header: string | null): string {
@@ -565,19 +581,24 @@ function jsonResponse(
   status: number,
   options: { cacheControl?: string } = {},
 ): Response {
-  return withCors(
-    new Response(JSON.stringify(payload), {
-      status,
-      headers: {
-        "cache-control": options.cacheControl ?? "no-store",
-        "content-type": "application/json; charset=utf-8",
-      },
-    }),
-  );
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      "cache-control": options.cacheControl ?? "no-store",
+      "content-type": "application/json; charset=utf-8",
+    },
+  });
 }
 
-function withCors(response: Response): Response {
-  response.headers.set("access-control-allow-origin", "*");
+export function applyCorsHeaders(
+  response: Response,
+  origin: string | null,
+  allowedOrigins: ReadonlySet<string>,
+): Response {
+  if (origin && allowedOrigins.has(origin)) {
+    response.headers.set("access-control-allow-origin", origin);
+    response.headers.append("vary", "Origin");
+  }
   response.headers.set("access-control-allow-headers", "authorization, content-type");
   response.headers.set("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS");
   return response;
