@@ -40,8 +40,9 @@ account-deletion flow is verified by this repository audit.
 5. Generic mobile errors could expose provider or platform messages.
 6. The public website, protected `/admin` route boundary, legal/support pages, and account deletion
    flow do not yet exist.
-7. The new laptop cannot currently rerun Supabase reset/integration suites because its Docker daemon
-   and Supabase CLI are unavailable.
+7. Connected staging still requires remote provider projects, credentials, domains, and a written
+   physical-device acceptance run; local build and integration success cannot substitute for that
+   deployment evidence.
 
 ## Stage A implementation
 
@@ -102,6 +103,17 @@ pnpm --filter @deutschtrainer/mobile start
 available, use the computer's private LAN IP and a narrowly scoped Windows Firewall rule. Never
 enable cleartext traffic in preview or production.
 
+In a headless Windows runner where Supabase CLI waits indefinitely without printing output, close
+its standard input explicitly:
+
+```powershell
+'' | supabase start --exclude logflare --ignore-health-check --yes
+'' | supabase db reset --local --yes
+```
+
+This is a terminal compatibility workaround only. Interactive PowerShell users can continue using
+the root `pnpm supabase:start` and `pnpm supabase:reset` scripts.
+
 ## Risk assessment
 
 - **Authentication:** configuration changes do not alter session persistence or Auth contracts.
@@ -125,9 +137,18 @@ smoke, Admin production build, Expo dependency compatibility, Expo Doctor 20/20,
 and Web export pass locally. Public Expo config inspection confirms Android cleartext is `true` only
 for local and `false` for preview.
 
-Database reset and local Supabase integration suites remain pending on this laptop until Docker and
-the Supabase CLI are available. This limitation must remain visible in release notes; it is not
-acceptable to mark connected staging complete based only on mocks or build success.
+On 2026-07-24, Docker Desktop 4.83.0 / Engine 29.6.2 and Supabase CLI 2.109.1 completed a clean local
+database reset. All fourteen migrations and the release seed applied successfully. With the API
+running in deterministic local AI mode, all nine database/API integration suites passed:
+
+- core AI evaluation, writing, audio, Admin authorization/publishing, and learning API;
+- offline sync/conflict handling, knowledge library, content readiness, and settings isolation.
+
+The content-readiness suite verified 100 approved human-reviewed exercises across B1–C2. The
+integration suites also exercised two-user RLS boundaries, denied direct RPC/table access,
+idempotent replay, immutable writing versions, private audio deletion, role-protected publishing,
+offline timestamp preservation, and owner-scoped preferences. Local verification is complete, but
+it is not evidence that connected staging has been deployed or accepted on a physical device.
 
 ## Next stages
 
