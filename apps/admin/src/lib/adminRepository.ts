@@ -1,4 +1,5 @@
-import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import type { ContentTeamRole } from "@deutschtrainer/shared-types";
 import {
   apiErrorResponseSchema,
@@ -42,8 +43,8 @@ export function createAdminRepository(): AdminRepository | undefined {
   if (!config) {
     return undefined;
   }
-  cachedClient ??= createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  cachedClient ??= createBrowserClient(config.supabaseUrl, config.supabaseAnonKey, {
+    isSingleton: true,
   });
   return new AdminRepository(cachedClient, config.apiBaseUrl);
 }
@@ -313,7 +314,7 @@ export class AdminRepository {
   }
 }
 
-function isContentTeamRole(value: string): value is ContentTeamRole {
+export function isContentTeamRole(value: unknown): value is ContentTeamRole {
   return value === "content_editor" || value === "reviewer" || value === "admin";
 }
 

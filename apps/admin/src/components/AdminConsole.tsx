@@ -170,6 +170,19 @@ export function AdminConsole() {
     }
   }
 
+  async function signOut() {
+    if (!repository) return;
+    setBusy(true);
+    setError("");
+    try {
+      await repository.signOut();
+      window.location.replace("/admin");
+    } catch (caught) {
+      setError(readError(caught));
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="state-screen">
@@ -198,11 +211,7 @@ export function AdminConsole() {
       <main className="state-screen state-error">
         <ShieldCheck size={30} />
         <strong>此帳號沒有內容管理權限</strong>
-        <button
-          className="button button-secondary"
-          onClick={() => repository.signOut()}
-          type="button"
-        >
+        <button className="button button-secondary" onClick={() => void signOut()} type="button">
           <LogOut size={16} />
           登出
         </button>
@@ -250,12 +259,7 @@ export function AdminConsole() {
             <strong>{profile.displayName || "內容管理者"}</strong>
             <span>{roleLabels[profile.role]}</span>
           </div>
-          <button
-            className="icon-button"
-            onClick={() => repository.signOut()}
-            title="登出"
-            type="button"
-          >
+          <button className="icon-button" onClick={() => void signOut()} title="登出" type="button">
             <LogOut size={17} />
           </button>
         </div>
