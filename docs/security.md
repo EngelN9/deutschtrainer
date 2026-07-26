@@ -99,3 +99,33 @@ Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 
 ## 9. 前端錯誤顯示
 
 前端不得顯示伺服器 stack trace。錯誤需顯示清楚、不羞辱使用者的繁體中文訊息，並提供可用的 retry 或下一步。
+
+## 10. Database function execution boundary
+
+Migration `20260726063314_harden_function_execution_privileges.sql` closes PostgreSQL's default
+`PUBLIC EXECUTE` behavior for the `public` schema and establishes these rules:
+
+- `anon` cannot execute any `public` `SECURITY DEFINER` function.
+- Trigger functions cannot be called directly by `authenticated`.
+- Service wrappers remain callable only by `service_role`.
+- Signed-in content operations retain only the reviewed Admin RPCs; each RPC still enforces the
+  caller's profile role and content workflow internally.
+- `current_profile_id`, `current_app_role`, and `is_content_team` remain available to
+  `authenticated` because RLS policies use them to enforce identity and role boundaries.
+- New functions do not inherit `PUBLIC EXECUTE`; every future client RPC requires an explicit,
+  signature-specific grant.
+- `set_updated_at` uses an empty fixed `search_path`.
+
+The migration includes a fail-fast privilege assertion for the anonymous boundary and the current
+authenticated allowlist. On 2026-07-26 a clean local database rebuild, local database lint, all nine
+database/API integration suites, and the linked remote migration completed successfully.
+
+The hosted security advisor now reports no mutable-search-path warning and no anonymous
+`SECURITY DEFINER` warning. Its remaining eight warnings correspond exactly to the reviewed
+authenticated allowlist above. The two `RLS enabled, no policy` information notices are intentional:
+`writing_prompt_rules` and `listening_asset_content` are server-only tables with table privileges
+revoked from `anon` and `authenticated`, while RLS remains an additional deny-by-default boundary.
+
+Performance advisor notices are a separate optimization backlog. Unused-index notices on the small
+staging dataset are not deletion evidence; indexes must not be removed until production query
+statistics justify doing so.
