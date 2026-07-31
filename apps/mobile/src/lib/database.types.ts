@@ -172,7 +172,7 @@ export type Database = {
           provider: string | null;
           provider_request_id: string | null;
           request_json: Json;
-          requested_by: string;
+          requested_by: string | null;
           status: string;
           target_entity_type: string;
           target_skill_ids: string[];
@@ -194,7 +194,7 @@ export type Database = {
           provider?: string | null;
           provider_request_id?: string | null;
           request_json: Json;
-          requested_by: string;
+          requested_by?: string | null;
           status?: string;
           target_entity_type?: string;
           target_skill_ids: string[];
@@ -216,7 +216,7 @@ export type Database = {
           provider?: string | null;
           provider_request_id?: string | null;
           request_json?: Json;
-          requested_by?: string;
+          requested_by?: string | null;
           status?: string;
           target_entity_type?: string;
           target_skill_ids?: string[];
@@ -2256,6 +2256,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      begin_account_deletion_service: {
+        Args: { p_auth_user_id: string };
+        Returns: {
+          profile_id: string;
+          storage_bucket: string;
+          storage_path: string;
+        }[];
+      };
       admin_publish_content: {
         Args: {
           p_entity_id: string;

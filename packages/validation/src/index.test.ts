@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  ACCOUNT_DELETION_CONFIRMATION,
+  accountDeletionRequestSchema,
   audioLearningWorkspaceResponseSchema,
   apiErrorResponseSchema,
   completeReviewRequestSchema,
@@ -404,5 +406,19 @@ describe("validation schemas", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("requires the exact destructive account-deletion confirmation", () => {
+    expect(
+      accountDeletionRequestSchema.safeParse({ confirmation: ACCOUNT_DELETION_CONFIRMATION })
+        .success,
+    ).toBe(true);
+    expect(accountDeletionRequestSchema.safeParse({ confirmation: "刪除" }).success).toBe(false);
+    expect(
+      accountDeletionRequestSchema.safeParse({
+        confirmation: ACCOUNT_DELETION_CONFIRMATION,
+        bypass: true,
+      }).success,
+    ).toBe(false);
   });
 });

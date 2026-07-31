@@ -8,6 +8,7 @@ const serviceRoleKey = requireEnvironment("SUPABASE_SERVICE_ROLE_KEY");
 const apiBaseUrl = process.env.API_BASE_URL ?? "http://127.0.0.1:8787";
 
 const service = createClient(supabaseUrl, serviceRoleKey, clientOptions());
+const anonymous = createClient(supabaseUrl, anonKey, clientOptions());
 const learner = createClient(supabaseUrl, anonKey, clientOptions());
 const editor = createClient(supabaseUrl, anonKey, clientOptions());
 const reviewer = createClient(supabaseUrl, anonKey, clientOptions());
@@ -48,6 +49,16 @@ try {
   const editorToken = await signIn(editor, editorUser.email, password);
   await signIn(reviewer, reviewerUser.email, password);
   await signIn(administrator, adminUser.email, password);
+
+  const anonymousHelperCalls = await Promise.all([
+    anonymous.rpc("current_profile_id"),
+    anonymous.rpc("current_app_role"),
+    anonymous.rpc("is_content_team"),
+  ]);
+  assert.ok(
+    anonymousHelperCalls.every((result) => result.error),
+    "anonymous must not execute identity or content-role helper functions",
+  );
 
   const learnerSave = await learner.rpc("admin_save_course", {
     p_course_id: null,
@@ -244,6 +255,7 @@ try {
   console.log(
     JSON.stringify(
       {
+        anonymousHelperCallsDenied: anonymousHelperCalls.every((result) => Boolean(result.error)),
         learnerSaveDenied: Boolean(learnerSave.error),
         learnerVersionRows: learnerVersions.data.length,
         editorDirectPublishDenied: Boolean(directPublish.error || directPublish.data.length === 0),

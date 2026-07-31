@@ -86,7 +86,7 @@ export function ReviewManager({
             <dl className="metadata-grid">
               <div>
                 <dt>送審者</dt>
-                <dd className="mono-cell">{selected.requested_by.slice(0, 8)}</dd>
+                <dd className="mono-cell">{selected.requested_by?.slice(0, 8) ?? "已刪除"}</dd>
               </div>
               <div>
                 <dt>送審時間</dt>

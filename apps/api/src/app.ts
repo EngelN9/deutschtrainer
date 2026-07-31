@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 import {
+  accountDataExportResponseSchema,
+  accountDeletionRequestSchema,
+  accountDeletionResponseSchema,
   apiErrorResponseSchema,
   audioLearningWorkspaceResponseSchema,
   completeReviewRequestSchema,
@@ -44,6 +47,7 @@ import {
   vocabularyListResponseSchema,
   writingWorkspaceResponseSchema,
 } from "@deutschtrainer/validation";
+import type { AccountDataServiceContract } from "./account-data/types";
 import type { AudioLearningServiceContract } from "./audio/types";
 import type { ContentGenerationServiceContract } from "./content-generation/types";
 import { ApiError, toApiError } from "./errors";
@@ -54,6 +58,7 @@ import type { SettingsServiceContract } from "./settings/types";
 import type { WritingService } from "./writing/types";
 
 export interface ApiHandlerOptions {
+  accountDataService: AccountDataServiceContract;
   evaluationService: EvaluationService;
   writingService: WritingService;
   audioService: AudioLearningServiceContract;
@@ -273,6 +278,35 @@ export function createApiHandler(options: ApiHandlerOptions) {
         const accessToken = readBearerToken(request.headers.get("authorization"));
         const result = await options.settingsService.getSettings(accessToken);
         return jsonResponse(userSettingsResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/export") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.accountDataService.exportAccount(accessToken);
+        return jsonResponse(accountDataExportResponseSchema.parse({ requestId, ...result }), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "DELETE" && url.pathname === "/users/me") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const parsed = accountDeletionRequestSchema.safeParse(await readJsonBody(request));
+        if (!parsed.success) {
+          throw validationError(
+            parsed.error.issues[0]?.message,
+            "請輸入完整確認文字後再刪除帳號。",
+          );
+        }
+        const result = await options.accountDataService.deleteAccount(accessToken);
+        return jsonResponse(accountDeletionResponseSchema.parse({ requestId, ...result }), 200);
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }

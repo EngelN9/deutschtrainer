@@ -140,3 +140,7 @@ async function readCourseIds(key: string): Promise<string[] | undefined> {
     return undefined;
   }
 }
+
+export async function clearNotificationProfileData(profileId: string): Promise<void> {
+  await AsyncStorage.removeItem(`${courseSnapshotPrefix}${profileId}`);
+}

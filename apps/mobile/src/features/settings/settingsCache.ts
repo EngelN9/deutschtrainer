@@ -37,6 +37,10 @@ export async function writeCachedUserSettings(
   await AsyncStorage.setItem(cacheKey(authUserId), JSON.stringify(parsed));
 }
 
+export async function clearCachedUserSettings(authUserId: string): Promise<void> {
+  await AsyncStorage.removeItem(cacheKey(authUserId));
+}
+
 function cacheKey(authUserId: string): string {
   return `${SETTINGS_CACHE_PREFIX}:${authUserId}`;
 }

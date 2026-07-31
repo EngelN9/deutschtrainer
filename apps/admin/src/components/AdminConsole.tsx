@@ -18,7 +18,6 @@ import {
 import { createAdminRepository, type AdminRepository } from "../lib/adminRepository";
 import type { AdminProfile, AdminWorkspaceData } from "../lib/adminTypes";
 import { AdminDashboard } from "./AdminDashboard";
-import { AdminLogin } from "./AdminLogin";
 import { roleLabels } from "./AdminUi";
 import { AiDraftManager } from "./AiDraftManager";
 import { AuditManager } from "./AuditManager";
@@ -56,16 +55,15 @@ const tabTitles: Record<WorkspaceTab, { title: string; eyebrow: string }> = {
   audit: { title: "操作紀錄", eyebrow: "Audit log" },
 };
 
-export function AdminConsole() {
+export function AdminConsole({ initialProfile }: { initialProfile: AdminProfile }) {
   const [repository, setRepository] = useState<AdminRepository>();
   const [configMissing, setConfigMissing] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<AdminProfile>();
+  const [profile, setProfile] = useState<AdminProfile>(initialProfile);
   const [data, setData] = useState<AdminWorkspaceData>(emptyData);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("dashboard");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [denied, setDenied] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -84,20 +82,23 @@ export function AdminConsole() {
       if (!active) return;
       setSession(nextSession);
       setError("");
-      setDenied(false);
       if (!nextSession) {
-        setProfile(undefined);
         setData(emptyData);
         setLoading(false);
+        window.location.replace("/admin/login");
+        return;
+      }
+      if (nextSession.user.id !== initialProfile.authUserId) {
+        setLoading(false);
+        window.location.replace("/admin/forbidden");
         return;
       }
       setLoading(true);
       try {
         const nextProfile = await activeRepository.getProfile(nextSession.user.id);
         if (!nextProfile) {
-          setDenied(true);
-          setProfile(undefined);
           setData(emptyData);
+          window.location.replace("/admin/forbidden");
           return;
         }
         const workspace = await activeRepository.loadWorkspace(nextProfile);
@@ -128,7 +129,7 @@ export function AdminConsole() {
       active = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [initialProfile.authUserId]);
 
   const pendingReviewCount = useMemo(
     () => data.reviews.filter((review) => review.status === "pending").length,
@@ -170,6 +171,18 @@ export function AdminConsole() {
     }
   }
 
+  async function handleSignOut() {
+    if (!repository) return;
+    setBusy(true);
+    try {
+      await repository.signOut();
+      window.location.replace("/admin/login");
+    } catch (caught) {
+      setError(readError(caught));
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="state-screen">
@@ -191,21 +204,10 @@ export function AdminConsole() {
     return null;
   }
   if (!session) {
-    return <AdminLogin repository={repository} />;
-  }
-  if (denied || !profile) {
     return (
-      <main className="state-screen state-error">
-        <ShieldCheck size={30} />
-        <strong>此帳號沒有內容管理權限</strong>
-        <button
-          className="button button-secondary"
-          onClick={() => repository.signOut()}
-          type="button"
-        >
-          <LogOut size={16} />
-          登出
-        </button>
+      <main className="state-screen">
+        <LoaderCircle className="spin" size={28} />
+        <strong>正在確認登入狀態</strong>
       </main>
     );
   }
@@ -252,7 +254,7 @@ export function AdminConsole() {
           </div>
           <button
             className="icon-button"
-            onClick={() => repository.signOut()}
+            onClick={() => void handleSignOut()}
             title="登出"
             type="button"
           >

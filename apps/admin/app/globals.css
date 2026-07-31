@@ -63,6 +63,133 @@ a {
   color: inherit;
 }
 
+.public-shell {
+  margin: 0 auto;
+  max-width: 1120px;
+  min-height: 100vh;
+  padding: 0 28px 64px;
+}
+
+.public-nav {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  min-height: 76px;
+}
+
+.public-nav > div {
+  display: flex;
+  gap: 20px;
+}
+
+.public-nav a {
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.public-brand {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+}
+
+.public-hero {
+  max-width: 820px;
+  padding: 92px 0 70px;
+}
+
+.public-eyebrow {
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
+
+.public-hero h1,
+.public-document h1 {
+  font-size: clamp(34px, 6vw, 64px);
+  line-height: 1.08;
+  margin: 0;
+}
+
+.public-hero > p:not(.public-eyebrow),
+.public-lead {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.8;
+  margin: 26px 0 0;
+  max-width: 720px;
+}
+
+.public-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.public-actions a {
+  text-decoration: none;
+}
+
+.public-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.public-grid article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 24px;
+}
+
+.public-grid h2,
+.public-document h2 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.public-grid p,
+.public-document p,
+.public-document li {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.public-grid p {
+  margin: 0;
+}
+
+.public-document {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-top: 48px;
+  padding: clamp(28px, 6vw, 64px);
+}
+
+.public-document h1 {
+  font-size: clamp(32px, 5vw, 48px);
+}
+
+.public-document section {
+  border-top: 1px solid var(--line);
+  margin-top: 30px;
+  padding-top: 26px;
+}
+
+.public-document a {
+  color: var(--brand);
+  font-weight: 700;
+}
+
 .admin-shell {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
@@ -1144,6 +1271,34 @@ textarea:disabled {
 }
 
 @media (max-width: 640px) {
+  .public-shell {
+    padding: 0 16px 44px;
+  }
+
+  .public-nav {
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+  }
+
+  .public-nav > div {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    justify-content: flex-end;
+  }
+
+  .public-hero {
+    padding: 60px 0 48px;
+  }
+
+  .public-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-document {
+    margin-top: 28px;
+  }
+
   .topbar {
     min-height: 66px;
     padding: 10px 15px;

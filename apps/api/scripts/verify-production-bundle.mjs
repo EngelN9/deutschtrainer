@@ -25,13 +25,14 @@ server.stdout.on("data", (chunk) => output.push(chunk.toString()));
 server.stderr.on("data", (chunk) => output.push(chunk.toString()));
 
 try {
-  const payload = await waitForHealth();
+  const { payload, requestId } = await waitForHealth();
   if (
     payload.status !== "ok" ||
     payload.service !== "deutschtrainer-api" ||
-    payload.aiConfigured !== false
+    payload.aiConfigured !== false ||
+    requestId !== "bundle-smoke-request"
   ) {
-    throw new Error(`Unexpected health payload: ${JSON.stringify(payload)}`);
+    throw new Error(`Unexpected health response: ${JSON.stringify({ payload, requestId })}`);
   }
   console.log(`Production bundle health check passed at ${healthUrl}.`);
 } finally {
@@ -45,9 +46,14 @@ async function waitForHealth() {
     }
 
     try {
-      const response = await fetch(healthUrl);
+      const response = await fetch(healthUrl, {
+        headers: { "x-request-id": "bundle-smoke-request" },
+      });
       if (response.ok) {
-        return await response.json();
+        return {
+          payload: await response.json(),
+          requestId: response.headers.get("x-request-id"),
+        };
       }
     } catch {
       // The bundle may still be starting.

@@ -14,6 +14,7 @@ interface ProgressState {
   hasHydrated: boolean;
   recordAttempt: (input: LearningAttemptInput & { exerciseIndex: number }) => Promise<void>;
   resetLesson: (userId: string, lessonId: string) => Promise<void>;
+  clearUser: (userId: string) => Promise<void>;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
@@ -43,6 +44,15 @@ export const useProgressStore = create<ProgressState>()(
             ...state.byUserId,
             [userId]: resetLessonProgress(state.byUserId[userId] ?? emptyUserProgress, lessonId),
           };
+          return { byUserId: nextByUserId };
+        });
+        await writeProgress(nextByUserId);
+      },
+      clearUser: async (userId) => {
+        let nextByUserId: Record<string, UserLearningProgress> = {};
+        set((state) => {
+          nextByUserId = { ...state.byUserId };
+          delete nextByUserId[userId];
           return { byUserId: nextByUserId };
         });
         await writeProgress(nextByUserId);

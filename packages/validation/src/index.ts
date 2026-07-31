@@ -1149,6 +1149,61 @@ export type DeleteSpeakingSubmissionResponse = z.infer<
   typeof deleteSpeakingSubmissionResponseSchema
 >;
 
+export const ACCOUNT_DELETION_CONFIRMATION = "刪除我的帳號";
+
+export const accountDeletionRequestSchema = z
+  .object({
+    confirmation: z.literal(ACCOUNT_DELETION_CONFIRMATION),
+  })
+  .strict();
+export type AccountDeletionRequest = z.infer<typeof accountDeletionRequestSchema>;
+
+export const accountDeletionResponseSchema = z.object({
+  requestId: z.string().min(1),
+  deleted: z.literal(true),
+});
+export type AccountDeletionResponse = z.infer<typeof accountDeletionResponseSchema>;
+
+const accountExportRowSchema = z.record(z.string(), z.unknown());
+
+export const accountDataExportResponseSchema = z.object({
+  requestId: z.string().min(1),
+  schemaVersion: z.literal("1"),
+  exportedAt: z.string().datetime({ offset: true }),
+  profile: accountExportRowSchema,
+  collections: z.object({
+    userPreferences: z.array(accountExportRowSchema),
+    userLevels: z.array(accountExportRowSchema),
+    attempts: z.array(accountExportRowSchema),
+    attemptAnswers: z.array(accountExportRowSchema),
+    errorRecords: z.array(accountExportRowSchema),
+    skillMastery: z.array(accountExportRowSchema),
+    reviewQueue: z.array(accountExportRowSchema),
+    lessonProgress: z.array(accountExportRowSchema),
+    aiFeedback: z.array(accountExportRowSchema),
+    aiUsageLogs: z.array(accountExportRowSchema),
+    writingSubmissions: z.array(accountExportRowSchema),
+    writingVersions: z.array(accountExportRowSchema),
+    listeningAttempts: z.array(accountExportRowSchema),
+    speakingSubmissions: z.array(accountExportRowSchema),
+    audioAssets: z.array(accountExportRowSchema),
+    contentVersions: z.array(accountExportRowSchema),
+    contentReviewsRequested: z.array(accountExportRowSchema),
+    contentReviewsPerformed: z.array(accountExportRowSchema),
+    aiGenerationJobs: z.array(accountExportRowSchema),
+    auditLogs: z.array(accountExportRowSchema),
+  }),
+  audioFiles: z.array(
+    z.object({
+      bucket: z.literal("speaking-audio"),
+      path: z.string().min(3).max(500),
+      signedUrl: z.string().url(),
+      expiresAt: z.string().datetime({ offset: true }),
+    }),
+  ),
+});
+export type AccountDataExportResponse = z.infer<typeof accountDataExportResponseSchema>;
+
 export const createConversationRequestSchema = z.object({
   scenarioId: z.string().uuid(),
   idempotencyKey: z.string().min(12),

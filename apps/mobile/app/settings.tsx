@@ -1,7 +1,29 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Clock3, Settings as SettingsIcon } from "lucide-react-native";
-import { Linking, Pressable, StyleSheet, Switch, Text, View } from "react-native";
-import type { UpdateNotificationPreferencesRequest } from "@deutschtrainer/validation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import {
+  Bell,
+  BellOff,
+  Clock3,
+  Download,
+  Settings as SettingsIcon,
+  Trash2,
+} from "lucide-react-native";
+import {
+  Alert,
+  Linking,
+  Pressable,
+  Share,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import {
+  ACCOUNT_DELETION_CONFIRMATION,
+  type UpdateNotificationPreferencesRequest,
+} from "@deutschtrainer/validation";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { ContentScreen } from "../src/components/ContentScreen";
@@ -18,17 +40,25 @@ import {
   useUserSettings,
 } from "../src/features/settings/useUserSettings";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
+import { exportAccountData } from "../src/features/settings/accountDataRepository";
 
 const reminderTimes = ["18:00", "20:00", "21:30"] as const;
 const inactivityDayOptions = [2, 3, 7, 14] as const;
 
 export default function SettingsScreen() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const authMode = useAuthStore((state) => state.authMode);
+  const authError = useAuthStore((state) => state.errorMessage);
+  const deleteAccount = useAuthStore((state) => state.deleteAccount);
   const settingsQuery = useUserSettings();
   const updateMutation = useUpdateNotificationPreferences();
   const [draft, setDraft] = useState<UpdateNotificationPreferencesRequest>();
   const [permission, setPermission] = useState<NotificationPermissionState>("undetermined");
   const [notice, setNotice] = useState<string | null>(null);
+  const [deletionText, setDeletionText] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const notifications = settingsQuery.data?.notifications;
@@ -75,6 +105,53 @@ export default function SettingsScreen() {
     }
   };
 
+  const exportData = async () => {
+    setNotice(null);
+    setExporting(true);
+    try {
+      const data = await exportAccountData();
+      await Share.share({
+        title: "DeutschTrainer 帳號資料匯出",
+        message: JSON.stringify(data, null, 2),
+      });
+      setNotice("帳號資料已交給你選擇的分享目標；錄音連結有效一小時。");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "無法匯出帳號資料。");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const confirmDeletion = () => {
+    if (deletionText !== ACCOUNT_DELETION_CONFIRMATION) {
+      setNotice(`請完整輸入「${ACCOUNT_DELETION_CONFIRMATION}」。`);
+      return;
+    }
+    Alert.alert(
+      "永久刪除帳號？",
+      "伺服器資料、私人錄音、裝置快取與待同步作答將被刪除，且無法復原。",
+      [
+        { style: "cancel", text: "取消" },
+        {
+          style: "destructive",
+          text: "永久刪除",
+          onPress: () => void performDeletion(),
+        },
+      ],
+    );
+  };
+
+  const performDeletion = async () => {
+    setDeleting(true);
+    setNotice(null);
+    await deleteAccount(deletionText);
+    setDeleting(false);
+    if (useAuthStore.getState().status === "unauthenticated") {
+      queryClient.clear();
+      router.replace("/welcome");
+    }
+  };
+
   return (
     <AuthGate mode="protected">
       <ContentScreen
@@ -89,6 +166,7 @@ export default function SettingsScreen() {
           tone="info"
         />
         <MessageBanner message={updateMutation.error?.message ?? null} tone="error" />
+        <MessageBanner message={authError} tone="error" />
 
         {settingsQuery.isError ? (
           <StatePanel
@@ -216,6 +294,66 @@ export default function SettingsScreen() {
             >
               保存設定
             </PrimaryButton>
+
+            <SettingsSection icon={Download} title="帳號資料">
+              {authMode === "supabase" ? (
+                <>
+                  <Text style={styles.dataRightsCopy}>
+                    匯出包含個人設定、學習紀錄、作文、評量、錄音
+                    metadata，以及一小時內有效的私人錄音下載連結。
+                  </Text>
+                  <PrimaryButton
+                    accessibilityLabel="匯出帳號資料"
+                    loading={exporting}
+                    onPress={() => void exportData()}
+                  >
+                    匯出我的資料
+                  </PrimaryButton>
+                </>
+              ) : (
+                <Text style={styles.dataRightsCopy}>
+                  Demo 沒有雲端帳號；登出或清除 App 資料即可移除這台裝置上的 Demo 資料。
+                </Text>
+              )}
+            </SettingsSection>
+
+            {authMode === "supabase" ? (
+              <View style={styles.dangerSection}>
+                <View style={styles.sectionHeading}>
+                  <Trash2 color={colorTokens.danger} size={20} />
+                  <Text style={styles.dangerTitle}>永久刪除帳號</Text>
+                </View>
+                <Text style={styles.dataRightsCopy}>
+                  此操作不可逆。請先匯出需要保留的資料，再輸入「
+                  {ACCOUNT_DELETION_CONFIRMATION}」。
+                </Text>
+                <TextInput
+                  accessibilityLabel="帳號刪除確認文字"
+                  autoCapitalize="none"
+                  editable={!deleting}
+                  onChangeText={setDeletionText}
+                  placeholder={ACCOUNT_DELETION_CONFIRMATION}
+                  style={styles.deletionInput}
+                  value={deletionText}
+                />
+                <Pressable
+                  accessibilityLabel="永久刪除帳號"
+                  accessibilityRole="button"
+                  disabled={deleting || deletionText !== ACCOUNT_DELETION_CONFIRMATION}
+                  onPress={confirmDeletion}
+                  style={({ pressed }) => [
+                    styles.deleteButton,
+                    deletionText !== ACCOUNT_DELETION_CONFIRMATION ? styles.disabled : null,
+                    pressed ? styles.pressed : null,
+                  ]}
+                >
+                  <Trash2 color="#FFFFFF" size={18} />
+                  <Text style={styles.deleteButtonText}>
+                    {deleting ? "正在刪除..." : "永久刪除帳號"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </>
         )}
       </ContentScreen>
@@ -327,6 +465,47 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.45,
+  },
+  dangerSection: {
+    backgroundColor: "#FFF5F5",
+    borderColor: "#E8B5B5",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.md,
+  },
+  dangerTitle: {
+    color: colorTokens.danger,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  dataRightsCopy: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  deleteButton: {
+    alignItems: "center",
+    backgroundColor: colorTokens.danger,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: spacingTokens.sm,
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  deletionInput: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D88B8B",
+    borderRadius: 8,
+    borderWidth: 1,
+    color: colorTokens.text,
+    minHeight: 46,
+    paddingHorizontal: spacingTokens.md,
   },
   masterBand: {
     alignItems: "center",

@@ -11,6 +11,8 @@ export function getApiHealth(): ApiHealth {
 }
 
 export { createApiHandler } from "./app";
+export { AccountDataService } from "./account-data/accountDataService";
+export { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
 export { readApiConfig } from "./config";
 export {
   AudioLearningService,

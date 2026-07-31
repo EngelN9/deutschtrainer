@@ -1,5 +1,5 @@
-import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import type { ContentTeamRole } from "@deutschtrainer/shared-types";
+import { createBrowserClient } from "@supabase/ssr";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import {
   adminCourseDraftSchema,
   adminExerciseDraftSchema,
@@ -24,36 +24,17 @@ import type {
   ExerciseRow,
   GenerationJobRow,
 } from "./adminTypes";
-
-interface AdminPublicConfig {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  apiBaseUrl: string;
-}
+import { isContentTeamRole } from "./adminAuthorization";
+import { readAdminPublicConfig } from "./adminPublicConfig";
 
 let cachedClient: SupabaseClient | undefined;
-
-export function readAdminPublicConfig(): AdminPublicConfig | undefined {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.startsWith("replace-with-")) {
-    return undefined;
-  }
-  return {
-    supabaseUrl,
-    supabaseAnonKey,
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "http://localhost:8787",
-  };
-}
 
 export function createAdminRepository(): AdminRepository | undefined {
   const config = readAdminPublicConfig();
   if (!config) {
     return undefined;
   }
-  cachedClient ??= createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-  });
+  cachedClient ??= createBrowserClient(config.supabaseUrl, config.supabaseAnonKey);
   return new AdminRepository(cachedClient, config.apiBaseUrl);
 }
 
@@ -320,10 +301,6 @@ export class AdminRepository {
     }
     return generateExerciseDraftResponseSchema.parse(payload);
   }
-}
-
-function isContentTeamRole(value: string): value is ContentTeamRole {
-  return value === "content_editor" || value === "reviewer" || value === "admin";
 }
 
 function assertSupabase(error: { message: string } | null, message: string): void {

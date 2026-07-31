@@ -2,6 +2,8 @@ import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "no
 import { resolve } from "node:path";
 import { loadEnvFile } from "node:process";
 import { createApiHandler } from "./app";
+import { AccountDataService } from "./account-data/accountDataService";
+import { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
 import { AudioLearningService } from "./audio/audioService";
 import {
   DeterministicAudioProvider,
@@ -28,6 +30,7 @@ import { LearningDataService } from "./learning-data/learningDataService";
 import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
 import { KnowledgeService } from "./knowledge/knowledgeService";
 import { SupabaseKnowledgeRepository } from "./knowledge/supabaseKnowledgeRepository";
+import { createHttpRequestLog, resolveRequestId } from "./observability";
 import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
 import { SettingsService } from "./settings/settingsService";
 import { SupabaseSettingsRepository } from "./settings/supabaseSettingsRepository";
@@ -77,6 +80,10 @@ const knowledgeService = new KnowledgeService(
 );
 const settingsService = new SettingsService({
   repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  rateLimiter: privateRequestRateLimiter,
+});
+const accountDataService = new AccountDataService({
+  repository: new SupabaseAccountDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
 });
 const writingRepository = new SupabaseWritingRepository(
@@ -141,7 +148,8 @@ const contentGenerationService = new ContentGenerationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
-const handleRequest = createApiHandler({
+const handlerDependencies = {
+  accountDataService,
   evaluationService,
   writingService,
   audioService,
@@ -154,44 +162,73 @@ const handleRequest = createApiHandler({
     writingProvider.configured &&
     audioProvider.configured &&
     contentGenerationProvider.configured,
-});
+};
 
 const server = createServer(async (incoming, outgoing) => {
+  const startedAt = performance.now();
+  const requestId = resolveRequestId(incoming.headers["x-request-id"]?.toString());
+  const requestUrl = new URL(incoming.url ?? "/", `http://${incoming.headers.host ?? "localhost"}`);
+  let status = 500;
+
   try {
     const body = await readRequestBody(incoming);
-    const request = new Request(
-      new URL(incoming.url ?? "/", `http://${incoming.headers.host ?? "localhost"}`),
-      {
-        method: incoming.method ?? "GET",
-        headers: toWebHeaders(incoming.headers),
-        ...(body.length > 0 ? { body: new Uint8Array(body) } : {}),
-      },
-    );
+    const requestHeaders = toWebHeaders(incoming.headers);
+    requestHeaders.set("x-request-id", requestId);
+    const request = new Request(requestUrl, {
+      method: incoming.method ?? "GET",
+      headers: requestHeaders,
+      ...(body.length > 0 ? { body: new Uint8Array(body) } : {}),
+    });
+    const handleRequest = createApiHandler({
+      ...handlerDependencies,
+      requestId: () => requestId,
+    });
     const response = await handleRequest(request);
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
+    responseHeaders["x-request-id"] = requestId;
+    status = response.status;
     outgoing.writeHead(response.status, responseHeaders);
     outgoing.end(Buffer.from(await response.arrayBuffer()));
   } catch {
-    outgoing.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+    outgoing.writeHead(500, {
+      "content-type": "application/json; charset=utf-8",
+      "x-request-id": requestId,
+    });
     outgoing.end(
       JSON.stringify({
         error: {
           code: "DATABASE_ERROR",
           message: "API 伺服器無法處理要求。",
           retryable: true,
-          requestId: "server-adapter",
+          requestId,
         },
       }),
     );
+  } finally {
+    const logEntry = createHttpRequestLog({
+      requestId,
+      method: incoming.method ?? "GET",
+      pathname: requestUrl.pathname,
+      status,
+      durationMs: performance.now() - startedAt,
+    });
+    const writeLog = logEntry.level === "error" ? console.error : console.log;
+    writeLog(JSON.stringify(logEntry));
   }
 });
 
 server.listen(config.port, config.host, () => {
   console.log(
-    `Deutschtrainer API listening on http://${config.host}:${config.port} (${config.appEnv})`,
+    JSON.stringify({
+      level: "info",
+      event: "api_started",
+      host: config.host,
+      port: config.port,
+      appEnv: config.appEnv,
+    }),
   );
 });
 
@@ -200,7 +237,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 function shutdown(signal: NodeJS.Signals): void {
-  console.log(`Deutschtrainer API received ${signal}; shutting down.`);
+  console.log(JSON.stringify({ level: "info", event: "api_shutdown_started", signal }));
   const forcedShutdown = setTimeout(() => {
     server.closeAllConnections();
     process.exit(1);
@@ -210,7 +247,13 @@ function shutdown(signal: NodeJS.Signals): void {
   server.close((error) => {
     clearTimeout(forcedShutdown);
     if (error) {
-      console.error("Deutschtrainer API shutdown failed.", error);
+      console.error(
+        JSON.stringify({
+          level: "error",
+          event: "api_shutdown_failed",
+          errorCategory: "SERVER_CLOSE_ERROR",
+        }),
+      );
       process.exit(1);
     }
     process.exit(0);
