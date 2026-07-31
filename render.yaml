@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: deutschtrainer-api-staging
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_EVALUATION_FAKE_MODE
+        value: "false"
+      - key: OPENAI_EVALUATION_MODEL
+        value: gpt-5.6-luna
+      - key: OPENAI_TTS_MODEL
+        value: gpt-4o-mini-tts
+      - key: OPENAI_TRANSCRIPTION_MODEL
+        value: whisper-1
+      - key: OPENAI_TIMEOUT_MS
+        value: "20000"
+      - key: OPENAI_INPUT_COST_PER_MILLION
+        value: "1"
+      - key: OPENAI_OUTPUT_COST_PER_MILLION
+        value: "6"
+      - key: AI_DAILY_FREE_LIMIT
+        value: "20"
+      - key: AI_WRITING_DAILY_FREE_LIMIT
+        value: "10"
+      - key: AI_AUDIO_TTS_DAILY_FREE_LIMIT
+        value: "20"
+      - key: AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT
+        value: "10"
+      - key: AI_CONTENT_GENERATION_DAILY_FREE_LIMIT
+        value: "20"
+      - key: LEARNING_API_REQUESTS_PER_MINUTE
+        value: "60"
+      - key: STORAGE_AUDIO_BUCKET
+        value: audio-assets

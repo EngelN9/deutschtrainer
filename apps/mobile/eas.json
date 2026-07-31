@@ -13,6 +13,23 @@
         "buildType": "apk"
       }
     },
-    "production": {}
+    "staging": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "DEUTSCHTRAINER_BUILD_PROFILE": "production",
+        "EXPO_PUBLIC_CONTENT_SOURCE": "api"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "environment": "production",
+      "env": {
+        "DEUTSCHTRAINER_BUILD_PROFILE": "production",
+        "EXPO_PUBLIC_CONTENT_SOURCE": "api"
+      }
+    }
   }
 }
