@@ -53,9 +53,8 @@ services:
     plan: free
     region: singapore
     buildCommand: >-
-      corepack enable && corepack prepare pnpm@11.7.0 --activate &&
-      pnpm install --frozen-lockfile &&
-      pnpm --filter @deutschtrainer/admin build
+      corepack pnpm install --frozen-lockfile &&
+      corepack pnpm --filter @deutschtrainer/admin build
     startCommand: corepack pnpm --filter @deutschtrainer/admin start
     healthCheckPath: /
     autoDeployTrigger: checksPass
@@ -75,9 +74,8 @@ services:
     name: deutschtrainer-engeln9-web
     runtime: static
     buildCommand: >-
-      corepack enable && corepack prepare pnpm@11.7.0 --activate &&
-      pnpm install --frozen-lockfile &&
-      pnpm --filter @deutschtrainer/mobile export:web
+      corepack pnpm install --frozen-lockfile &&
+      corepack pnpm --filter @deutschtrainer/mobile export:web
     staticPublishPath: ./apps/mobile/dist
     autoDeployTrigger: checksPass
     envVars:
