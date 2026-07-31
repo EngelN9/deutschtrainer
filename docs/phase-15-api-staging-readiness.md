@@ -27,6 +27,34 @@ The final image:
 - handles `SIGINT` and `SIGTERM`, with a ten-second forced-shutdown bound;
 - receives secrets only from the deployment runtime.
 
+The Node adapter returns a bounded `x-request-id` on every response and emits JSON request events
+containing method, pathname, status and duration without query strings, headers, bodies or private
+learning content. Central collection and provider-backed alerts remain deployment work described in
+`docs/operations.md`.
+
+## Render staging target
+
+The repository-selected connected staging target is a Render Docker web service defined by the
+root `render.yaml`:
+
+- service: `deutschtrainer-api-staging`;
+- region: Singapore;
+- Dockerfile: `apps/api/Dockerfile`;
+- health check: `/health`;
+- public listener: `HOST=0.0.0.0`, platform `PORT=10000`;
+- deploy trigger: only after GitHub checks pass;
+- plan: free staging instance.
+
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY` use `sync: false` and must be
+entered through Render's protected environment prompt. The Blueprint contains names and non-secret
+limits only. The Dockerfile does not declare secret build arguments, so these values are runtime
+configuration rather than image contents.
+
+The free plan sleeps after inactivity, has an ephemeral filesystem, and does not provide
+production operability evidence. It is accepted only for connected staging and two-user/real-AI
+verification. Production requires an explicit paid-capacity, monitoring, distributed rate-limit,
+backup/restore, and rollback decision.
+
 ## Environment boundary
 
 Required server-only values:
@@ -68,13 +96,43 @@ GitHub CI now verifies:
 
 ## Credentialed handoff
 
-The next phase requires external state and credentials and is not simulated in source control:
+Gate 3 has selected the repository-linked remote Supabase project, restored the two previously
+applied migration files to append-only source history, and aligned local/remote history at 21
+migrations. Remote checks confirmed:
 
-1. Create or select a remote Supabase staging project.
-2. Link the Supabase CLI and apply all migrations plus the release seed.
-3. Provision an OpenAI project key with spending and usage limits.
-4. Deploy the API container and verify `/health` reports `aiConfigured: true`.
-5. Configure Admin and EAS staging public variables with the remote Supabase URL, anon key, and API base URL.
-6. Build a connected Android preview and run authenticated course, grading, writing, audio, offline-sync, and deletion acceptance.
+- 36/36 public tables have RLS;
+- protected writing/listening tables have no anon/authenticated grants;
+- no public function retains `PUBLIC EXECUTE`;
+- all `SECURITY DEFINER` functions have a fixed `search_path`;
+- account deletion is service-role-only and active-learner Storage policies replaced the legacy
+  policies;
+- anon/authenticated have zero mutation or `MAINTAIN` grants on every existing public table and on
+  the `postgres` defaults used by repository migrations;
+- Auth health and published course reads return `200`, while anonymous protected-content and Admin
+  RPC calls return `401`;
+- the release seed contains 100 human/approved/published exercises with the required level/type
+  distribution and answer coverage.
+
+Supabase advisors still surface the eight intentionally authenticated identity/Admin
+`SECURITY DEFINER` entry points and two RLS-without-policy service-only tables. Local role E2E and
+remote anonymous checks support the design, but the remote two-user/role suite remains required.
+The platform-owned `supabase_admin` default ACL cannot be changed by the repository migration
+runner and still carries client defaults. Application tables must therefore be created only by
+reviewed append-only migrations, with an effective-privilege assertion such as the current
+hardening migrations; dashboard-created application tables are outside the accepted workflow.
+
+The remaining connected handoff requires external runtime credentials and deployment:
+
+1. Provision an OpenAI project key with spending and usage limits.
+2. Import `render.yaml` from the public GitHub repository and enter the three `sync: false` runtime
+   values in Render without copying them into source or build arguments.
+3. Deploy the Render service and verify the public HTTPS `/health` reports `aiConfigured: true`.
+4. Run remote two-user learning, role, Storage, writing/audio and account-deletion suites.
+5. Configure Admin and the EAS `preview` environment with the remote Supabase URL, publishable key,
+   and API base URL.
+6. Build the `staging` Android profile and run authenticated course, grading, writing, audio,
+   offline-sync and deletion acceptance.
 
 No service-role key or OpenAI key belongs in GitHub source, a Mobile/Admin public variable, or a GitHub Release asset.
+The process-local private-request limiter is not a distributed production control; a gateway or
+shared store and multi-instance verification are required before operational readiness can pass.

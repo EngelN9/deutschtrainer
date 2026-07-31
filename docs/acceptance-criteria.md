@@ -1,5 +1,11 @@
 # Acceptance Criteria
 
+Phase 3–13 的結果段落包含歷史 implementation evidence。2026-07-31 已在同一 working
+tree 對 clean local Supabase 與 production API bundle 重跑 manifests 中的十個
+credentialed verification scripts；local deterministic integration 的結果依各段落記錄。
+Real AI、remote deployment、remote security 或 native device 未驗證的項目仍為
+`BLOCKED`，本機結果不得直接當作 production readiness。
+
 ## 1. Phase 0 驗收
 
 - 15 份指定規劃文件已建立。
@@ -53,7 +59,8 @@
 - loading、empty、error、retry 狀態完整。
 - 重新開啟 App 後進度仍存在。
 
-目前結果：Pass。
+目前 local content/Supabase integration：`PASS`；connected staging 與 device flow 仍為
+`BLOCKED`。
 
 - Supabase seed 已實際驗證 B1、B2、C1、C2 共 4 門課、9 堂課及 50 題。
 - Lesson 必要欄位已在課堂頁顯示。
@@ -69,7 +76,8 @@
 - 到期複習能正確顯示與完成。
 - 學習分析顯示技能掌握度與弱項。
 
-目前結果：Pass。
+目前 local learning/Supabase integration：`PASS`；connected staging 與 device flow 仍為
+`BLOCKED`。
 
 - `record_fixed_attempt` 以單一交易寫入 Attempt、AttemptAnswer、SkillMastery、ErrorRecord、ReviewQueue 與 LessonProgress。
 - 相同 idempotency key 實際重送後仍只有一筆 Attempt。
@@ -86,7 +94,8 @@
 - AI 成本寫入 ai_usage_logs。
 - 使用者看到繁體中文錯誤解釋。
 
-目前結果：Pass。
+目前 deterministic local integration：`PASS`；real AI 與 remote isolation 仍為
+`BLOCKED`。
 
 - 本機整合測試驗證首次批改、相同 idempotency key 重播與 learner-scoped cache。
 - 兩位使用者 RLS 測試確認回饋不可跨帳號讀取；匿名使用者看不到 AI 參考答案。
@@ -104,7 +113,8 @@
 - 使用者可任選兩版比較，並可刪除自己的作文資料。
 - 其他使用者與匿名使用者不可讀取作文、版本或評分規則。
 
-目前結果：Pass。
+目前 deterministic local writing、owner isolation 與 deletion integration：`PASS`；
+real AI 與 remote isolation 仍為 `BLOCKED`。
 
 - 本機整合實測第一稿 62 分、第二稿 88 分、idempotent replay、兩版原文與 add/remove diff。
 - 匿名可讀已發布題目但評分規則回傳 401；第二位使用者讀到零筆 submission/version。
@@ -122,7 +132,7 @@
 - 錄音、signed URL、逐字稿、回饋與刪除操作必須限制為 owner；刪除後 storage 與資料庫不得保留原始錄音。
 - TTS/STT 必須納入 idempotency、rolling quota、usage log、provider retry 與安全降級。
 
-目前結果：Pass with device follow-up。
+歷史 implementation evidence：Pass；remote owner isolation 與 native audio 為 `BLOCKED`。
 
 - 本機整合實測匿名逐字稿存取為 401、TTS cache hit、dictation 100 分及 idempotent replay。
 - 第二位使用者無法取得 signed URL、submission、audio metadata 或刪除錄音；owner delete 後 storage 物件已移除。
@@ -140,7 +150,7 @@
 - AI 產物必須通過 Structured Output、Zod 與題型語意驗證，且只能保存為 `ai_generated + draft`。
 - 所有核心內容的發布狀態轉換都必須寫入 `audit_logs`，並保存 admin actor 與版本。
 
-目前結果：Pass。
+歷史 implementation evidence：Pass；remote role matrix 仍為 `BLOCKED`。
 
 - `supabase db reset` 已驗證 Phase 1-8 migrations 與完整 seed 可共同重建。
 - 四角色整合實測 learner save、editor approve/direct publish、reviewer publish 皆被拒絕。
@@ -159,7 +169,8 @@
 - authenticated 不可直接執行 `record_fixed_attempt`。
 - Mobile 核心課程與學習紀錄不得直接操作 Supabase table/RPC。
 
-目前結果：Pass。
+目前 local learning API/Supabase integration：`PASS`；connected staging 與 remote
+isolation 仍為 `BLOCKED`。
 
 - 公開 API 實測 4 門 B1-C2 課程、C2 篩選、course/lesson detail 與 cache header。
 - 錯誤答案由後端保存為 0 分；以正確答案重送相同 key 仍回放原始 0 分。
@@ -177,7 +188,8 @@
 - Mobile 寫作與聽說結構化 repository 不得直接操作 Supabase table/RPC。
 - 錄音 binary 可保留 owner JWT + Storage RLS 直傳，不得包含 service-role key。
 
-目前結果：Pass。
+目前 local writing/audio workspace integration：`PASS`；connected staging 與 remote
+isolation 仍為 `BLOCKED`。
 
 - learner A 的作文 workspace 有 2 個版本，learner B submissions 為 0；跨帳號刪除回傳 404。
 - learner A 的 audio workspace 有 1 筆 listening attempt、1 筆 speaking submission 與 1 筆 owner audio metadata，learner B 均為 0。
@@ -193,7 +205,8 @@
 - 作文完成、新課程與每日目標事件具有穩定 dedupe key。
 - Web 必須安全降級；iOS/Android 必須建立權限流程、Android channel 與通知 deep link。
 
-目前結果：Pass with device follow-up。
+目前 local settings/Supabase integration：`PASS`；remote integration 與 native
+notification device acceptance 仍為 `BLOCKED`。
 
 - learner A 完成 C1-C2 onboarding 並保存 45 分鐘目標、21:30、7 天與 Europe/Berlin；learner B 保持未 onboarding 與預設設定。
 - learner B 直接查詢 learner A preferences 得到 0 rows；learner A 直接 PATCH preferences 回傳 `403`。
@@ -210,7 +223,8 @@
 - API 必須重新評分原始答案，回補時間限最近 30 天且不可超過未來 5 分鐘。
 - authenticated 不可執行 `record_fixed_attempt_sync_service`。
 
-目前結果：Pass with device follow-up。
+目前 local offline-sync/Supabase integration：`PASS`；connected staging 與 offline
+device matrix 仍為 `BLOCKED`。
 
 - Profile 隔離、nested version update、queue idempotency、restart recovery、conflict lifecycle 與 connectivity mapping 單元測試通過。
 - API service 驗證合法 `submittedAt` 原樣傳遞，過舊與未來 timestamp 回傳 `VALIDATION_ERROR 400`。
@@ -226,7 +240,8 @@
 - Mobile 提供 loading、empty、error、retry、offline 狀態，以及可存取的模式、程度與分頁控制。
 - 相關練習必須開啟指定 exercise，不得只返回不相關的課程首頁。
 
-目前結果：Pass。
+目前 local knowledge/content/Supabase integration：`PASS`；connected staging 與 native
+navigation acceptance 仍為 `BLOCKED`。
 
 - 本機 E2E 驗證 50 筆 published 單字、繁中搜尋、分頁、cache header、完整單字 metadata、10 個文法主題的規則／例句／錯誤及相關練習。
 - `die Miete` 與 `B1.nebensatz` 在 Phase 14 seed 各解析 10 筆相關練習；invalid difficulty 為 `400`，未知 UUID 為 `404`。
@@ -241,7 +256,11 @@
 - Maestro guest smoke 不依賴帳密或 secrets，覆蓋歡迎、登入、忘記密碼與返回登入。
 - 本機可自動化檢查須通過；Android／iOS 權限、通知、錄音、離線與安裝式 smoke 保留為 device follow-up。
 
-目前結果：Android Preview guest smoke pass；其餘為 device follow-up。
+目前結果：Repository config 與 guest flow 已版本化；2026-07-31 clean local reset 套用
+21 個 migrations，且直接資料庫檢查確認 100 題、B1 50／B2 25／C1 13／C2 12、100 答案
+rows 與八種題型下限；Expo compatibility、peer check、Doctor 20/20 及 Android/Web export
+亦通過。qualified human-language review 附件、目前 `0.1.1`／build `3` 的 Android 安裝
+及完整 device matrix 沒有同 revision 可重現證據，因此仍為 `BLOCKED`。
 
 ## 17. Phase 15 驗收
 
@@ -252,4 +271,30 @@
 - GitHub CI 必須建置及 smoke production bundle，並成功建置 API container。
 - 真實 service-role／OpenAI secrets 不得寫入 image、source、Mobile/Admin public variables 或 release assets。
 
-目前結果：Local pass；connected staging follow-up。
+目前結果：Repository bundle/container contract 已實作；2026-07-31 local Docker build
+成功，image 使用 `node`、包含 health check 與 plain-Node command，runtime layout 不含
+`.env`/`.git`，缺少 service-role key 時正確 fail fast；`APP_ENV=local` credentialed
+container `/health` 與 Docker health 均通過，production default 亦正確拒絕 fake AI。
+Linked remote Supabase 已套用 21 個 migrations，remote static/anonymous security、現有
+public tables 與 repository-owned defaults 的 client mutation/`MAINTAIN` privilege 收斂，
+以及 release seed checks 通過。Public GitHub repository 與 Render staging Blueprint 已建立；
+protected runtime values 尚未輸入，HTTPS API deployment、remote two-user suite、real AI、
+EAS staging build 與 operations 仍為 `BLOCKED`。
+
+## 18. 帳號資料權利驗收
+
+- active user 可由 `GET /users/me/export` 取得自己的 profile、設定、學習、AI、作文、音訊
+  與內容工作資料；私人錄音只使用短效 signed URL。
+- 未登入與其他使用者不得取得資料或 Storage object。
+- `DELETE /users/me` 只接受精確確認詞，先刪除 owner Storage，再刪除 Auth user 與
+  cascade owner rows；治理紀錄以明確 nullable FK 匿名化。
+- Storage 失敗時不得刪除 Auth user或回報成功；重試不得造成額外破壞。
+- 刪除後舊 token 不得通過 API，Mobile profile-scoped cache、pending queue、通知與
+  session 必須清除，另一位使用者保持可用。
+
+目前結果：Repository implementation、unit coverage 與 21-migration clean replay 已建立；
+2026-07-31 local two-user account-data E2E 驗證 unauthenticated export `401`、cross-user
+Storage denial、invalid confirmation `400`、owner deletion、刪除後 profile/Storage 零筆、
+舊 token `401`，且另一位使用者仍可正確匯出自己的資料。Remote account-deletion
+function 已驗證僅 service role 可執行；remote two-user API flow 與 Android restart/cache
+acceptance 仍為 `BLOCKED`。

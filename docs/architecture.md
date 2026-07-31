@@ -27,7 +27,7 @@ docs/
 tests/
 ```
 
-目前 Phase 0 只建立骨架與文件，不建立大量 App 頁面。
+此結構描述目前 repository；release readiness 另依 `docs/definition-of-done.md` 判定。
 
 ## 2. 技術選型
 
@@ -53,7 +53,9 @@ TypeScript strict mode 必須啟用。UI 元件不得直接呼叫資料庫；資
 ### Admin Web
 
 - 負責內容建立、審核、發布、版本、音訊與統計管理。
-- 管理頁面必須通過 role 檢查。
+- `/admin` 在 Next.js server boundary 以 Supabase `getUser()` 與 active profile role 驗證，
+  browser 端再做 session/profile revalidation；前端隱藏按鈕不是權限控制。
+- `/`、`/support`、`/privacy`、`/terms` 與 `/account-deletion` 是公開資訊頁面。
 - AI 生成草稿只能建立 draft 或 pending_review。
 
 ### Backend
@@ -96,36 +98,39 @@ AI 題型流程：
 
 所有 API 需定義 request schema、response schema、權限、錯誤碼、rate limit、cache、idempotency。
 
-| Method | Path                               | Request Schema                       | Response Schema                   | 權限                    | Rate limit         | Cache            | Idempotency |
-| ------ | ---------------------------------- | ------------------------------------ | --------------------------------- | ----------------------- | ------------------ | ---------------- | ----------- |
-| GET    | /courses                           | CourseListRequest                    | CourseListResponse                | public published        | 120/min            | yes              | no          |
-| GET    | /courses/:courseId                 | CourseDetailRequest                  | CourseDetailResponse              | public published        | 120/min            | yes              | no          |
-| GET    | /lessons/:lessonId                 | LessonDetailRequest                  | LessonDetailResponse              | public published        | 120/min            | yes              | no          |
-| GET    | /vocabulary                        | VocabularyListRequest                | VocabularyListResponse            | public published        | 120/min            | yes              | no          |
-| GET    | /vocabulary/:itemId                | path UUID                            | VocabularyDetailResponse          | public published        | 120/min            | yes              | no          |
-| GET    | /grammar-topics                    | GrammarTopicListRequest              | GrammarTopicListResponse          | public published        | 120/min            | yes              | no          |
-| GET    | /grammar-topics/:topicId           | path UUID                            | GrammarTopicDetailResponse        | public published        | 120/min            | yes              | no          |
-| POST   | /attempts                          | SubmitAttemptRequest                 | SubmitAttemptResponse             | learner self            | 60/min             | no               | yes         |
-| GET    | /users/me/progress                 | ProgressRequest                      | ProgressResponse                  | learner self            | 60/min             | no               | no          |
-| GET    | /users/me/reviews                  | ReviewQueueRequest                   | ReviewQueueResponse               | learner self            | 60/min             | no               | no          |
-| POST   | /reviews/:reviewId/complete        | CompleteReviewRequest                | CompleteReviewResponse            | learner self            | 60/min             | no               | yes         |
-| GET    | /users/me/settings                 | none                                 | UserSettingsResponse              | learner self            | 60/min             | no               | no          |
-| PUT    | /users/me/onboarding               | OnboardingRequest                    | UserSettingsResponse              | learner self            | 60/min             | no               | no          |
-| PUT    | /users/me/notification-preferences | UpdateNotificationPreferencesRequest | NotificationPreferencesResponse   | learner self            | 60/min             | no               | no          |
-| GET    | /users/me/writing                  | none                                 | WritingWorkspaceResponse          | learner self            | 60/min             | no               | no          |
-| DELETE | /writing/submissions/:id           | path UUID                            | DeleteWritingSubmissionResponse   | learner self            | 60/min             | no               | no          |
-| POST   | /ai/evaluate-response              | EvaluateResponseRequest              | EvaluateResponseResponse          | learner self            | 20/rolling 24h     | learner scoped   | yes         |
-| POST   | /ai/evaluate-writing               | EvaluateWritingRequest               | EvaluateWritingResponse           | learner self            | 10/day free tier   | no               | yes         |
-| POST   | /admin/ai/exercise-drafts          | GenerateExerciseDraftRequest         | GenerateExerciseDraftResponse     | content_editor or admin | 20/rolling 24h     | replay only      | yes         |
-| GET    | /users/me/audio-learning           | none                                 | AudioLearningWorkspaceResponse    | learner self            | 60/min             | no               | no          |
-| POST   | /listening/activity                | ListeningActivityRequest             | ListeningActivityResponse         | learner self            | 60/min             | no               | no          |
-| POST   | /listening/reveal-transcript       | RevealListeningTranscriptRequest     | RevealListeningTranscriptResponse | learner self            | 60/min             | no               | no          |
-| POST   | /listening/submit-dictation        | SubmitDictationRequest               | SubmitDictationResponse           | learner self            | 60/min             | no               | yes         |
-| POST   | /audio/text-to-speech              | TextToSpeechRequest                  | TextToSpeechResponse              | learner self or editor  | 60/day free tier   | yes by text hash | yes         |
-| POST   | /audio/transcribe                  | TranscribeRequest                    | TranscribeResponse                | learner self            | 30/day free tier   | no               | yes         |
-| DELETE | /speaking/submissions/:id          | path UUID                            | DeleteSpeakingSubmissionResponse  | learner self            | 60/min             | no               | no          |
-| POST   | /conversations                     | CreateConversationRequest            | CreateConversationResponse        | learner self            | 20/day free tier   | no               | yes         |
-| POST   | /conversations/:id/messages        | SendConversationMessageRequest       | SendConversationMessageResponse   | learner self            | scenario max turns | no               | yes         |
+| Method | Path                               | Request Schema                       | Response Schema                   | 權限                    | Rate limit       | Cache            | Idempotency |
+| ------ | ---------------------------------- | ------------------------------------ | --------------------------------- | ----------------------- | ---------------- | ---------------- | ----------- |
+| GET    | /courses                           | CourseListRequest                    | CourseListResponse                | public published        | 120/min          | yes              | no          |
+| GET    | /courses/:courseId                 | CourseDetailRequest                  | CourseDetailResponse              | public published        | 120/min          | yes              | no          |
+| GET    | /lessons/:lessonId                 | LessonDetailRequest                  | LessonDetailResponse              | public published        | 120/min          | yes              | no          |
+| GET    | /vocabulary                        | VocabularyListRequest                | VocabularyListResponse            | public published        | 120/min          | yes              | no          |
+| GET    | /vocabulary/:itemId                | path UUID                            | VocabularyDetailResponse          | public published        | 120/min          | yes              | no          |
+| GET    | /grammar-topics                    | GrammarTopicListRequest              | GrammarTopicListResponse          | public published        | 120/min          | yes              | no          |
+| GET    | /grammar-topics/:topicId           | path UUID                            | GrammarTopicDetailResponse        | public published        | 120/min          | yes              | no          |
+| POST   | /attempts                          | SubmitAttemptRequest                 | SubmitAttemptResponse             | learner self            | 60/min           | no               | yes         |
+| GET    | /users/me/progress                 | ProgressRequest                      | ProgressResponse                  | learner self            | 60/min           | no               | no          |
+| GET    | /users/me/reviews                  | ReviewQueueRequest                   | ReviewQueueResponse               | learner self            | 60/min           | no               | no          |
+| POST   | /reviews/:reviewId/complete        | CompleteReviewRequest                | CompleteReviewResponse            | learner self            | 60/min           | no               | yes         |
+| GET    | /users/me/settings                 | none                                 | UserSettingsResponse              | learner self            | 60/min           | no               | no          |
+| GET    | /users/me/export                   | none                                 | AccountDataExportResponse         | active account self     | 60/min           | no               | no          |
+| DELETE | /users/me                          | AccountDeletionRequest               | AccountDeletionResponse           | account self            | 60/min           | no               | replay safe |
+| PUT    | /users/me/onboarding               | OnboardingRequest                    | UserSettingsResponse              | learner self            | 60/min           | no               | no          |
+| PUT    | /users/me/notification-preferences | UpdateNotificationPreferencesRequest | NotificationPreferencesResponse   | learner self            | 60/min           | no               | no          |
+| GET    | /users/me/writing                  | none                                 | WritingWorkspaceResponse          | learner self            | 60/min           | no               | no          |
+| DELETE | /writing/submissions/:id           | path UUID                            | DeleteWritingSubmissionResponse   | learner self            | 60/min           | no               | no          |
+| POST   | /ai/evaluate-response              | EvaluateResponseRequest              | EvaluateResponseResponse          | learner self            | 20/rolling 24h   | learner scoped   | yes         |
+| POST   | /ai/evaluate-writing               | EvaluateWritingRequest               | EvaluateWritingResponse           | learner self            | 10/day free tier | no               | yes         |
+| POST   | /admin/ai/exercise-drafts          | GenerateExerciseDraftRequest         | GenerateExerciseDraftResponse     | content_editor or admin | 20/rolling 24h   | replay only      | yes         |
+| GET    | /users/me/audio-learning           | none                                 | AudioLearningWorkspaceResponse    | learner self            | 60/min           | no               | no          |
+| POST   | /listening/activity                | ListeningActivityRequest             | ListeningActivityResponse         | learner self            | 60/min           | no               | no          |
+| POST   | /listening/reveal-transcript       | RevealListeningTranscriptRequest     | RevealListeningTranscriptResponse | learner self            | 60/min           | no               | no          |
+| POST   | /listening/submit-dictation        | SubmitDictationRequest               | SubmitDictationResponse           | learner self            | 60/min           | no               | yes         |
+| POST   | /audio/text-to-speech              | TextToSpeechRequest                  | TextToSpeechResponse              | learner self or editor  | 60/day free tier | yes by text hash | yes         |
+| POST   | /audio/transcribe                  | TranscribeRequest                    | TranscribeResponse                | learner self            | 30/day free tier | no               | yes         |
+| DELETE | /speaking/submissions/:id          | path UUID                            | DeleteSpeakingSubmissionResponse  | learner self            | 60/min           | no               | no          |
+
+多輪 AI 對話仍是規劃中的 domain capability；目前 API 沒有 `/conversations` endpoints，不得在
+Mobile、文件或 release claim 中描述為可用功能。
 
 統一錯誤格式：
 
@@ -165,6 +170,8 @@ Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。�
 - API client 只呼叫 backend；不得直接從 UI 呼叫 Supabase table。
 - DB row type、API DTO、UI ViewModel 分離。
 - Phase 9 已將課程、固定作答、進度與複習移至 API；Phase 10 再將作文／音訊結構化資料與遙測移至 API；Phase 11 將 profile、onboarding 與通知偏好移至 API；Phase 12 在不繞過 API 權威評分的前提下加入下載與重連同步；Phase 13 將單字與文法知識庫改由 published-only typed API 提供。
+- 帳號資料匯出與刪除由 API 使用 service-role repository 協調；刪除順序先處理私人
+  Storage，再刪除 Auth user，資料庫 owner rows 依 FK cascade／明確匿名化策略清理。
 - Mobile 的 Supabase client 僅保留 Auth 與 owner-scoped Storage binary 操作；Storage 路徑仍受 JWT 與 RLS 限制。
 
 ### 通知排程
@@ -193,6 +200,10 @@ Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。�
 - APP_ENV
 
 只有 public-safe 變數可進入 mobile bundle。service role key 與 OpenAI key 僅存在 backend runtime。
+實際變數名稱與必要性以 root、Mobile 與 Admin 的 `.env.example` 為準；不得從 runtime
+輸出完整環境。
+EAS production profile 固定 API content source，並在 app config 拒絕缺值、placeholder、
+localhost 與非 HTTPS remote URL；Admin 缺少任一必要 public URL/key 時不啟用管理後台。
 
 ## 9. 主要 TypeScript 模型
 
@@ -217,8 +228,8 @@ Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。�
 - ReviewItem
 - WritingSubmission
 - AIFeedback
-- ConversationScenario
-- ConversationSession
+- ConversationScenario（規劃中，尚無 API／migration）
+- ConversationSession（規劃中，尚無 API／migration）
 - ListeningAsset
 - ListeningAttempt
 - SpeakingPrompt

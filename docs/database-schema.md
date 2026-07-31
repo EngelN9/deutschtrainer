@@ -65,26 +65,24 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 | skill_mastery    | id, user_id, skill_id, mastery_score, confidence_score, attempt_count, correct_count, incorrect_count, hint_count, average_response_time_ms, last_practiced_at, next_review_at, correct_streak, incorrect_streak, last_error_types                                                                        | unique(user_id,skill_id), index(user_id,next_review_at)                               | self read; transactional RPC write                            |
 | review_queue     | id, user_id, skill_id, exercise_id, source_attempt_id, priority, scheduled_at, reason, interval_days, ease_factor, status, completed_at, completed_attempt_id                                                                                                                                             | partial unique active item, index(user_id,status,scheduled_at)                        | self read; transactional RPC write                            |
 | lesson_progress  | id, user_id, lesson_id, status, completion_percent, completed_exercise_ids, correct_exercise_count, attempted_exercise_count, last_activity_id, last_practiced_at, completed_at                                                                                                                           | unique(user_id,lesson_id)                                                             | self read; transactional RPC write                            |
-| course_progress  | id, user_id, course_id, completion_percent, completed_lessons, total_lessons, last_lesson_id                                                                                                                                                                                                              | unique(user_id,course_id)                                                             | self only                                                     |
 
-## 6. 寫作、AI、對話、聽力與口說
+課程完成度目前由 `lesson_progress` 與課程內容聚合；沒有 `course_progress` migration 或 table。
 
-| Table                   | 主要欄位                                                                                                                                                                                                      | 關聯與索引                                                            | RLS                                         |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------- |
-| writing_prompts         | id, lesson_id, level, writing_type, title_zh_tw, prompt_de, prompt_zh_tw, requirements_json, minimum_words, maximum_words, estimated_minutes, skill_ids, review_status, status, version, deleted_at           | unique(lesson_id,writing_type), index(level,status,type)              | approved published public read              |
-| writing_prompt_rules    | id, prompt_id, grading_notes_zh_tw, reference_outline_json, reference_version_de                                                                                                                              | unique(prompt_id), fk writing_prompts                                 | service-role read only                      |
-| writing_submissions     | id, user_id, lesson_id, prompt_id, level, writing_type, current_version_id, status, created_at, updated_at                                                                                                    | index(user_id,updated_at), index(user_id,prompt_id)                   | self read; RPC write/delete                 |
-| writing_versions        | id, user_id, submission_id, previous_version_id, version_number, text_de, word_count, diff_json, ai_feedback_id, idempotency_key, created_at                                                                  | unique(submission_id,version_number), unique(user_id,idempotency_key) | self read; service-only append              |
-| ai_feedback             | id, user_id, nullable attempt_id, feature, target_type, target_id, schema_version, prompt_id, prompt_version, model, feedback_json, requires_human_review, cache_key, idempotency_key, cached_from_id         | exercise-attempt or writing-version target check; target index        | self read; service-only transaction write   |
-| conversation_scenarios  | id, level, scenario, user_role, ai_role, learning_objectives_json, allowed_vocabulary_json, target_grammar_json, maximum_turns, feedback_frequency, correction_style, register, success_criteria_json, status | index(level,status)                                                   | published public read                       |
-| conversation_sessions   | id, user_id, scenario_id, status, started_at, completed_at, summary_feedback_json                                                                                                                             | fk scenario/user, index(user_id,status)                               | self only                                   |
-| conversation_messages   | id, session_id, role, content_de, content_zh_tw, turn_index, ai_feedback_id                                                                                                                                   | fk session, index(session_id,turn_index)                              | self only                                   |
-| listening_assets        | id, level, title_zh_tw, summary_zh_tw, topic, duration_seconds, source_text_version, voice, model, status, published_at, deleted_at                                                                           | index(level,status,published_at)                                      | published metadata public read              |
-| listening_asset_content | id, listening_asset_id, source_text_de, transcript_zh_tw, comprehension_questions_json                                                                                                                        | unique(listening_asset_id)                                            | service-role read only                      |
-| listening_attempts      | id, user_id, listening_asset_id, mode, answer_text, normalized_answer, score, grading_json, idempotency_key, completed_at                                                                                     | unique(user_id,idempotency_key), index(user_id,completed_at)          | self read; transactional RPC write          |
-| speaking_prompts        | id, level, title_zh_tw, prompt_zh_tw, target_text_de, topic, suggested_seconds, status, published_at, deleted_at                                                                                              | index(level,status,published_at)                                      | published public read                       |
-| speaking_submissions    | id, user_id, speaking_prompt_id, audio_asset_id, status, transcript_de, content_score, fluency_json, feedback_json, provider, model, error_code, idempotency_key, created_at                                  | unique(user_id,idempotency_key), index(user_id,created_at)            | self read; service-only result write/delete |
-| audio_assets            | id, owner_user_id, purpose, storage_bucket, storage_path, mime_type, duration_ms, provider, model, cache_key, source_entity_type, source_entity_id, metadata_json, deleted_at                                 | unique(cache_key), index(owner_user_id), index(storage_bucket,path)   | published TTS metadata or self-owned upload |
+## 6. 寫作、AI、聽力與口說
+
+| Table                   | 主要欄位                                                                                                                                                                                              | 關聯與索引                                                            | RLS                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------- |
+| writing_prompts         | id, lesson_id, level, writing_type, title_zh_tw, prompt_de, prompt_zh_tw, requirements_json, minimum_words, maximum_words, estimated_minutes, skill_ids, review_status, status, version, deleted_at   | unique(lesson_id,writing_type), index(level,status,type)              | approved published public read              |
+| writing_prompt_rules    | id, prompt_id, grading_notes_zh_tw, reference_outline_json, reference_version_de                                                                                                                      | unique(prompt_id), fk writing_prompts                                 | service-role read only                      |
+| writing_submissions     | id, user_id, lesson_id, prompt_id, level, writing_type, current_version_id, status, created_at, updated_at                                                                                            | index(user_id,updated_at), index(user_id,prompt_id)                   | self read; RPC write/delete                 |
+| writing_versions        | id, user_id, submission_id, previous_version_id, version_number, text_de, word_count, diff_json, ai_feedback_id, idempotency_key, created_at                                                          | unique(submission_id,version_number), unique(user_id,idempotency_key) | self read; service-only append              |
+| ai_feedback             | id, user_id, nullable attempt_id, feature, target_type, target_id, schema_version, prompt_id, prompt_version, model, feedback_json, requires_human_review, cache_key, idempotency_key, cached_from_id | exercise-attempt or writing-version target check; target index        | self read; service-only transaction write   |
+| listening_assets        | id, level, title_zh_tw, summary_zh_tw, topic, duration_seconds, source_text_version, voice, model, status, published_at, deleted_at                                                                   | index(level,status,published_at)                                      | published metadata public read              |
+| listening_asset_content | id, listening_asset_id, source_text_de, transcript_zh_tw, comprehension_questions_json                                                                                                                | unique(listening_asset_id)                                            | service-role read only                      |
+| listening_attempts      | id, user_id, listening_asset_id, mode, answer_text, normalized_answer, score, grading_json, idempotency_key, completed_at                                                                             | unique(user_id,idempotency_key), index(user_id,completed_at)          | self read; transactional RPC write          |
+| speaking_prompts        | id, level, title_zh_tw, prompt_zh_tw, target_text_de, topic, suggested_seconds, status, published_at, deleted_at                                                                                      | index(level,status,published_at)                                      | published public read                       |
+| speaking_submissions    | id, user_id, speaking_prompt_id, audio_asset_id, status, transcript_de, content_score, fluency_json, feedback_json, provider, model, error_code, idempotency_key, created_at                          | unique(user_id,idempotency_key), index(user_id,created_at)            | self read; service-only result write/delete |
+| audio_assets            | id, owner_user_id, purpose, storage_bucket, storage_path, mime_type, duration_ms, provider, model, cache_key, source_entity_type, source_entity_id, metadata_json, deleted_at                         | unique(cache_key), index(owner_user_id), index(storage_bucket,path)   | published TTS metadata or self-owned upload |
 
 ## 7. 內容治理與系統表
 
@@ -96,6 +94,10 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 | ai_usage_logs      | id, user_id, request_id, idempotency_key, feature, model, provider_request_id, provider_attempt, input_tokens, output_tokens, estimated_cost, latency_ms, success, cached, logical_request, error_code, created_at | unique(request_id,provider_attempt), daily-limit indexes       | self read; service-only write                |
 | feature_flags      | id, key, description, enabled, audience_json, updated_by                                                                                                                                                           | unique(key)                                                    | admin write, backend read                    |
 | audit_logs         | id, actor_user_id, action, entity_type, entity_id, metadata_json, ip_hash, user_agent_hash, created_at                                                                                                             | index(actor_user_id,created_at), index(entity_type,entity_id)  | admin only                                   |
+
+多輪 conversation types 仍保留在規劃模型中，但目前沒有 conversation tables 或 migrations。
+`content_reviews.requested_by` 在帳號刪除 migration 後可為 null，刪除 requester 時採
+`ON DELETE SET NULL` 保留不含私人內容的治理記錄；UI 以「已刪除」顯示。
 
 ## 8. RLS 策略摘要
 
@@ -110,6 +112,9 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 - reviewer 可讀取審核所需內容，但不得看到不必要的使用者敏感資料。
 - admin 可管理角色、feature flags、audit 與成本統計。
 - service role 僅後端使用；前端永遠不用 service role。
+- `begin_account_deletion_service` 僅 service role 可執行，先標記 profile 刪除中並回傳該
+  owner 的私人錄音路徑；API 刪除 Storage 後再刪除 Auth user，由 FK cascade 清除 owner
+  rows。失敗不得偽裝成功。
 
 ## 9. Migration 要求
 
@@ -118,3 +123,20 @@ writing_type: informal_email, formal_email, experience_description, opinion, com
 - 所有 FK 需明確 on delete 策略。
 - 重要查詢欄位建立索引。
 - sensitive text 不寫入 logs；需保留摘要時使用 hash 或節錄。
+- 已套用 migration append-only；remote 已存在的
+  `202607240001_protected_content_privileges.sql` 與
+  `20260726063314_harden_function_execution_privileges.sql` 必須保留。
+- 帳號資料權利使用 `20260731042553_account_data_rights.sql`，不得回寫先前 migration。
+- `20260731042641_restrict_public_function_execution.sql` 收斂早期 identity helper、Admin
+  RPC 與 trigger function 的預設 `PUBLIC EXECUTE`；合法 client 入口採明確角色
+  allowlist，沒有 schema shape 變更。
+- `20260731042703_fix_set_updated_at_search_path.sql` 將共用 timestamp trigger function
+  的名稱解析固定為 `pg_catalog`；此 migration 不改變 trigger body 或資料 shape。
+- `20260731045035_restrict_client_table_mutations.sql` 撤銷 anon/authenticated 對所有
+  public tables 的直接 mutation privileges；Mobile/Admin 的結構化寫入維持
+  API service role 或受審核的 role-checking RPC。
+- `20260731050131_harden_client_table_default_privileges.sql` 進一步撤銷 PostgreSQL 17
+  `MAINTAIN` privilege，並驗證 repository migration owner `postgres` 的未來 public
+  table defaults 不會重新授予 client mutation/maintenance 權限。平台擁有的
+  `supabase_admin` defaults 不屬於 repository migration runner 的權限範圍，因此
+  application tables 不得透過未受審核的 dashboard 路徑建立。

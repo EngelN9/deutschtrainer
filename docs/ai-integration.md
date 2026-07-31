@@ -11,14 +11,14 @@
 
 ## 2. AI 功能
 
-| 功能         | API                              | 輸出 Schema              | 是否可快取                       |
-| ------------ | -------------------------------- | ------------------------ | -------------------------------- |
-| 自由回答批改 | POST /ai/evaluate-response       | AiEvaluationFeedback     | learner+exercise+answer+versions |
-| 作文批改     | POST /ai/evaluate-writing        | WritingFeedback          | no, but versioned                |
-| 生成題目草稿 | POST /admin/ai/exercise-drafts   | GeneratedExerciseDraft   | idempotent replay only           |
-| 德語 TTS     | POST /audio/text-to-speech       | TextToSpeechResult       | yes by text+voice hash           |
-| STT          | POST /audio/transcribe           | TranscriptionResult      | no                               |
-| 對話         | POST /conversations/:id/messages | ConversationTurnFeedback | no                               |
+| 功能         | API                            | 輸出 Schema            | 是否可快取                       |
+| ------------ | ------------------------------ | ---------------------- | -------------------------------- |
+| 自由回答批改 | POST /ai/evaluate-response     | AiEvaluationFeedback   | learner+exercise+answer+versions |
+| 作文批改     | POST /ai/evaluate-writing      | WritingFeedback        | no, but versioned                |
+| 生成題目草稿 | POST /admin/ai/exercise-drafts | GeneratedExerciseDraft | idempotent replay only           |
+| 德語 TTS     | POST /audio/text-to-speech     | TextToSpeechResult     | yes by text+voice hash           |
+| STT          | POST /audio/transcribe         | TranscriptionResult    | no                               |
+| 對話（規劃） | 尚無 endpoint                  | 尚未實作               | not applicable                   |
 
 ## 3. 驗證管線
 
@@ -123,3 +123,5 @@ STT：
 - AI 題目草稿已完成內容角色驗證、三種受約束題型、Structured Output、Zod／語意重驗、retry、rolling quota、usage log 與冪等重播。
 - 生成結果不接受模型提供 UUID、status 或 review decision；成功後由 service-only RPC 固定寫成 `ai_generated + draft`。
 - 自由口說與多輪 AI 對話仍屬後續階段。
+- `AI_EVALUATION_FAKE_MODE=true` 僅是 local/test deterministic fixture；不得作為 real AI
+  品質、成本、latency、staging 或 production 驗收證據。

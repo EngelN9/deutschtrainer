@@ -70,27 +70,48 @@ pnpm --filter @deutschtrainer/api verify:settings:local
 pnpm --filter @deutschtrainer/api verify:offline-sync:local
 pnpm --filter @deutschtrainer/api verify:knowledge:local
 pnpm --filter @deutschtrainer/api verify:content-readiness:local
+pnpm --filter @deutschtrainer/api verify:account-data:local
 ```
 
 Local mobile web is available at `http://localhost:8081`; the admin console uses `http://localhost:3000`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
 
+## Connected Staging Blueprint
+
+The public source repository is
+[EngelN9/deutschtrainer](https://github.com/EngelN9/deutschtrainer). The root `render.yaml`
+describes a free Render staging web service that builds `apps/api/Dockerfile`, binds
+`0.0.0.0:$PORT`, checks `/health`, and deploys only after GitHub checks pass.
+
+[Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
+
+Render must prompt for `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`; their
+values never belong in this repository. The free service can sleep after inactivity and is staging
+evidence only, not production or operational readiness. Do not configure Mobile/Admin until the
+deployed `/health` endpoint reports `aiConfigured: true` and the remote security suites pass.
+
 ## Current Scope
 
-- Phase 0: planning and architecture complete.
-- Phase 1: monorepo and tooling foundation complete.
-- Phase 2: auth, onboarding, and protected navigation complete.
-- Phase 3: course map, lessons, six deterministic exercise types, source switching, and per-user local progress complete.
-- Phase 4: attempts, cross-device lesson progress, mastery, review scheduling, error history, and learning analytics complete.
-- Phase 5: authenticated translation/free-response AI evaluation, Structured Outputs, detailed error classification, retry, learner-scoped cache, usage/cost logging, and protected answer keys complete.
-- Phase 6: B1-C2 writing prompts, immutable versions, AI inline diagnosis, ten-dimension rubrics, rewrite/reference flow, version comparison, retry, analytics, RLS, and deletion complete.
-- Phase 7: private TTS playback, listening telemetry, protected transcripts, server-scored dictation, microphone fallback, recording/STT, assisted speaking feedback, analytics, cross-user isolation, and deletion complete.
-- Phase 8: role-gated course and exercise editing, immutable content versions, review decisions, review-required AI drafts, admin-only publishing, and audit trails complete.
-- Phase 9: published course APIs, server-authoritative fixed grading, private progress/review APIs, per-user rate limiting, idempotent replay, and Mobile core-data API migration complete.
-- Phase 10: private writing/audio workspaces, API-backed writing deletion and listening telemetry, shared learner rate limiting, and Mobile structured-data API migration complete.
-- Phase 11: API-backed onboarding and notification preferences, timezone-aware local reminders, event deduplication, and personal notification settings complete with native-device follow-up.
-- Phase 12: per-user course downloads, offline fixed-exercise grading, durable pending attempts, reconnect sync, conflict recovery, and original submission-time preservation complete with native-device follow-up.
-- Phase 13: searchable B1-C2 vocabulary and grammar libraries, structured Traditional Chinese explanations, published-only APIs, pagination, and related-exercise deep links complete.
-- Phase 14: 100 approved human exercises, release identifiers and artwork, EAS preview/production profiles, content-readiness verification, and a versioned native guest smoke flow complete with device follow-up.
-- Phase 15: deployment-safe API configuration, a self-contained Node production bundle, container packaging, graceful shutdown, and CI bundle/container verification complete.
+Phases 0–15 describe the repository implementation baseline, not production readiness. The
+repository contains the planned architecture and tooling; authentication and onboarding; courses,
+fixed grading, learning records and offline synchronization; AI-assisted evaluation, writing and
+audio flows; the content-admin workflow; knowledge libraries; release configuration; and an API
+bundle/container contract. It also includes authenticated account-data export and account deletion.
+
+These layers must be reported separately:
+
+- Repository implementation and automated unit/build evidence: verifiable from this checkout.
+- Local integration: requires Docker and a clean local Supabase reset before the local verification
+  commands are evidence.
+- Connected staging and remote security: require a remote Supabase project, deployed HTTPS API,
+  configured public clients, and two-user verification.
+- Real AI quality, cost, and latency: require a real provider credential with fake mode disabled.
+- Native device: requires an installed Android build for notifications, microphone, recording,
+  restart, flight mode, background reconnect, and deletion/cache acceptance.
+- Operations and public delivery: require deployed monitoring, backup/restore and rollback drills,
+  public URLs, release artifacts, and any applicable store review.
+
+Until every required A–J gate in `docs/definition-of-done.md` has reproducible evidence, this project
+must be described as a feature-rich preview whose deployment and device acceptance remain blocked,
+not as complete, publicly available, production-ready, or formally released.
 
 See `docs/phase-15-api-staging-readiness.md` for the production bundle, container contract, staging environment boundary, and credentialed deployment handoff.

@@ -1,5 +1,9 @@
 # Development Roadmap
 
+以下 Phase 狀態記錄 repository implementation 的歷史證據，不是目前 release gate 結果。
+需要 Supabase、真實 AI、遠端部署或裝置的舊驗收，若未在目前 revision 重跑，皆依
+`docs/definition-of-done.md` 標示 `BLOCKED`，不得由舊 `Pass` 推導 production readiness。
+
 ## Phase 0：文件及架構
 
 交付：
@@ -121,7 +125,8 @@
 - 答錯後建立複習項目。
 - 到期複習可正確顯示。
 
-驗收結果：Pass。
+目前 local learning/Supabase integration：`PASS`；connected staging 與 device flow 仍為
+`BLOCKED`。
 
 ## Phase 5：AI 批改
 
@@ -142,7 +147,7 @@
 - 使用者看到繁體中文解釋。
 - AI 金鑰不出現在前端。
 
-驗收結果：Pass。
+歷史 implementation evidence：Pass；真實 AI 品質／成本／latency 仍為 `BLOCKED`。
 
 - `translation` 與 `free_response` 共用受保護的 `POST /ai/evaluate-response` 流程。
 - Structured Outputs 後仍執行 Zod、技能關聯、CEFR、一致性及禁止內容檢查，失敗最多重試一次。
@@ -166,7 +171,8 @@
 - 每次修改都有版本。
 - 使用者可比較兩個版本。
 
-目前狀態：Pass。
+目前 deterministic local writing/Supabase integration：`PASS`；real AI、connected staging
+與 remote isolation 仍為 `BLOCKED`。
 
 - B1-C2 各有一個已審核題目，公開欄位與後端評分規則分表保存。
 - 第一稿先保存再批改，僅提供行內錯誤、十項評分與修改任務，不顯示完整範文。
@@ -193,7 +199,7 @@
 - 錄音可刪除。
 - 音訊不會被其他使用者讀取。
 
-目前狀態：Pass。
+歷史 implementation evidence：Pass；原生音訊與 remote owner isolation 仍為 `BLOCKED`。
 
 - TTS 僅接受受信任素材 ID，生成音檔保存於 private bucket 並以短效 signed URL 播放。
 - 聽力支援正常／慢速、重播、關鍵詞、受保護逐字稿、聽寫與理解題，結果與操作遙測皆保存。
@@ -219,7 +225,7 @@
 - 非管理員不可進入管理功能。
 - 所有發布操作寫入 audit log。
 
-目前狀態：Pass。
+歷史 implementation evidence：Pass；remote role matrix 仍為 `BLOCKED`。
 
 - `content_editor` 可建立／修改草稿及送審，`reviewer` 可核准／退回，只有 `admin` 可發布。
 - 課程與題目寫入集中於 security-definer RPC，每次保存建立不可變 `content_versions` 快照。
@@ -247,7 +253,8 @@
 - 公開內容只包含 published 資料並具有快取標頭。
 - 舊 `record_fixed_attempt` 不可由 authenticated 直接執行。
 
-目前狀態：Pass。
+目前 local learning API/Supabase integration：`PASS`；connected staging 與 remote
+isolation 仍為 `BLOCKED`。
 
 - 七個規格端點均有獨立 Zod request/response schema。
 - API 依已發布固定題重新評分，再呼叫 service-role-only RPC 原子更新學習紀錄。
@@ -271,7 +278,8 @@
 - authenticated 不可直接執行作文刪除或聽力遙測 RPC。
 - Mobile 僅以 Supabase Storage RLS 處理 owner binary，上層結構化資料均經 API。
 
-目前狀態：Pass。
+目前 local writing/audio workspace integration：`PASS`；connected staging 與 remote
+isolation 仍為 `BLOCKED`。
 
 - 四個受保護端點具有獨立 Zod response contract、統一錯誤與 `no-store`。
 - 雙帳號整合測試驗證作文兩版、聽力／口說 workspace 隔離、跨帳號 `404`、舊 RPC 撤權及 owner deletion。
@@ -295,7 +303,8 @@
 - 同一時區日期最多一筆排程提醒；事件通知以穩定 key 去重。
 - Web 不載入 native notification module；Android/iOS 使用明確 channel、權限與 deep link。
 
-目前狀態：Pass with device follow-up。
+目前狀態：Repository implementation present；native notification/device acceptance 為
+`BLOCKED`。
 
 - 三個受保護設定端點具有獨立 Zod contract、統一錯誤與 `no-store`。
 - Mobile profile/onboarding/preferences 不再直接操作 Supabase table。
@@ -322,7 +331,9 @@
 - API 必須重新評分原始答案，並以實際作答時間計算 activity 與 review schedule。
 - authenticated 不可直接執行 offline sync RPC；衝突不得被靜默刪除。
 
-目前狀態：Pass with device follow-up。
+目前狀態：Repository implementation present；2026-07-31 clean migration replay 與
+local offline API E2E 均為 `PASS`；connected staging 與 offline restart/reconnect device
+matrix 仍為 `BLOCKED`。
 
 - AsyncStorage snapshot 與 settings cache 均經 Zod 驗證並依 profile/auth user 隔離，pending 上限 200。
 - NetInfo、typed API errors、離線 catalog adapter、reconnect coordinator 與管理介面已完成。
@@ -348,7 +359,9 @@
 - 德語與繁中搜尋、分頁、CEFR 篩選及相關練習均可操作。
 - 390 px 與桌面寬度無文字遮擋或水平溢出。
 
-目前狀態：Pass。
+目前狀態：Repository implementation present；2026-07-31 clean seed 的 100 題數量、
+CEFR 分布、答案完整性、題型下限與 local knowledge API integration 均已重跑且為
+`PASS`；connected staging 與 native navigation acceptance 仍為 `BLOCKED`。
 
 - 本機 E2E 實測 50 筆單字、published status、分頁、`die Miete` 繁中搜尋、`B1.nebensatz` 文法搜尋；Phase 14 seed 下兩者各解析 10 筆相關練習。
 - invalid difficulty 回傳 `400`，未知 UUID 回傳 `404`。
@@ -371,7 +384,11 @@
 - 乾淨 Supabase reset、Expo config、EAS config、quality gates 與 production builds 通過。
 - Android／iOS 實機仍須執行權限、通知、錄音、離線重連及 Maestro device matrix。
 
-目前狀態：Pass with device follow-up。
+目前狀態：Repository config 與 flow present；2026-07-31 clean Supabase replay、seed
+結構檢查與 API Docker image build 通過。Expo dependency compatibility、peer dependency
+check、Doctor 20/20 與 Android/Web export 亦在相容 patch 更新後通過；目前 app
+`0.1.1`／build `3` 的完整 device matrix 與 release artifact evidence 為 `BLOCKED`，
+不得視為正式發布。
 
 - 詳見 `docs/phase-14-mvp-release-readiness.md`。
 
@@ -393,7 +410,15 @@
 - container 必須以非 root 使用者啟動、暴露明確 port 並具有 health check。
 - format、lint、typecheck、tests、bundle smoke、container build 與既有 Mobile/Admin gates 全數通過。
 
-目前狀態：Implementation complete; connected staging follow-up。
+目前狀態：Repository artifact implementation present；2026-07-31 local Docker image
+build、non-root/layout/health-check metadata、缺少 secret 時的 fail-fast 與
+`APP_ENV=local` credentialed container health 均通過；production default 亦正確拒絕
+fake AI。Linked remote Supabase 的 21-migration head、RLS、function/Storage privilege、
+public-table client mutation/`MAINTAIN` privilege、anonymous denial 與 release seed 已驗證。
+Public GitHub repository 與 free Render staging Blueprint 已建立，但 protected runtime
+values 與 deploy 尚未完成。HTTPS API、remote two-user suite、real AI、
+distributed rate limit 與 operations drills 為 `BLOCKED`。
 
-- 真實 Supabase project、OpenAI API key、公開 API domain 與 EAS connected preview 仍需 credentialed deployment。
+- OpenAI API key、公開 API domain、remote service-role runtime 與 EAS staging build 仍需
+  credentialed deployment。
 - 詳見 `docs/phase-15-api-staging-readiness.md`。

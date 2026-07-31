@@ -16,10 +16,9 @@
 
 ## 3. 技術
 
-- monorepo 使用 pnpm workspace、Turborepo，或先採 pnpm workspace 即可？
-- 離線儲存使用 Expo SQLite、MMKV，或 React Query persistence？
-- E2E 第一版選 Maestro 還是 Detox？
-- 管理後台是否與 API 共用同一套 server package？
+- AsyncStorage 接近 5 MB、pending queue 超過目前每 profile 200 筆上限，或需要跨課程索引
+  查詢時，SQLite 遷移的門檻與資料轉換策略為何？
+- Connected device E2E 在 Maestro guest smoke 之外，哪些 authenticated flows 應優先自動化？
 
 ## 4. 法務與隱私
 
@@ -39,3 +38,14 @@
 - 免費 AI 回答批改採 rolling 24 小時 20 次，可由 `AI_DAILY_FREE_LIMIT` 調整。
 - 預設批改模型為可設定的 `gpt-5.6-luna`；模型與單價皆由 server-only 環境變數控制。
 - Phase 5 採獨立 Node.js API，Supabase 負責 Auth、PostgreSQL、RLS 與 transaction RPC。
+
+## 7. Repository 已決定
+
+- Monorepo 使用 pnpm workspace，未加入 Turborepo。
+- 目前 bounded offline snapshot 使用 AsyncStorage；達到文件化容量／查詢門檻時再評估
+  SQLite，不以擴大單一 JSON item 迴避遷移。
+- 第一條版本化 native smoke 使用 Maestro；Web 行為另由既有 Playwright/Jest 證據覆蓋。
+- Admin 與 API 是不同 workspace/runtime，只共用 validation、types 等穩定 package。
+- 目前 release 不含付款；AI 額度存在，但不是訂閱或付費 entitlement。
+- 帳號刪除採立即、不可逆的 owner Storage 與 Auth 刪除。正式資料保留與法務核准仍是
+  deployment 前的外部決策，不由 repository 實作取代。

@@ -30,6 +30,9 @@ Expo + React Native learner app for Traditional Chinese German learners at B1-C2
 - Immutable writing versions, UTF-16 inline error highlights, ten rubric scores, and revision tasks.
 - First-pass self-revision, second-pass reference text, arbitrary two-version comparison, and recoverable failed evaluations.
 - Common writing-error counts in learning analytics and owner-only writing deletion.
+- Account-data export with short-lived private-audio links and an explicit, destructive
+  account-deletion flow that clears owner-scoped settings, notifications, downloads, pending
+  attempts, progress, and the local Auth session after server deletion.
 
 ## Run
 
@@ -55,13 +58,22 @@ pnpm dlx eas-cli@latest login
 pnpm dlx eas-cli@latest init
 pnpm dlx eas-cli@latest config --platform android --profile preview --non-interactive
 pnpm dlx eas-cli@latest build --platform android --profile preview
+pnpm dlx eas-cli@latest config --platform android --profile staging --non-interactive
+pnpm dlx eas-cli@latest build --platform android --profile staging
 ```
 
-The `preview` profile creates an internally distributed Android APK. The `production` profile keeps the store-distribution defaults. Configure the four `EXPO_PUBLIC_*` values from `.env.example` in the matching EAS environment; never add an OpenAI or Supabase service-role key to a Mobile build.
+The `preview` profile creates a mock-content, internally distributed Android APK. The `staging`
+profile also creates an internal APK, uses the EAS `preview` environment, requires the API content
+source, and applies the same remote-HTTPS configuration checks as a production build. The
+`production` profile keeps the store-distribution defaults. Configure the four `EXPO_PUBLIC_*`
+values from `.env.example` in the matching EAS environment; never add an OpenAI or Supabase
+service-role key to a Mobile build.
 
 Preview builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. It creates no Supabase session, sends no authenticated API requests, and keeps fixed-exercise progress plus preferences in AsyncStorage on the device. AI writing evaluation, knowledge search, audio training, and cloud synchronization stay hidden in Demo mode. API builds do not expose this entrance.
 
-After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with its SHA-256 checksum. Connected preview and production builds remain blocked until remote API and Supabase environments are available.
+After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with
+its SHA-256 checksum. The remote Supabase staging schema exists, but a staging APK remains blocked
+until the HTTPS API and the four public EAS `preview` variables are configured.
 
 After installing a preview build on a connected device, run the credential-free Demo learning flow:
 
