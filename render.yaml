@@ -2,7 +2,6 @@ services:
   - type: web
     name: deutschtrainer-engeln9-api
     runtime: docker
-    plan: free
     region: singapore
     dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /health
@@ -17,8 +16,6 @@ services:
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: OPENAI_API_KEY
         sync: false
       - key: AI_EVALUATION_FAKE_MODE
         value: "false"
