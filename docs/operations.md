@@ -32,15 +32,23 @@ verify behavior across at least two instances before Gate I can pass.
 ## Deployment checklist
 
 1. Build and verify `apps/api/dist/server.mjs`; build the root-context Docker image.
-2. Import the root `render.yaml` from the public GitHub repository.
+2. Import the root `render.yaml` from the public GitHub repository. The Blueprint creates the API,
+   the Next.js public/Admin site, and the Expo Web learner preview.
 3. Enter `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY` only in Render's
    protected `sync: false` environment prompt; never print values.
 4. Confirm `APP_ENV=staging`, `HOST=0.0.0.0`, the platform `PORT`, and fake mode off.
 5. Apply append-only migrations to staging and run remote owner/role/security verification.
 6. Confirm the public HTTPS `/health`, request IDs, structured log ingestion and alert delivery.
-7. Configure Admin and Mobile with public-only remote URLs/publishable keys.
-8. Record Render service/deploy ID, image digest, migration head, app/build identifiers and
-   rollback target.
+7. Configure the Admin and learner Web services with public-only remote URLs/publishable keys.
+   Confirm `/admin` remains server-gated and the learner build uses the API content source.
+8. Verify direct SPA routes on the learner Web URL and the public support, privacy, terms, and
+   account-deletion routes on the Next.js URL.
+9. Record all three Render service/deploy IDs and URLs, the API image digest, migration head,
+   source commit and rollback target.
+
+This URL deployment does not publish an Android or iOS package. Store submission, signing, native
+installation, notifications, microphone permissions, restart, and background behavior remain
+outside this preview.
 
 The selected free Render service is limited to staging: it can sleep after inactivity, uses an
 ephemeral filesystem, and does not prove production availability or operations. Gate I remains

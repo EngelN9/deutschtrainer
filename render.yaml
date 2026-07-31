@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: deutschtrainer-api-staging
+    name: deutschtrainer-engeln9-api
     runtime: docker
     plan: free
     region: singapore
@@ -48,3 +48,60 @@ services:
         value: "60"
       - key: STORAGE_AUDIO_BUCKET
         value: audio-assets
+
+  - type: web
+    name: deutschtrainer-engeln9-site
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: >-
+      corepack enable && corepack prepare pnpm@11.7.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @deutschtrainer/admin build
+    startCommand: corepack pnpm --filter @deutschtrainer/admin start
+    healthCheckPath: /
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.18.0
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+
+  - type: web
+    name: deutschtrainer-engeln9-web
+    runtime: static
+    plan: free
+    buildCommand: >-
+      corepack enable && corepack prepare pnpm@11.7.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @deutschtrainer/mobile export:web
+    staticPublishPath: ./apps/mobile/dist
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DEUTSCHTRAINER_BUILD_PROFILE
+        value: production
+      - key: EXPO_PUBLIC_CONTENT_SOURCE
+        value: api
+      - key: EXPO_PUBLIC_API_BASE_URL
+        sync: false
+      - key: EXPO_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: EXPO_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

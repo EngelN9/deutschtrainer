@@ -34,21 +34,28 @@ learning content. Central collection and provider-backed alerts remain deploymen
 
 ## Render staging target
 
-The repository-selected connected staging target is a Render Docker web service defined by the
-root `render.yaml`:
+The repository-selected connected staging target is a three-service Render Blueprint defined by
+the root `render.yaml`:
 
-- service: `deutschtrainer-api-staging`;
+- API service: `deutschtrainer-engeln9-api`;
+- public/Admin service: `deutschtrainer-engeln9-site`;
+- learner Web Preview: `deutschtrainer-engeln9-web`;
 - region: Singapore;
-- Dockerfile: `apps/api/Dockerfile`;
-- health check: `/health`;
+- API Dockerfile: `apps/api/Dockerfile`;
+- API health check: `/health`;
 - public listener: `HOST=0.0.0.0`, platform `PORT=10000`;
 - deploy trigger: only after GitHub checks pass;
-- plan: free staging instance.
+- plan: free preview services.
 
 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY` use `sync: false` and must be
 entered through Render's protected environment prompt. The Blueprint contains names and non-secret
 limits only. The Dockerfile does not declare secret build arguments, so these values are runtime
 configuration rather than image contents.
+
+The Next.js service receives only `NEXT_PUBLIC_*` values and provides the public information/legal
+pages plus the server-gated Admin console. The Expo static service receives only `EXPO_PUBLIC_*`
+values, enforces the remote HTTPS/API release configuration at build time, and rewrites client-side
+routes to `index.html`. Neither frontend receives the service-role or OpenAI key.
 
 The free plan sleeps after inactivity, has an ephemeral filesystem, and does not provide
 production operability evidence. It is accepted only for connected staging and two-user/real-AI
@@ -125,13 +132,13 @@ The remaining connected handoff requires external runtime credentials and deploy
 
 1. Provision an OpenAI project key with spending and usage limits.
 2. Import `render.yaml` from the public GitHub repository and enter the three `sync: false` runtime
-   values in Render without copying them into source or build arguments.
-3. Deploy the Render service and verify the public HTTPS `/health` reports `aiConfigured: true`.
+   API values plus the approved frontend public values in Render without copying them into source
+   or build arguments.
+3. Deploy all three Render services and verify the API HTTPS `/health`, public/legal routes,
+   server-gated `/admin`, learner login, catalog, fixed grading and direct SPA routes.
 4. Run remote two-user learning, role, Storage, writing/audio and account-deletion suites.
-5. Configure Admin and the EAS `preview` environment with the remote Supabase URL, publishable key,
-   and API base URL.
-6. Build the `staging` Android profile and run authenticated course, grading, writing, audio,
-   offline-sync and deletion acceptance.
+5. Treat this as a browser-accessible connected preview. Google Play and Apple App Store
+   publication are explicitly outside the current deployment.
 
 No service-role key or OpenAI key belongs in GitHub source, a Mobile/Admin public variable, or a GitHub Release asset.
 The process-local private-request limiter is not a distributed production control; a gateway or

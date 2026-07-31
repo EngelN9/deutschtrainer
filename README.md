@@ -79,15 +79,20 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 
 The public source repository is
 [EngelN9/deutschtrainer](https://github.com/EngelN9/deutschtrainer). The root `render.yaml`
-describes a free Render staging web service that builds `apps/api/Dockerfile`, binds
-`0.0.0.0:$PORT`, checks `/health`, and deploys only after GitHub checks pass.
+describes three free Render preview services that deploy only after GitHub checks pass:
+
+- `deutschtrainer-engeln9-api`: Docker API with `/health`;
+- `deutschtrainer-engeln9-site`: Next.js public information site and role-gated `/admin`;
+- `deutschtrainer-engeln9-web`: Expo Web learner preview with SPA route rewrites.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
 
-Render must prompt for `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`; their
-values never belong in this repository. The free service can sleep after inactivity and is staging
-evidence only, not production or operational readiness. Do not configure Mobile/Admin until the
-deployed `/health` endpoint reports `aiConfigured: true` and the remote security suites pass.
+Render must prompt for the API's server-only values and the two frontends' approved public
+Supabase/API settings; their values never belong in this repository. The learner web surface is a
+connected preview, not evidence for native notifications, microphone permissions, installation,
+background reconnect, or app restart. The free services can sleep after inactivity and are staging
+evidence only, not production or operational readiness. No Google Play or Apple App Store
+publication is part of this deployment.
 
 ## Current Scope
 
