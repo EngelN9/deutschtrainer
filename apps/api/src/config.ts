@@ -4,6 +4,7 @@ export interface ApiConfig {
   appEnv: AppEnvironment;
   host: string;
   port: number;
+  corsAllowedOrigins: string[];
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
   openAiApiKey: string;
@@ -23,10 +24,12 @@ export interface ApiConfig {
 }
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
+  const appEnv = readAppEnvironment(env.APP_ENV);
   return {
-    appEnv: readAppEnvironment(env.APP_ENV),
+    appEnv,
     host: env.HOST?.trim() || "127.0.0.1",
     port: readPositiveInteger(env.PORT, 8787),
+    corsAllowedOrigins: readCorsAllowedOrigins(env.CORS_ALLOWED_ORIGINS, appEnv),
     supabaseUrl: env.SUPABASE_URL ?? "http://127.0.0.1:54321",
     supabaseServiceRoleKey: cleanSecret(env.SUPABASE_SERVICE_ROLE_KEY),
     openAiApiKey: cleanSecret(env.OPENAI_API_KEY),
@@ -65,6 +68,8 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     throw new Error("AI_EVALUATION_FAKE_MODE must be false in staging and production.");
   }
 
+  assertRemoteCorsOrigins(config.corsAllowedOrigins);
+
   let supabaseUrl: URL;
   try {
     supabaseUrl = new URL(config.supabaseUrl);
@@ -75,6 +80,26 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
   if (supabaseUrl.protocol !== "https:") {
     throw new Error("SUPABASE_URL must use HTTPS in staging and production.");
   }
+}
+
+export function resolveCorsResponseOrigin(
+  requestOrigin: string | undefined,
+  allowedOrigins: readonly string[],
+): string | undefined {
+  if (!requestOrigin) {
+    return undefined;
+  }
+  if (allowedOrigins.includes("*")) {
+    return "*";
+  }
+
+  let normalizedOrigin: string;
+  try {
+    normalizedOrigin = new URL(requestOrigin).origin;
+  } catch {
+    return undefined;
+  }
+  return allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : undefined;
 }
 
 function cleanSecret(value: string | undefined): string {
@@ -95,6 +120,55 @@ function readAppEnvironment(value: string | undefined): AppEnvironment {
     return normalized;
   }
   throw new Error("APP_ENV must be one of local, test, staging, or production.");
+}
+
+function readCorsAllowedOrigins(value: string | undefined, appEnv: AppEnvironment): string[] {
+  const entries = value
+    ?.split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  if (!entries || entries.length === 0) {
+    return appEnv === "local" || appEnv === "test" ? ["*"] : [];
+  }
+  return [...new Set(entries.map(normalizeCorsOrigin))];
+}
+
+function normalizeCorsOrigin(value: string): string {
+  if (value === "*") {
+    return value;
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("CORS_ALLOWED_ORIGINS must contain valid absolute origins.");
+  }
+  if (url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+    throw new Error("CORS_ALLOWED_ORIGINS entries must be origins without paths or credentials.");
+  }
+  return url.origin;
+}
+
+function assertRemoteCorsOrigins(origins: readonly string[]): void {
+  if (origins.length === 0) {
+    throw new Error("CORS_ALLOWED_ORIGINS is required in staging and production.");
+  }
+
+  for (const origin of origins) {
+    if (origin === "*") {
+      throw new Error("CORS_ALLOWED_ORIGINS must not contain * in staging or production.");
+    }
+    const url = new URL(origin);
+    if (url.protocol !== "https:" || isLocalHostname(url.hostname)) {
+      throw new Error("CORS_ALLOWED_ORIGINS must contain remote HTTPS origins.");
+    }
+  }
+}
+
+function isLocalHostname(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1";
 }
 
 function readPositiveInteger(value: string | undefined, fallback: number): number {
