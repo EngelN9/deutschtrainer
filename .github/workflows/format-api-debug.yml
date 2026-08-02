@@ -1,0 +1,41 @@
+name: Format API debug
+
+on:
+  push:
+    branches:
+      - codex/gates-2-3-readiness
+
+permissions:
+  contents: write
+
+jobs:
+  format-api:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: codex/gates-2-3-readiness
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format and commit API files
+        run: |
+          pnpm exec prettier --write apps/api/src/config.test.ts apps/api/src/dev-server.ts
+          if git diff --quiet -- apps/api/src/config.test.ts apps/api/src/dev-server.ts; then
+            echo 'Files already formatted.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/api/src/config.test.ts apps/api/src/dev-server.ts
+          git commit -m 'style: format API CORS changes'
+          git push origin HEAD:codex/gates-2-3-readiness
