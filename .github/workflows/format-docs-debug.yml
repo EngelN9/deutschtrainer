@@ -1,0 +1,38 @@
+name: Format docs debug
+
+on:
+  push:
+    branches:
+      - codex/gates-2-3-readiness
+
+permissions:
+  contents: read
+
+jobs:
+  format-docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format and print documents
+        run: |
+          pnpm exec prettier --write SPECIFICATION.md DELIVERY_PLAN.md
+          echo 'BEGIN_SPECIFICATION_BASE64'
+          base64 -w 0 SPECIFICATION.md
+          echo
+          echo 'END_SPECIFICATION_BASE64'
+          echo 'BEGIN_DELIVERY_PLAN_BASE64'
+          base64 -w 0 DELIVERY_PLAN.md
+          echo
+          echo 'END_DELIVERY_PLAN_BASE64'
