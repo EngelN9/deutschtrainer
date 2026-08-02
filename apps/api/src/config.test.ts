@@ -1,9 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import {
-  assertApiDeploymentConfig,
-  readApiConfig,
-  resolveCorsResponseOrigin,
-} from "./config";
+import { assertApiDeploymentConfig, readApiConfig, resolveCorsResponseOrigin } from "./config";
 
 describe("API deployment config", () => {
   it("keeps local development defaults", () => {
@@ -72,9 +68,7 @@ describe("API deployment config", () => {
       "CORS_ALLOWED_ORIGINS is required",
     );
     expect(() =>
-      assertApiDeploymentConfig(
-        readApiConfig({ ...baseEnvironment, CORS_ALLOWED_ORIGINS: "*" }),
-      ),
+      assertApiDeploymentConfig(readApiConfig({ ...baseEnvironment, CORS_ALLOWED_ORIGINS: "*" })),
     ).toThrow("must not contain *");
     expect(() =>
       assertApiDeploymentConfig(

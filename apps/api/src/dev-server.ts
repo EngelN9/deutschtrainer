@@ -11,11 +11,7 @@ import {
   UnavailableAudioProvider,
 } from "./audio/openAiAudioProvider";
 import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
-import {
-  assertApiDeploymentConfig,
-  readApiConfig,
-  resolveCorsResponseOrigin,
-} from "./config";
+import { assertApiDeploymentConfig, readApiConfig, resolveCorsResponseOrigin } from "./config";
 import { ContentGenerationService } from "./content-generation/contentGenerationService";
 import {
   DeterministicContentGenerationProvider,
