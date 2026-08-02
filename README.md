@@ -17,6 +17,19 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - `supabase`: local configuration, migrations, seed content, and functions.
 - `docs`: product, architecture, security, testing, and phase reports.
 
+## Important Documentation
+
+- [`AGENTS.md`](AGENTS.md): repository-wide instructions for Codex, AI agents, and contributors.
+- [`SPECIFICATION.md`](SPECIFICATION.md): stable product scope, platform boundaries, and technical principles.
+- [`DELIVERY_PLAN.md`](DELIVERY_PLAN.md): connected-release Gate sequence and instructions for assigning one Gate at a time.
+- [`docs/definition-of-done.md`](docs/definition-of-done.md): authoritative A-J completion and release evidence gates.
+- [`docs/architecture.md`](docs/architecture.md): current system architecture and component boundaries.
+- [`docs/security.md`](docs/security.md): security, privacy, authorization, and data-protection requirements.
+- [`docs/testing-strategy.md`](docs/testing-strategy.md): automated, local integration, connected, and device testing strategy.
+- [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md): measurable product and phase acceptance criteria.
+
+`SPECIFICATION.md` and `DELIVERY_PLAN.md` are reference documents. Do not submit either file to Codex as one monolithic implementation prompt; assign one small, independently reviewable task or Gate.
+
 ## Requirements
 
 - Node.js 20 or newer.
