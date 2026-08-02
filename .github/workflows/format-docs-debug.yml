@@ -1,6 +1,7 @@
 name: Format docs debug
 
 on:
+  pull_request:
   push:
     branches:
       - codex/gates-2-3-readiness
