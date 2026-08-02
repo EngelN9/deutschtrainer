@@ -38,7 +38,9 @@ pnpm --filter @deutschtrainer/api verify:bundle
 pnpm --filter @deutschtrainer/api start
 ```
 
-`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures and require an HTTPS Supabase URL. `SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance.
+`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures, require an HTTPS Supabase URL, and require `CORS_ALLOWED_ORIGINS` to contain an explicit comma-separated list of remote HTTPS browser origins. The Node adapter removes the handler's local wildcard CORS header and only echoes an approved request origin. Native clients and server-to-server requests do not need an `Origin` header.
+
+`SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance. The Render Blueprint prompts for the OpenAI key and evaluation model as protected runtime inputs rather than committing either value.
 
 The API reads platform-provided environment variables first. For local development it also looks for `.env` in the current directory and repository root. Set `API_ENV_FILE` only when an explicit local environment-file path is needed; containers should inject secrets through their runtime rather than copy an environment file into the image.
 
