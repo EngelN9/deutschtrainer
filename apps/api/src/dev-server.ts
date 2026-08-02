@@ -11,7 +11,11 @@ import {
   UnavailableAudioProvider,
 } from "./audio/openAiAudioProvider";
 import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
-import { assertApiDeploymentConfig, readApiConfig } from "./config";
+import {
+  assertApiDeploymentConfig,
+  readApiConfig,
+  resolveCorsResponseOrigin,
+} from "./config";
 import { ContentGenerationService } from "./content-generation/contentGenerationService";
 import {
   DeterministicContentGenerationProvider,
@@ -189,14 +193,25 @@ const server = createServer(async (incoming, outgoing) => {
       responseHeaders[key] = value;
     });
     responseHeaders["x-request-id"] = requestId;
+    applyCorsResponseHeaders(
+      responseHeaders,
+      readSingleHeader(incoming.headers.origin),
+      config.corsAllowedOrigins,
+    );
     status = response.status;
     outgoing.writeHead(response.status, responseHeaders);
     outgoing.end(Buffer.from(await response.arrayBuffer()));
   } catch {
-    outgoing.writeHead(500, {
+    const responseHeaders: Record<string, string> = {
       "content-type": "application/json; charset=utf-8",
       "x-request-id": requestId,
-    });
+    };
+    applyCorsResponseHeaders(
+      responseHeaders,
+      readSingleHeader(incoming.headers.origin),
+      config.corsAllowedOrigins,
+    );
+    outgoing.writeHead(500, responseHeaders);
     outgoing.end(
       JSON.stringify({
         error: {
@@ -283,6 +298,34 @@ function toWebHeaders(headers: IncomingHttpHeaders): Headers {
     }
   }
   return result;
+}
+
+function applyCorsResponseHeaders(
+  headers: Record<string, string>,
+  requestOrigin: string | undefined,
+  allowedOrigins: readonly string[],
+): void {
+  delete headers["access-control-allow-origin"];
+  const responseOrigin = resolveCorsResponseOrigin(requestOrigin, allowedOrigins);
+  if (!responseOrigin) {
+    return;
+  }
+
+  headers["access-control-allow-origin"] = responseOrigin;
+  if (responseOrigin !== "*") {
+    const varyValues = new Set(
+      (headers.vary ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    );
+    varyValues.add("Origin");
+    headers.vary = [...varyValues].join(", ");
+  }
+}
+
+function readSingleHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function isMissingFileError(error: unknown): boolean {
