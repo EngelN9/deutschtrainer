@@ -19,7 +19,9 @@ Phase 6 delivers a complete B1-C2 writing loop for Traditional Chinese learners:
 3. API authenticates the Supabase access token and loads protected prompt rules with the service role.
 4. API computes the same whitespace word count enforced by PostgreSQL.
 5. `prepare_writing_version` saves the original text and word diff before any provider request.
-6. The 10-request rolling 24-hour quota, provider call, one retry, token usage, latency, and estimated cost are handled server-side.
+6. The default two-success rolling 24-hour platform quota, provider call, one retry, token usage,
+   latency, and estimated cost are handled server-side. Idempotent replay and provider failure do
+   not consume the learner quota; each new provider attempt still counts toward the global hard cap.
 7. JSON Schema, Zod, and business validation check all scores, spans, skills, language, reference policy, repeated errors, CEFR deviation, and unsafe output.
 8. `record_writing_feedback` attaches accepted feedback and updates the submission status atomically.
 9. Mobile invalidates the writing workspace query and renders the stored version and feedback.

@@ -29,13 +29,18 @@
 
 ## 5. 商業與營運
 
-- MVP 是否需要區分免費/付費額度，即使不做訂閱付款？
+- 第二階段 BYOK 的 managed KMS 供應商、key rotation 與復原程序何時完成 threat model？
 - 管理後台第一版是否需要完整匿名化學習統計，或先以種子資料與內部帳號測試？
 - 是否需要建立內容審核 SLA 或審核優先級？
 
-## 6. Phase 5 已決定
+## 6. AI entitlement 已決定
 
-- 免費 AI 回答批改採 rolling 24 小時 20 次，可由 `AI_DAILY_FREE_LIMIT` 調整。
+- 第一階段只提供已驗證 learner 的平台免費額度：一般批改 5、作文 2、TTS 5、STT 2，
+  均採 rolling 24 小時並由 server-only 環境變數調整。
+- 平台 provider attempt 採 100/UTC day 資料庫原子硬上限；OpenAI budget 只作告警，
+  不取代硬上限。
+- BYOK 不與第一階段同時推出；完成正式 threat model 與 KMS-backed envelope encryption
+  前不得顯示或宣稱可用。
 - 預設批改模型為可設定的 `gpt-5.6-luna`；模型與單價皆由 server-only 環境變數控制。
 - Phase 5 採獨立 Node.js API，Supabase 負責 Auth、PostgreSQL、RLS 與 transaction RPC。
 

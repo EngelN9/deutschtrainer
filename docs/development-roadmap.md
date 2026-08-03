@@ -151,7 +151,7 @@
 
 - `translation` 與 `free_response` 共用受保護的 `POST /ai/evaluate-response` 流程。
 - Structured Outputs 後仍執行 Zod、技能關聯、CEFR、一致性及禁止內容檢查，失敗最多重試一次。
-- learner-scoped cache、24 小時 20 次額度、token、latency 與估算成本均由後端處理。
+- learner-scoped cache、一般批改 5/rolling 24h 平台額度、token、latency 與估算成本均由後端處理。
 - AI 回饋、Attempt、ErrorRecord、Mastery、ReviewQueue 與 LessonProgress 由 service-role-only RPC 原子寫入。
 - Playwright 已驗證斷線保留回答、重試成功、繁中回饋，以及 390 px 手機版無水平溢出。
 
@@ -413,10 +413,11 @@ check、Doctor 20/20 與 Android/Web export 亦在相容 patch 更新後通過�
 目前狀態：Repository artifact implementation present；2026-07-31 local Docker image
 build、non-root/layout/health-check metadata、缺少 secret 時的 fail-fast 與
 `APP_ENV=local` credentialed container health 均通過；production default 亦正確拒絕
-fake AI。Linked remote Supabase 的 21-migration head、RLS、function/Storage privilege、
+fake AI。Linked remote Supabase 的既有 21-migration head、RLS、function/Storage privilege、
 public-table client mutation/`MAINTAIN` privilege、anonymous denial 與 release seed 已驗證。
-Public GitHub repository 與 free Render staging Blueprint 已建立，但 protected runtime
-values 與 deploy 尚未完成。HTTPS API、remote two-user suite、real AI、
+Public GitHub repository 與三個 free Render Preview 服務已公開；2026-08-01 HTTPS API
+`/health` 為 `200`，但 `aiConfigured:false`，且目前 remote 尚未套用第 22 個原子 quota
+migration 或目前 branch deployment。remote two-user suite、real AI、一般 private-request
 distributed rate limit 與 operations drills 為 `BLOCKED`。
 
 - OpenAI API key、公開 API domain、remote service-role runtime 與 EAS staging build 仍需

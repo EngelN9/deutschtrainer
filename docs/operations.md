@@ -2,9 +2,10 @@
 
 ## Scope and current boundary
 
-This runbook defines the production acceptance contract. It does not claim that monitoring,
-backups, restore drills, distributed rate limiting, deployment, or rollback have already been
-configured. Until provider-backed evidence exists, those items remain `BLOCKED`.
+This runbook defines the production acceptance contract. Three free Render Preview services are
+publicly reachable, but this does not claim that monitoring, backups, restore drills, distributed
+private-request limiting, real AI, paid capacity, or rollback rehearsal have been configured.
+Until provider-backed evidence exists, those items remain `BLOCKED`.
 
 ## Runtime health and request tracing
 

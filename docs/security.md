@@ -42,6 +42,10 @@
 - conversation：目前沒有 API 或 database tables；未來實作時必須採 owner isolation，
   必要審核只可使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
+- ai_quota_reservations / ai_provider_call_reservations：無 anon/authenticated table grant 或
+  policy；只由 service role 呼叫固定 `search_path` 的 reservation/finalization RPC。帳號刪除
+  透過 profile FK cascade 移除個人 quota rows；不含 key／內容的 provider-call 全域計數將
+  FK 設為 null 後保留，避免刪帳繞過 UTC-day 硬上限。
 - audit_logs：admin only。
 
 ## 4. Secrets
@@ -50,6 +54,12 @@
 - `SUPABASE_SERVICE_ROLE_KEY` 只存在 backend runtime。
 - Mobile 只允許 `EXPO_PUBLIC_SUPABASE_URL`、`EXPO_PUBLIC_SUPABASE_ANON_KEY` 與 `EXPO_PUBLIC_API_BASE_URL`。
 - CI secrets 不輸出到 logs。
+- `AI_PUBLIC_ENABLED` 是 server-only emergency switch；staging/production 啟用時若缺少
+  `OPENAI_API_KEY`，API 必須在啟動時 fail fast。健康檢查只回傳 boolean 狀態，不回傳 key。
+- BYOK 尚未實作。完成 KMS-backed envelope encryption、threat model、刪除與備份驗證前，
+  Mobile、Admin、API contract 與資料庫都不得接受或保存使用者 OpenAI Key。
+- staging／production 的 `CORS_ALLOWED_ORIGINS` 必須是精確 HTTPS origin allowlist；API 不得
+  回傳 wildcard，也不得對未允許的 browser origin 回傳 CORS header。
 
 Gate 3 remote evidence verifies zero `PUBLIC` function execute privileges, service-role-only
 account deletion, protected writing/listening tables without client grants, 36/36 public tables
@@ -82,10 +92,13 @@ migration must verify its effective client privileges.
 
 - 固定題型提交：60/min。
 - 課程讀取：120/min。
-- AI 自由回答：依方案限制，例如免費 20/day。
-- AI 作文：依方案限制，例如免費 10/day。
-- TTS：依受信任內容 hash 快取，預設免費 20/day；cache hit 不占新生成額度。
-- STT：預設免費 10/day。
+- AI 自由回答：已驗證 learner 預設 5/rolling 24h。
+- AI 作文：已驗證 learner 預設 2/rolling 24h。
+- TTS：依受信任內容 hash 快取，預設 5/rolling 24h；cache hit 不占額度。
+- STT：已驗證 learner 預設 2/rolling 24h。
+- 平台所有 learner AI provider attempts 合計預設 100/UTC day；資料庫 advisory lock 與
+  unique constraints 防止並行穿透。provider 失敗釋放個人額度，但已發生的 provider attempt
+  仍保留在全域硬上限與 usage/cost log。
 - AI 題目草稿：內容編輯與 admin 預設 20/rolling 24h；idempotent replay 不重複計數。
 - 對話：尚未實作；未來必須同時受 scenario maximumTurns、daily limit 與 owner
   isolation 限制。

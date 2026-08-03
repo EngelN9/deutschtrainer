@@ -128,16 +128,20 @@ runner and still carries client defaults. Application tables must therefore be c
 reviewed append-only migrations, with an effective-privilege assertion such as the current
 hardening migrations; dashboard-created application tables are outside the accepted workflow.
 
-The remaining connected handoff requires external runtime credentials and deployment:
+The public GitHub repository and all three free Render Preview services are now reachable. On
+2026-08-01 the public API `/health` returned `200` with `aiConfigured:false`; the response did not
+yet include the new `aiPublicEnabled` field, proving that the current branch and migration head are
+not deployed. The remaining connected handoff is:
 
 1. Provision an OpenAI project key with spending and usage limits.
-2. Import `render.yaml` from the public GitHub repository and enter the three `sync: false` runtime
-   API values plus the approved frontend public values in Render without copying them into source
-   or build arguments.
-3. Deploy all three Render services and verify the API HTTPS `/health`, public/legal routes,
-   server-gated `/admin`, learner login, catalog, fixed grading and direct SPA routes.
+2. Apply the append-only AI quota migration after review, deploy the current branch with
+   `AI_PUBLIC_ENABLED=false`, and verify the new `/health` contract plus entitlement endpoint.
+3. Verify public/legal routes, server-gated `/admin`, learner login, catalog, fixed grading and
+   direct SPA routes against that deploy identifier.
 4. Run remote two-user learning, role, Storage, writing/audio and account-deletion suites.
-5. Treat this as a browser-accessible connected preview. Google Play and Apple App Store
+5. Enter the OpenAI key only in the Render API secret store, keep fake mode disabled, perform real
+   AI quality/cost/latency acceptance, then explicitly enable the public switch.
+6. Treat this as a browser-accessible connected preview. Google Play and Apple App Store
    publication are explicitly outside the current deployment.
 
 No service-role key or OpenAI key belongs in GitHub source, a Mobile/Admin public variable, or a GitHub Release asset.

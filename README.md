@@ -51,7 +51,7 @@ pnpm dev:mobile
 pnpm dev:admin
 ```
 
-Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. Set `OPENAI_API_KEY` for real evaluation and content generation. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in production.
+Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it without an API-only `OPENAI_API_KEY` fails fast. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, enable both flags only for that local API process; this remains test evidence, not real-AI acceptance.
 
 The mobile content source is controlled by:
 
@@ -84,6 +84,7 @@ pnpm --filter @deutschtrainer/api verify:offline-sync:local
 pnpm --filter @deutschtrainer/api verify:knowledge:local
 pnpm --filter @deutschtrainer/api verify:content-readiness:local
 pnpm --filter @deutschtrainer/api verify:account-data:local
+pnpm --filter @deutschtrainer/api verify:ai-quota:local
 ```
 
 Local mobile web is available at `http://localhost:8081`; the admin console uses `http://localhost:3000`. Supabase API, Studio, and Mailpit normally use ports `54321`, `54323`, and `54324`.
@@ -94,18 +95,27 @@ The public source repository is
 [EngelN9/deutschtrainer](https://github.com/EngelN9/deutschtrainer). The root `render.yaml`
 describes three free Render preview services that deploy only after GitHub checks pass:
 
-- `deutschtrainer-engeln9-api`: Docker API with `/health`;
-- `deutschtrainer-engeln9-site`: Next.js public information site and role-gated `/admin`;
-- `deutschtrainer-engeln9-web`: Expo Web learner preview with SPA route rewrites.
+- [deutschtrainer-engeln9-api](https://deutschtrainer-engeln9-api.onrender.com/health): Docker API with `/health`;
+- [deutschtrainer-engeln9-site](https://deutschtrainer-engeln9-site.onrender.com): Next.js public information site and role-gated `/admin`;
+- [deutschtrainer-engeln9-web](https://deutschtrainer-engeln9-web.onrender.com): Expo Web learner preview with SPA route rewrites.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
 
-Render must prompt for the API's server-only values and the two frontends' approved public
-Supabase/API settings; their values never belong in this repository. The learner web surface is a
+Render must prompt for the API's server-only values, an exact HTTPS-only
+`CORS_ALLOWED_ORIGINS` list for the two browser surfaces, and the two frontends' approved public
+Supabase/API settings; their values never belong in this repository. Keep
+`AI_PUBLIC_ENABLED=false` for the responsive-preview rollout. The learner web surface is a
 connected preview, not evidence for native notifications, microphone permissions, installation,
 background reconnect, or app restart. The free services can sleep after inactivity and are staging
 evidence only, not production or operational readiness. No Google Play or Apple App Store
-publication is part of this deployment.
+publication is part of this deployment. `/health` exposes `aiConfigured` and `aiPublicEnabled`
+without exposing credentials; both provider configuration and the public switch must be true before
+real learner AI acceptance begins.
+
+The learner App uses width-based responsive breakpoints rather than device names: compact below
+600 px, medium from 600–1023 px, and wide from 1024 px. The public site and Admin console provide
+their corresponding mobile/tablet/desktop layouts. The quota and viewport contracts are documented
+in `docs/responsive-ai-entitlement.md`.
 
 ## Current Scope
 
@@ -129,7 +139,7 @@ These layers must be reported separately:
   public URLs, release artifacts, and any applicable store review.
 
 Until every required A–J gate in `docs/definition-of-done.md` has reproducible evidence, this project
-must be described as a feature-rich preview whose deployment and device acceptance remain blocked,
-not as complete, publicly available, production-ready, or formally released.
+must be described as a publicly reachable, feature-rich Preview whose real-AI, operations and
+device acceptance remain blocked, not as complete, production-ready or formally released.
 
 See `docs/phase-15-api-staging-readiness.md` for the production bundle, container contract, staging environment boundary, and credentialed deployment handoff.

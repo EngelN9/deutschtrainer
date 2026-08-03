@@ -64,11 +64,14 @@ The migration also creates private `listening-audio` and `speaking-audio` bucket
 ```text
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TRANSCRIPTION_MODEL=whisper-1
-AI_AUDIO_TTS_DAILY_FREE_LIMIT=20
-AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT=10
+AI_AUDIO_TTS_DAILY_FREE_LIMIT=5
+AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT=2
 ```
 
-`AI_EVALUATION_FAKE_MODE=true` also enables deterministic local audio fixtures. It must remain disabled in production.
+`AI_PUBLIC_ENABLED=false` keeps learner-facing AI globally disabled. Enabling it in staging or
+production requires an API-only `OPENAI_API_KEY`; missing configuration fails fast.
+`AI_EVALUATION_FAKE_MODE=true` also enables deterministic local audio fixtures. It must remain
+disabled in staging and production.
 
 ## Local Verification
 

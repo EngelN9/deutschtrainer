@@ -198,6 +198,8 @@ isolation 仍為 `BLOCKED`。
 ## 13. Phase 11 驗收
 
 - `GET /users/me/settings` 只回傳登入者的 profile、程度、每日目標與通知偏好。
+- `GET /users/me/ai-entitlement` 只回傳平台服務狀態、5/2/5/2 的 rolling 24h
+  used/remaining/resetsAt；不回傳 provider key 或其他使用者資料。
 - `PUT /users/me/onboarding` 原子保存 current/target level、每日分鐘、學習目標與 onboarding 狀態。
 - `PUT /users/me/notification-preferences` 驗證 HH:mm、IANA timezone、2-14 天未學習區間與各事件開關。
 - authenticated 不可直接 update profile、insert/update preferences 或 levels，也不可執行兩個 service wrappers。
@@ -256,8 +258,10 @@ navigation acceptance 仍為 `BLOCKED`。
 - Maestro guest smoke 不依賴帳密或 secrets，覆蓋歡迎、登入、忘記密碼與返回登入。
 - 本機可自動化檢查須通過；Android／iOS 權限、通知、錄音、離線與安裝式 smoke 保留為 device follow-up。
 
-目前結果：Repository config 與 guest flow 已版本化；2026-07-31 clean local reset 套用
-21 個 migrations，且直接資料庫檢查確認 100 題、B1 50／B2 25／C1 13／C2 12、100 答案
+目前結果：Repository config 與 guest flow 已版本化；2026-08-01 clean local reset 套用
+23 個 migrations（包含原子 AI public quota 與刪帳後保留全平台計數的 forward migration），
+且直接資料庫檢查確認 100 題、
+B1 50／B2 25／C1 13／C2 12、100 答案
 rows 與八種題型下限；Expo compatibility、peer check、Doctor 20/20 及 Android/Web export
 亦通過。qualified human-language review 附件、目前 `0.1.1`／build `3` 的 Android 安裝
 及完整 device matrix 沒有同 revision 可重現證據，因此仍為 `BLOCKED`。
@@ -275,11 +279,12 @@ rows 與八種題型下限；Expo compatibility、peer check、Doctor 20/20 及 
 成功，image 使用 `node`、包含 health check 與 plain-Node command，runtime layout 不含
 `.env`/`.git`，缺少 service-role key 時正確 fail fast；`APP_ENV=local` credentialed
 container `/health` 與 Docker health 均通過，production default 亦正確拒絕 fake AI。
-Linked remote Supabase 已套用 21 個 migrations，remote static/anonymous security、現有
+Linked remote Supabase 目前仍套用前 21 個 migrations，remote static/anonymous security、現有
 public tables 與 repository-owned defaults 的 client mutation/`MAINTAIN` privilege 收斂，
-以及 release seed checks 通過。Public GitHub repository 與 Render staging Blueprint 已建立；
-protected runtime values 尚未輸入，HTTPS API deployment、remote two-user suite、real AI、
-EAS staging build 與 operations 仍為 `BLOCKED`。
+以及 release seed checks 通過。Public GitHub repository 與三個 Render Preview 服務已建立並
+可透過 HTTPS 存取；2026-08-01 API `/health` 回傳 `200` 與 `aiConfigured:false`，且舊部署
+尚未包含新 `aiPublicEnabled` 欄位。第 22 個 quota migration、目前 branch deployment、
+remote two-user suite、real AI、EAS staging build 與 operations 仍為 `BLOCKED`。
 
 ## 18. 帳號資料權利驗收
 

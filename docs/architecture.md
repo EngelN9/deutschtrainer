@@ -98,36 +98,37 @@ AI 題型流程：
 
 所有 API 需定義 request schema、response schema、權限、錯誤碼、rate limit、cache、idempotency。
 
-| Method | Path                               | Request Schema                       | Response Schema                   | 權限                    | Rate limit       | Cache            | Idempotency |
-| ------ | ---------------------------------- | ------------------------------------ | --------------------------------- | ----------------------- | ---------------- | ---------------- | ----------- |
-| GET    | /courses                           | CourseListRequest                    | CourseListResponse                | public published        | 120/min          | yes              | no          |
-| GET    | /courses/:courseId                 | CourseDetailRequest                  | CourseDetailResponse              | public published        | 120/min          | yes              | no          |
-| GET    | /lessons/:lessonId                 | LessonDetailRequest                  | LessonDetailResponse              | public published        | 120/min          | yes              | no          |
-| GET    | /vocabulary                        | VocabularyListRequest                | VocabularyListResponse            | public published        | 120/min          | yes              | no          |
-| GET    | /vocabulary/:itemId                | path UUID                            | VocabularyDetailResponse          | public published        | 120/min          | yes              | no          |
-| GET    | /grammar-topics                    | GrammarTopicListRequest              | GrammarTopicListResponse          | public published        | 120/min          | yes              | no          |
-| GET    | /grammar-topics/:topicId           | path UUID                            | GrammarTopicDetailResponse        | public published        | 120/min          | yes              | no          |
-| POST   | /attempts                          | SubmitAttemptRequest                 | SubmitAttemptResponse             | learner self            | 60/min           | no               | yes         |
-| GET    | /users/me/progress                 | ProgressRequest                      | ProgressResponse                  | learner self            | 60/min           | no               | no          |
-| GET    | /users/me/reviews                  | ReviewQueueRequest                   | ReviewQueueResponse               | learner self            | 60/min           | no               | no          |
-| POST   | /reviews/:reviewId/complete        | CompleteReviewRequest                | CompleteReviewResponse            | learner self            | 60/min           | no               | yes         |
-| GET    | /users/me/settings                 | none                                 | UserSettingsResponse              | learner self            | 60/min           | no               | no          |
-| GET    | /users/me/export                   | none                                 | AccountDataExportResponse         | active account self     | 60/min           | no               | no          |
-| DELETE | /users/me                          | AccountDeletionRequest               | AccountDeletionResponse           | account self            | 60/min           | no               | replay safe |
-| PUT    | /users/me/onboarding               | OnboardingRequest                    | UserSettingsResponse              | learner self            | 60/min           | no               | no          |
-| PUT    | /users/me/notification-preferences | UpdateNotificationPreferencesRequest | NotificationPreferencesResponse   | learner self            | 60/min           | no               | no          |
-| GET    | /users/me/writing                  | none                                 | WritingWorkspaceResponse          | learner self            | 60/min           | no               | no          |
-| DELETE | /writing/submissions/:id           | path UUID                            | DeleteWritingSubmissionResponse   | learner self            | 60/min           | no               | no          |
-| POST   | /ai/evaluate-response              | EvaluateResponseRequest              | EvaluateResponseResponse          | learner self            | 20/rolling 24h   | learner scoped   | yes         |
-| POST   | /ai/evaluate-writing               | EvaluateWritingRequest               | EvaluateWritingResponse           | learner self            | 10/day free tier | no               | yes         |
-| POST   | /admin/ai/exercise-drafts          | GenerateExerciseDraftRequest         | GenerateExerciseDraftResponse     | content_editor or admin | 20/rolling 24h   | replay only      | yes         |
-| GET    | /users/me/audio-learning           | none                                 | AudioLearningWorkspaceResponse    | learner self            | 60/min           | no               | no          |
-| POST   | /listening/activity                | ListeningActivityRequest             | ListeningActivityResponse         | learner self            | 60/min           | no               | no          |
-| POST   | /listening/reveal-transcript       | RevealListeningTranscriptRequest     | RevealListeningTranscriptResponse | learner self            | 60/min           | no               | no          |
-| POST   | /listening/submit-dictation        | SubmitDictationRequest               | SubmitDictationResponse           | learner self            | 60/min           | no               | yes         |
-| POST   | /audio/text-to-speech              | TextToSpeechRequest                  | TextToSpeechResponse              | learner self or editor  | 60/day free tier | yes by text hash | yes         |
-| POST   | /audio/transcribe                  | TranscribeRequest                    | TranscribeResponse                | learner self            | 30/day free tier | no               | yes         |
-| DELETE | /speaking/submissions/:id          | path UUID                            | DeleteSpeakingSubmissionResponse  | learner self            | 60/min           | no               | no          |
+| Method | Path                               | Request Schema                       | Response Schema                   | 權限                    | Rate limit     | Cache            | Idempotency |
+| ------ | ---------------------------------- | ------------------------------------ | --------------------------------- | ----------------------- | -------------- | ---------------- | ----------- |
+| GET    | /courses                           | CourseListRequest                    | CourseListResponse                | public published        | 120/min        | yes              | no          |
+| GET    | /courses/:courseId                 | CourseDetailRequest                  | CourseDetailResponse              | public published        | 120/min        | yes              | no          |
+| GET    | /lessons/:lessonId                 | LessonDetailRequest                  | LessonDetailResponse              | public published        | 120/min        | yes              | no          |
+| GET    | /vocabulary                        | VocabularyListRequest                | VocabularyListResponse            | public published        | 120/min        | yes              | no          |
+| GET    | /vocabulary/:itemId                | path UUID                            | VocabularyDetailResponse          | public published        | 120/min        | yes              | no          |
+| GET    | /grammar-topics                    | GrammarTopicListRequest              | GrammarTopicListResponse          | public published        | 120/min        | yes              | no          |
+| GET    | /grammar-topics/:topicId           | path UUID                            | GrammarTopicDetailResponse        | public published        | 120/min        | yes              | no          |
+| POST   | /attempts                          | SubmitAttemptRequest                 | SubmitAttemptResponse             | learner self            | 60/min         | no               | yes         |
+| GET    | /users/me/progress                 | ProgressRequest                      | ProgressResponse                  | learner self            | 60/min         | no               | no          |
+| GET    | /users/me/reviews                  | ReviewQueueRequest                   | ReviewQueueResponse               | learner self            | 60/min         | no               | no          |
+| POST   | /reviews/:reviewId/complete        | CompleteReviewRequest                | CompleteReviewResponse            | learner self            | 60/min         | no               | yes         |
+| GET    | /users/me/settings                 | none                                 | UserSettingsResponse              | learner self            | 60/min         | no               | no          |
+| GET    | /users/me/ai-entitlement           | none                                 | AiEntitlementResponse             | active account self     | 60/min         | private no-store | no          |
+| GET    | /users/me/export                   | none                                 | AccountDataExportResponse         | active account self     | 60/min         | no               | no          |
+| DELETE | /users/me                          | AccountDeletionRequest               | AccountDeletionResponse           | account self            | 60/min         | no               | replay safe |
+| PUT    | /users/me/onboarding               | OnboardingRequest                    | UserSettingsResponse              | learner self            | 60/min         | no               | no          |
+| PUT    | /users/me/notification-preferences | UpdateNotificationPreferencesRequest | NotificationPreferencesResponse   | learner self            | 60/min         | no               | no          |
+| GET    | /users/me/writing                  | none                                 | WritingWorkspaceResponse          | learner self            | 60/min         | no               | no          |
+| DELETE | /writing/submissions/:id           | path UUID                            | DeleteWritingSubmissionResponse   | learner self            | 60/min         | no               | no          |
+| POST   | /ai/evaluate-response              | EvaluateResponseRequest              | EvaluateResponseResponse          | verified learner self   | 5/rolling 24h  | learner scoped   | yes         |
+| POST   | /ai/evaluate-writing               | EvaluateWritingRequest               | EvaluateWritingResponse           | verified learner self   | 2/rolling 24h  | no               | yes         |
+| POST   | /admin/ai/exercise-drafts          | GenerateExerciseDraftRequest         | GenerateExerciseDraftResponse     | content_editor or admin | 20/rolling 24h | replay only      | yes         |
+| GET    | /users/me/audio-learning           | none                                 | AudioLearningWorkspaceResponse    | learner self            | 60/min         | no               | no          |
+| POST   | /listening/activity                | ListeningActivityRequest             | ListeningActivityResponse         | learner self            | 60/min         | no               | no          |
+| POST   | /listening/reveal-transcript       | RevealListeningTranscriptRequest     | RevealListeningTranscriptResponse | learner self            | 60/min         | no               | no          |
+| POST   | /listening/submit-dictation        | SubmitDictationRequest               | SubmitDictationResponse           | learner self            | 60/min         | no               | yes         |
+| POST   | /audio/text-to-speech              | TextToSpeechRequest                  | TextToSpeechResponse              | verified learner self   | 5/rolling 24h  | yes by text hash | yes         |
+| POST   | /audio/transcribe                  | TranscribeRequest                    | TranscribeResponse                | verified learner self   | 2/rolling 24h  | no               | yes         |
+| DELETE | /speaking/submissions/:id          | path UUID                            | DeleteSpeakingSubmissionResponse  | learner self            | 60/min         | no               | no          |
 
 多輪 AI 對話仍是規劃中的 domain capability；目前 API 沒有 `/conversations` endpoints，不得在
 Mobile、文件或 release claim 中描述為可用功能。
@@ -145,7 +146,7 @@ Mobile、文件或 release claim 中描述為可用功能。
 }
 ```
 
-錯誤碼至少包含 VALIDATION_ERROR、UNAUTHORIZED、FORBIDDEN、NOT_FOUND、RATE_LIMITED、NETWORK_ERROR、DATABASE_ERROR、AI_TIMEOUT、AI_RESPONSE_INVALID、AUDIO_UPLOAD_FAILED、CONTENT_NOT_PUBLISHED。
+錯誤碼至少包含 VALIDATION_ERROR、UNAUTHORIZED、FORBIDDEN、NOT_FOUND、CONFLICT、RATE_LIMITED、NETWORK_ERROR、DATABASE_ERROR、AI_TIMEOUT、AI_RESPONSE_INVALID、AI_NOT_CONFIGURED、AI_QUOTA_EXCEEDED、AI_GLOBALLY_DISABLED、AUDIO_UPLOAD_FAILED、CONTENT_NOT_PUBLISHED。
 
 ## 6. 離線與同步
 
@@ -195,15 +196,27 @@ Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。�
 - OPENAI_INPUT_COST_PER_MILLION
 - OPENAI_OUTPUT_COST_PER_MILLION
 - AI_DAILY_FREE_LIMIT
+- AI_WRITING_DAILY_FREE_LIMIT
+- AI_AUDIO_TTS_DAILY_FREE_LIMIT
+- AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT
+- AI_PUBLIC_ENABLED
+- AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT
 - AI_EVALUATION_FAKE_MODE (local verification only)
 - STORAGE_AUDIO_BUCKET
 - APP_ENV
+- CORS_ALLOWED_ORIGINS
 
 只有 public-safe 變數可進入 mobile bundle。service role key 與 OpenAI key 僅存在 backend runtime。
 實際變數名稱與必要性以 root、Mobile 與 Admin 的 `.env.example` 為準；不得從 runtime
 輸出完整環境。
 EAS production profile 固定 API content source，並在 app config 拒絕缺值、placeholder、
 localhost 與非 HTTPS remote URL；Admin 缺少任一必要 public URL/key 時不啟用管理後台。
+API 在 staging／production 要求 `CORS_ALLOWED_ORIGINS` 為精確的 HTTPS origins；不接受
+wildcard、localhost 或 path，且只對被允許的 request origin 回傳 CORS header 與 `Vary: Origin`。
+
+Learner App 的共用 shell 以 viewport 寬度分類 compact（`<600`）、medium
+（`600–1023`）與 wide（`>=1024`）。compact 使用單欄與可水平捲動的七項底部導覽，wide
+使用 184 px 左側 rail；長篇 detail/form 保持約 760 px，主頁內容上限約 1120 px。
 
 ## 9. 主要 TypeScript 模型
 
