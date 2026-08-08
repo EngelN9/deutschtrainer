@@ -9,6 +9,12 @@ describe("API deployment config", () => {
     expect(config.host).toBe("127.0.0.1");
     expect(config.port).toBe(8787);
     expect(config.corsAllowedOrigins).toEqual(["*"]);
+    expect(config.publicAiEnabled).toBe(false);
+    expect(config.dailyFreeLimit).toBe(5);
+    expect(config.writingDailyFreeLimit).toBe(2);
+    expect(config.audioTtsDailyFreeLimit).toBe(5);
+    expect(config.audioTranscriptionDailyFreeLimit).toBe(2);
+    expect(config.globalAiDailyProviderCallLimit).toBe(100);
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
   });
 
@@ -44,6 +50,31 @@ describe("API deployment config", () => {
     expect(() => assertApiDeploymentConfig(config)).toThrow(
       "AI_EVALUATION_FAKE_MODE must be false",
     );
+  });
+
+  it("fails fast when public AI is enabled without an API-only provider key", () => {
+    const config = readApiConfig({
+      APP_ENV: "staging",
+      CORS_ALLOWED_ORIGINS: "https://app.example.com",
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "staging-service-key",
+      AI_PUBLIC_ENABLED: "true",
+    });
+
+    expect(() => assertApiDeploymentConfig(config)).toThrow(
+      "OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true",
+    );
+  });
+
+  it("allows public AI only with deterministic fixtures in local test evidence", () => {
+    const config = readApiConfig({
+      APP_ENV: "local",
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      AI_EVALUATION_FAKE_MODE: "true",
+      AI_PUBLIC_ENABLED: "true",
+    });
+
+    expect(() => assertApiDeploymentConfig(config)).not.toThrow();
   });
 
   it("requires HTTPS Supabase in staging and production", () => {

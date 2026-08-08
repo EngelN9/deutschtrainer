@@ -6,6 +6,7 @@ import {
   BellOff,
   Clock3,
   Download,
+  Sparkles,
   Settings as SettingsIcon,
   Trash2,
 } from "lucide-react-native";
@@ -22,6 +23,7 @@ import {
 } from "react-native";
 import {
   ACCOUNT_DELETION_CONFIRMATION,
+  type AiEntitlementResponse,
   type UpdateNotificationPreferencesRequest,
 } from "@deutschtrainer/validation";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
@@ -36,9 +38,11 @@ import {
 } from "../src/features/notifications/notificationRuntime";
 import type { NotificationPermissionState } from "../src/features/notifications/notificationTypes";
 import {
+  useAiEntitlement,
   useUpdateNotificationPreferences,
   useUserSettings,
 } from "../src/features/settings/useUserSettings";
+import { useResponsiveLayout } from "../src/layout/useResponsiveLayout";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { exportAccountData } from "../src/features/settings/accountDataRepository";
 
@@ -52,7 +56,9 @@ export default function SettingsScreen() {
   const authError = useAuthStore((state) => state.errorMessage);
   const deleteAccount = useAuthStore((state) => state.deleteAccount);
   const settingsQuery = useUserSettings();
+  const aiEntitlementQuery = useAiEntitlement();
   const updateMutation = useUpdateNotificationPreferences();
+  const { isCompact } = useResponsiveLayout();
   const [draft, setDraft] = useState<UpdateNotificationPreferencesRequest>();
   const [permission, setPermission] = useState<NotificationPermissionState>("undetermined");
   const [notice, setNotice] = useState<string | null>(null);
@@ -191,7 +197,7 @@ export default function SettingsScreen() {
                 <Text style={styles.masterTitle}>學習通知</Text>
                 <Text style={styles.masterMeta}>{permissionLabel(permission)}</Text>
               </View>
-              <Switch
+              <AccessibleSwitch
                 accessibilityLabel="切換全部學習通知"
                 disabled={updateMutation.isPending}
                 onValueChange={(value) => setDraft({ ...draft, notificationsEnabled: value })}
@@ -295,6 +301,68 @@ export default function SettingsScreen() {
               保存設定
             </PrimaryButton>
 
+            <SettingsSection icon={Sparkles} title="AI 使用額度">
+              {authMode === "demo" ? (
+                <Text style={styles.dataRightsCopy}>
+                  Demo 不會呼叫 AI，也不會顯示假的 AI 評量。登入並完成 Email
+                  驗證後，才能查看平台免費額度。
+                </Text>
+              ) : aiEntitlementQuery.isLoading ? (
+                <Text style={styles.dataRightsCopy}>正在載入 AI 額度...</Text>
+              ) : aiEntitlementQuery.isError ? (
+                <View style={styles.quotaMessage}>
+                  <Text style={styles.dataRightsCopy}>{aiEntitlementQuery.error.message}</Text>
+                  <Pressable
+                    accessibilityLabel="重新載入 AI 額度"
+                    accessibilityRole="button"
+                    onPress={() => void aiEntitlementQuery.refetch()}
+                    style={({ pressed }) => [
+                      styles.settingsButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                  >
+                    <Text style={styles.settingsButtonText}>重新載入</Text>
+                  </Pressable>
+                </View>
+              ) : aiEntitlementQuery.data ? (
+                <>
+                  <MessageBanner
+                    message={
+                      aiEntitlementQuery.data.providerAvailable
+                        ? "平台免費 AI 已啟用；額度以 rolling 24 小時計算。"
+                        : "平台 AI 尚未開放，或帳號尚未完成 Email 驗證。"
+                    }
+                    tone="info"
+                  />
+                  <View style={styles.quotaGrid}>
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="一般批改"
+                      quota={aiEntitlementQuery.data.quotas.responseEvaluation}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="作文批改"
+                      quota={aiEntitlementQuery.data.quotas.writingEvaluation}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="語音合成"
+                      quota={aiEntitlementQuery.data.quotas.textToSpeech}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="錄音轉錄"
+                      quota={aiEntitlementQuery.data.quotas.transcription}
+                    />
+                  </View>
+                  <Text style={styles.dataRightsCopy}>
+                    系統不會顯示或回傳任何 API Key；個人 OpenAI Key 功能尚未開放。
+                  </Text>
+                </>
+              ) : null}
+            </SettingsSection>
+
             <SettingsSection icon={Download} title="帳號資料">
               {authMode === "supabase" ? (
                 <>
@@ -361,6 +429,37 @@ export default function SettingsScreen() {
   );
 }
 
+function AiQuotaCard({
+  compact,
+  label,
+  quota,
+}: {
+  compact: boolean;
+  label: string;
+  quota: AiEntitlementResponse["quotas"]["responseEvaluation"];
+}) {
+  return (
+    <View style={[styles.quotaCard, compact ? styles.quotaCardCompact : null]}>
+      <Text style={styles.quotaLabel}>{label}</Text>
+      <Text style={styles.quotaValue}>
+        剩餘 {quota.remaining} / {quota.limit}
+      </Text>
+      <Text style={styles.quotaReset}>
+        {quota.resetsAt ? `${formatQuotaReset(quota.resetsAt)} 起逐次恢復` : "目前沒有待恢復用量"}
+      </Text>
+    </View>
+  );
+}
+
+function formatQuotaReset(value: string): string {
+  return new Intl.DateTimeFormat("zh-TW", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 function SettingsSection({
   children,
   icon: Icon,
@@ -395,13 +494,45 @@ function ToggleRow({
   return (
     <View style={[styles.toggleRow, disabled ? styles.disabled : null]}>
       <Text style={styles.toggleLabel}>{label}</Text>
-      <Switch
+      <AccessibleSwitch
         accessibilityLabel={`切換${label}`}
         disabled={disabled}
         onValueChange={onValueChange}
         value={value}
       />
     </View>
+  );
+}
+
+function AccessibleSwitch({
+  accessibilityLabel,
+  disabled,
+  onValueChange,
+  value,
+}: {
+  accessibilityLabel: string;
+  disabled: boolean;
+  onValueChange: (value: boolean) => void;
+  value: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
+      disabled={disabled}
+      onPress={() => onValueChange(!value)}
+      style={styles.switchTarget}
+    >
+      <Switch
+        accessibilityElementsHidden
+        accessible={false}
+        disabled={disabled}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        value={value}
+      />
+    </Pressable>
   );
 }
 
@@ -535,6 +666,45 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
+  quotaCard: {
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "47%",
+    flexGrow: 1,
+    gap: spacingTokens.xs,
+    minWidth: 220,
+    padding: spacingTokens.md,
+  },
+  quotaCardCompact: {
+    flexBasis: "100%",
+    minWidth: 0,
+  },
+  quotaGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacingTokens.sm,
+  },
+  quotaLabel: {
+    color: colorTokens.mutedText,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  quotaMessage: {
+    alignItems: "flex-start",
+    gap: spacingTokens.sm,
+  },
+  quotaReset: {
+    color: colorTokens.mutedText,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  quotaValue: {
+    color: colorTokens.primary,
+    fontSize: 17,
+    fontWeight: "900",
+  },
   section: {
     borderBottomColor: colorTokens.border,
     borderBottomWidth: 1,
@@ -585,7 +755,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.xs,
-    minHeight: 42,
+    minHeight: 44,
     paddingHorizontal: spacingTokens.md,
   },
   settingsButtonText: {
@@ -611,6 +781,12 @@ const styles = StyleSheet.create({
     color: colorTokens.text,
     fontSize: 16,
     fontWeight: "700",
+  },
+  switchTarget: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    minWidth: 44,
   },
   toggleLabel: {
     color: colorTokens.text,

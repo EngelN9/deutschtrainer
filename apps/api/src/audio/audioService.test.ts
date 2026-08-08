@@ -1,11 +1,14 @@
 import { describe, expect, it, jest } from "@jest/globals";
+import type { AiQuotaGate } from "../ai-quota/types";
 import type { AudioRepository } from "./types";
 import { AudioLearningService, buildSpeakingFeedback, scoreWordComparison } from "./audioService";
 import { DeterministicAudioProvider, UnavailableAudioProvider } from "./openAiAudioProvider";
 
 const learner = {
   authUserId: "a2a0a460-f0a8-49d3-b046-4748eb241ce8",
+  emailVerified: true,
   profileId: "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f",
+  role: "learner" as const,
   timezone: "Asia/Taipei",
 };
 
@@ -186,9 +189,23 @@ function createService(
     provider,
     dailyTtsLimit: 20,
     dailyTranscriptionLimit: 10,
+    quotaGate: createQuotaGate(),
     now: () => new Date("2026-07-13T10:00:00.000Z"),
     requestId: () => "phase7-request-test",
   });
+}
+
+function createQuotaGate(): AiQuotaGate {
+  return {
+    assertEligible: () => undefined,
+    reserve: async () => ({
+      id: "fc072324-ccbb-452c-8e99-a4bbda83eac3",
+      generation: 1,
+    }),
+    reserveProviderCall: async () => undefined,
+    consume: async () => undefined,
+    release: async () => undefined,
+  };
 }
 
 function createRepository(overrides: Partial<AudioRepository> = {}): AudioRepository {
@@ -212,7 +229,6 @@ function createRepository(overrides: Partial<AudioRepository> = {}): AudioReposi
       model: "local-audio-fixture",
     }),
     createSignedUrl: async (_bucket, path) => `http://localhost/storage/${path}?token=test`,
-    countRecentLogicalRequests: async () => 0,
     recordUsage: async () => undefined,
     recordListeningActivity: async () => "2f48dbbe-2e97-4f4f-a795-d8d0cda0bfc2",
     findListeningAttemptByIdempotency: async () => undefined,

@@ -17,7 +17,6 @@ import { useProgressStore } from "../src/features/progress/useProgressStore";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { LevelSelector } from "../src/components/LevelSelector";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
@@ -87,6 +86,7 @@ export default function CoursesScreen() {
         }
         description="依程度探索主題單元，下載後可離線閱讀並完成固定題。"
         eyebrow="課程地圖"
+        showMainNavigation
         title="德語能力路徑"
       >
         <OfflineStatusBand />
@@ -216,7 +216,6 @@ export default function CoursesScreen() {
             })}
           </View>
         )}
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );

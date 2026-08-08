@@ -42,7 +42,7 @@ const settings: UserSettingsResponse = {
 describe("SettingsService", () => {
   it("loads settings only for the authenticated owner", async () => {
     const repository = createRepository();
-    const service = new SettingsService({ repository });
+    const service = createService(repository);
 
     await expect(service.getSettings("access-token")).resolves.toEqual(settings);
     expect(repository.getSettings).toHaveBeenCalledWith(profileId);
@@ -50,7 +50,7 @@ describe("SettingsService", () => {
 
   it("completes onboarding through the owner-scoped repository", async () => {
     const repository = createRepository();
-    const service = new SettingsService({ repository });
+    const service = createService(repository);
     const request: OnboardingRequest = {
       currentLevel: "B1",
       targetLevel: "B2",
@@ -65,7 +65,7 @@ describe("SettingsService", () => {
 
   it("updates notification preferences and returns the persisted server value", async () => {
     const repository = createRepository();
-    const service = new SettingsService({ repository });
+    const service = createService(repository);
     const request: UpdateNotificationPreferencesRequest = {
       notificationsEnabled: false,
       dailyReminderEnabled: true,
@@ -84,15 +84,60 @@ describe("SettingsService", () => {
     });
     expect(repository.updateNotificationPreferences).toHaveBeenCalledWith(profileId, request);
   });
+
+  it("reports rolling platform quota without exposing a provider credential", async () => {
+    const repository = createRepository();
+    repository.listAiQuotaUsage.mockResolvedValue([
+      { feature: "evaluate_response", reservedAt: "2026-07-15T08:00:00.000Z" },
+    ]);
+    const service = createService(repository);
+
+    await expect(service.getAiEntitlement("access-token")).resolves.toEqual({
+      providerAvailable: true,
+      source: "platform_free",
+      windowHours: 24,
+      quotas: {
+        responseEvaluation: {
+          limit: 5,
+          used: 1,
+          remaining: 4,
+          resetsAt: "2026-07-16T08:00:00.000Z",
+        },
+        writingEvaluation: { limit: 2, used: 0, remaining: 2, resetsAt: null },
+        textToSpeech: { limit: 5, used: 0, remaining: 5, resetsAt: null },
+        transcription: { limit: 2, used: 0, remaining: 2, resetsAt: null },
+      },
+    });
+  });
 });
+
+function createService(repository: SettingsRepository) {
+  return new SettingsService({
+    repository,
+    now: () => new Date("2026-07-15T09:00:00.000Z"),
+    aiEntitlement: {
+      providerConfigured: true,
+      publicEnabled: true,
+      quotas: {
+        evaluate_response: 5,
+        evaluate_writing: 2,
+        text_to_speech: 5,
+        transcribe_audio: 2,
+      },
+    },
+  });
+}
 
 function createRepository(): jest.Mocked<SettingsRepository> {
   return {
     authenticate: jest.fn(async () => ({
       authUserId: "00000000-0000-4000-8000-000000000002",
+      emailVerified: true,
       profileId,
+      role: "learner",
     })),
     getSettings: jest.fn(async () => settings),
+    listAiQuotaUsage: jest.fn(async () => []),
     completeOnboarding: jest.fn(async () => undefined),
     updateNotificationPreferences: jest.fn(async () => undefined),
   };

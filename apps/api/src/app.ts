@@ -3,6 +3,7 @@ import {
   accountDataExportResponseSchema,
   accountDeletionRequestSchema,
   accountDeletionResponseSchema,
+  aiEntitlementResponseSchema,
   apiErrorResponseSchema,
   audioLearningWorkspaceResponseSchema,
   completeReviewRequestSchema,
@@ -67,6 +68,7 @@ export interface ApiHandlerOptions {
   knowledgeService: KnowledgeServiceContract;
   settingsService: SettingsServiceContract;
   aiConfigured: boolean;
+  aiPublicEnabled: boolean;
   requestId?: () => string;
 }
 
@@ -81,7 +83,12 @@ export function createApiHandler(options: ApiHandlerOptions) {
     const url = new URL(request.url);
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
       return jsonResponse(
-        { status: "ok", service: "deutschtrainer-api", aiConfigured: options.aiConfigured },
+        {
+          status: "ok",
+          service: "deutschtrainer-api",
+          aiConfigured: options.aiConfigured,
+          aiPublicEnabled: options.aiPublicEnabled,
+        },
         200,
       );
     }
@@ -278,6 +285,19 @@ export function createApiHandler(options: ApiHandlerOptions) {
         const accessToken = readBearerToken(request.headers.get("authorization"));
         const result = await options.settingsService.getSettings(accessToken);
         return jsonResponse(userSettingsResponseSchema.parse(result), 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/users/me/ai-entitlement") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const result = await options.settingsService.getAiEntitlement(accessToken);
+        return jsonResponse(aiEntitlementResponseSchema.parse(result), 200, {
+          cacheControl: "private, no-store",
+        });
       } catch (error) {
         return errorResponse(toApiError(error), requestId);
       }

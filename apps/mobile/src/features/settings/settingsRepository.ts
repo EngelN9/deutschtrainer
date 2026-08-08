@@ -1,8 +1,10 @@
 import {
+  aiEntitlementResponseSchema,
   notificationPreferencesResponseSchema,
   onboardingRequestSchema,
   updateNotificationPreferencesRequestSchema,
   userSettingsResponseSchema,
+  type AiEntitlementResponse,
   type NotificationPreferencesResponse,
   type OnboardingRequest,
   type UpdateNotificationPreferencesRequest,
@@ -12,6 +14,13 @@ import { isNetworkApiError, requestApi } from "../../lib/apiClient";
 import { mobileEnv } from "../../lib/env";
 import { DEMO_AUTH_USER_ID, demoUserSettings } from "../auth/demoAuth";
 import { readCachedUserSettings, writeCachedUserSettings } from "./settingsCache";
+
+export async function getAiEntitlement(): Promise<AiEntitlementResponse> {
+  return requestApi("/users/me/ai-entitlement", aiEntitlementResponseSchema, {
+    authenticated: true,
+    fallbackMessage: "AI 使用額度格式不正確。",
+  });
+}
 
 export async function getUserSettings(authUserId?: string): Promise<UserSettingsResponse> {
   if (isDemoUser(authUserId)) {

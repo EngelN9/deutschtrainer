@@ -19,6 +19,7 @@ import type {
   EvaluateWritingResponse,
   WritingWorkspaceResponse,
 } from "@deutschtrainer/validation";
+import type { AiQuotaGate, AiQuotaReservation } from "../ai-quota/types";
 import type { AuthenticatedLearner } from "../evaluation/types";
 import { ApiError } from "../errors";
 import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
@@ -40,6 +41,7 @@ export interface WritingEvaluationServiceOptions {
   dailyLimit: number;
   inputCostPerMillion: number;
   outputCostPerMillion: number;
+  quotaGate: AiQuotaGate;
   privateRequestsPerMinute?: number;
   rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
@@ -82,6 +84,7 @@ export class WritingEvaluationService implements WritingService {
   ): Promise<EvaluateWritingResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
+    this.options.quotaGate.assertEligible(learner);
 
     const existing = await this.options.repository.findByIdempotency(
       learner.profileId,
@@ -152,37 +155,6 @@ export class WritingEvaluationService implements WritingService {
       });
     }
 
-    if (prepared.created) {
-      const since = new Date(this.now().getTime() - 24 * 60 * 60 * 1000).toISOString();
-      const recentRequests = await this.options.repository.countRecentLogicalRequests(
-        learner.profileId,
-        since,
-      );
-      if (recentRequests >= this.options.dailyLimit) {
-        await this.failPreparedVersion(learner.profileId, prepared.versionId, {
-          learnerId: learner.profileId,
-          requestId,
-          idempotencyKey: request.idempotencyKey,
-          model: this.options.provider.model,
-          providerAttempt: 0,
-          inputTokens: 0,
-          outputTokens: 0,
-          estimatedCost: 0,
-          latencyMs: 0,
-          success: false,
-          logicalRequest: true,
-          errorCode: "RATE_LIMITED",
-        });
-        return createFallbackResponse(
-          requestId,
-          prepared,
-          this.options.provider.model,
-          "RATE_LIMITED",
-          emptyUsage(),
-        );
-      }
-    }
-
     if (!this.options.provider.configured) {
       await this.failPreparedVersion(learner.profileId, prepared.versionId, {
         learnerId: learner.profileId,
@@ -207,14 +179,40 @@ export class WritingEvaluationService implements WritingService {
       );
     }
 
-    return this.evaluateWithProvider(
-      requestId,
-      learner.profileId,
-      request,
-      prompt,
-      prepared,
-      previousErrorTypes,
-    );
+    let reservation: AiQuotaReservation;
+    try {
+      reservation = await this.options.quotaGate.reserve({
+        learnerId: learner.profileId,
+        feature: "evaluate_writing",
+        idempotencyKey: request.idempotencyKey,
+        limit: this.options.dailyLimit,
+      });
+    } catch (error) {
+      await this.options.repository.markEvaluationFailed(learner.profileId, prepared.versionId);
+      throw error;
+    }
+
+    let result: EvaluateWritingResponse;
+    try {
+      result = await this.evaluateWithProvider(
+        requestId,
+        learner.profileId,
+        request,
+        prompt,
+        prepared,
+        previousErrorTypes,
+        reservation,
+      );
+    } catch (error) {
+      await this.options.quotaGate.release(reservation);
+      throw error;
+    }
+    if (result.status === "completed") {
+      await this.options.quotaGate.consume(reservation);
+    } else {
+      await this.options.quotaGate.release(reservation);
+    }
+    return result;
   }
 
   async deleteSubmission(
@@ -234,12 +232,14 @@ export class WritingEvaluationService implements WritingService {
     prompt: ProtectedWritingPrompt,
     prepared: PreparedWritingVersion,
     previousErrorTypes: ErrorType[],
+    reservation: AiQuotaReservation,
   ): Promise<EvaluateWritingResponse> {
     const totals = emptyUsage();
     let retryIssues: string[] = [];
     let fallbackReason: WritingProviderErrorCode = "AI_RESPONSE_INVALID";
 
     for (let providerAttempt = 1; providerAttempt <= 2; providerAttempt += 1) {
+      await this.options.quotaGate.reserveProviderCall(reservation, providerAttempt);
       const messages = buildEvaluateWritingPrompt({
         targetLevel: prompt.level,
         writingType: prompt.writingType,

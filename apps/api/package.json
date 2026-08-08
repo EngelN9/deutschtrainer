@@ -21,7 +21,8 @@
     "verify:knowledge:local": "tsx scripts/verify-knowledge-library-e2e.ts",
     "verify:content-readiness:local": "tsx scripts/verify-content-readiness-e2e.ts",
     "verify:settings:local": "tsx scripts/verify-settings-e2e.ts",
-    "verify:account-data:local": "tsx scripts/verify-account-data-e2e.ts"
+    "verify:account-data:local": "tsx scripts/verify-account-data-e2e.ts",
+    "verify:ai-quota:local": "tsx scripts/verify-ai-quota-e2e.ts"
   },
   "dependencies": {
     "@deutschtrainer/ai-prompts": "workspace:*",

@@ -22,7 +22,11 @@ export default function SupportPage() {
       <section>
         <h2>帳號與資料</h2>
         <p>
-          若要了解資料刪除範圍與限制，請參閱<Link href="/account-deletion">帳號與資料刪除</Link>。
+          若要了解資料刪除範圍與限制，請參閱
+          <Link className="inline-action-link" href="/account-deletion">
+            帳號與資料刪除
+          </Link>
+          。
         </p>
       </section>
     </PublicDocument>

@@ -119,6 +119,9 @@ export const apiErrorCodeSchema = z.enum([
   "AI_TIMEOUT",
   "AI_RESPONSE_INVALID",
   "AI_NOT_CONFIGURED",
+  "AI_QUOTA_EXCEEDED",
+  "AI_GLOBALLY_DISABLED",
+  "CONFLICT",
   "AUDIO_UPLOAD_FAILED",
   "CONTENT_NOT_PUBLISHED",
 ]);
@@ -216,11 +219,13 @@ export type UpdateNotificationPreferencesRequest = z.infer<
   typeof updateNotificationPreferencesRequestSchema
 >;
 
+export const userRoleSchema = z.enum(["learner", "content_editor", "reviewer", "admin"]);
+
 export const userProfileSchema = z.object({
   id: databaseUuidSchema,
   authUserId: databaseUuidSchema,
   displayName: z.string().max(80),
-  role: z.enum(["learner", "content_editor", "reviewer", "admin"]),
+  role: userRoleSchema,
   timezone: timeZoneSchema,
   onboardingCompleted: z.boolean(),
 });
@@ -236,6 +241,26 @@ export const userSettingsResponseSchema = z.object({
   notifications: notificationPreferencesSchema,
 });
 export type UserSettingsResponse = z.infer<typeof userSettingsResponseSchema>;
+
+export const aiEntitlementQuotaSchema = z.object({
+  limit: z.number().int().positive(),
+  used: z.number().int().nonnegative(),
+  remaining: z.number().int().nonnegative(),
+  resetsAt: z.string().datetime({ offset: true }).nullable(),
+});
+
+export const aiEntitlementResponseSchema = z.object({
+  providerAvailable: z.boolean(),
+  source: z.literal("platform_free"),
+  windowHours: z.literal(24),
+  quotas: z.object({
+    responseEvaluation: aiEntitlementQuotaSchema,
+    writingEvaluation: aiEntitlementQuotaSchema,
+    textToSpeech: aiEntitlementQuotaSchema,
+    transcription: aiEntitlementQuotaSchema,
+  }),
+});
+export type AiEntitlementResponse = z.infer<typeof aiEntitlementResponseSchema>;
 
 export const notificationPreferencesResponseSchema = z.object({
   notifications: notificationPreferencesSchema,

@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     borderColor: colorTokens.border,
     borderRadius: 6,
     borderWidth: 1,
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: spacingTokens.sm,
     paddingVertical: spacingTokens.xs,

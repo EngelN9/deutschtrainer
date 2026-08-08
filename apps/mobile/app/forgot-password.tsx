@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import type { ForgotPasswordRequest } from "@deutschtrainer/validation";
 import { forgotPasswordRequestSchema } from "@deutschtrainer/validation";
 import { AppScreen } from "../src/components/AppScreen";
+import { AuthLink } from "../src/components/AuthLink";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { TextField } from "../src/components/TextField";
@@ -59,7 +59,7 @@ export default function ForgotPasswordScreen() {
         >
           寄出重設密碼信
         </PrimaryButton>
-        <Link href="/sign-in">返回登入</Link>
+        <AuthLink href="/sign-in">返回登入</AuthLink>
       </AppScreen>
     </AuthGate>
   );

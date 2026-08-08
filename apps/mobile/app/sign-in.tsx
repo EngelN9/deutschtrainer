@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import type { SignInRequest } from "@deutschtrainer/validation";
 import { signInRequestSchema } from "@deutschtrainer/validation";
 import { AppScreen } from "../src/components/AppScreen";
+import { AuthLink } from "../src/components/AuthLink";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { TextField } from "../src/components/TextField";
@@ -75,8 +75,8 @@ export default function SignInScreen() {
         >
           登入
         </PrimaryButton>
-        <Link href="/forgot-password">忘記密碼</Link>
-        <Link href="/sign-up">還沒有帳號？建立帳號</Link>
+        <AuthLink href="/forgot-password">忘記密碼</AuthLink>
+        <AuthLink href="/sign-up">還沒有帳號？建立帳號</AuthLink>
       </AppScreen>
     </AuthGate>
   );

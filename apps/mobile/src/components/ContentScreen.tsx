@@ -4,6 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { useResponsiveLayout } from "../layout/useResponsiveLayout";
+import { MainNavigation } from "./MainNavigation";
 
 interface ContentScreenProps extends PropsWithChildren {
   action?: ReactNode;
@@ -11,6 +13,7 @@ interface ContentScreenProps extends PropsWithChildren {
   eyebrow?: string;
   onBack?: () => void;
   showBack?: boolean;
+  showMainNavigation?: boolean;
   title: string;
 }
 
@@ -21,38 +24,64 @@ export function ContentScreen({
   eyebrow,
   onBack,
   showBack = false,
+  showMainNavigation = false,
   title,
 }: ContentScreenProps) {
   const router = useRouter();
+  const { isCompact, isMedium, isWide } = useResponsiveLayout();
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.scrollContent} style={styles.screen}>
-        <View style={styles.container}>
-          <View style={styles.topRow}>
-            {showBack ? (
-              <Pressable
-                accessibilityLabel="返回上一頁"
-                accessibilityRole="button"
-                onPress={onBack ?? router.back}
-                style={({ pressed }) => [styles.iconButton, pressed ? styles.pressed : null]}
-              >
-                <ArrowLeft color={colorTokens.text} size={22} strokeWidth={2.2} />
-              </Pressable>
-            ) : (
-              <View style={styles.iconSpacer} />
-            )}
-            <View style={styles.topAction}>{action}</View>
+      <View style={[styles.shell, isWide ? styles.wideShell : null]}>
+        {showMainNavigation && isWide ? (
+          <View style={styles.navigationRail}>
+            <MainNavigation layout="rail" />
           </View>
-          <View style={styles.header}>
-            {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-            <Text style={styles.title}>{title}</Text>
-            {description ? <Text style={styles.description}>{description}</Text> : null}
+        ) : null}
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            isCompact ? styles.compactScrollContent : null,
+          ]}
+          style={styles.screen}
+        >
+          <View
+            style={[
+              styles.container,
+              isMedium ? styles.mediumContainer : null,
+              isWide ? styles.wideContainer : null,
+            ]}
+          >
+            <View style={styles.topRow}>
+              {showBack ? (
+                <Pressable
+                  accessibilityLabel="返回上一頁"
+                  accessibilityRole="button"
+                  onPress={onBack ?? router.back}
+                  style={({ pressed }) => [styles.iconButton, pressed ? styles.pressed : null]}
+                >
+                  <ArrowLeft color={colorTokens.text} size={22} strokeWidth={2.2} />
+                </Pressable>
+              ) : (
+                <View style={styles.iconSpacer} />
+              )}
+              <View style={styles.topAction}>{action}</View>
+            </View>
+            <View style={styles.header}>
+              {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+              <Text style={styles.title}>{title}</Text>
+              {description ? <Text style={styles.description}>{description}</Text> : null}
+            </View>
+            <View style={styles.body}>{children}</View>
           </View>
-          <View style={styles.body}>{children}</View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+        {showMainNavigation && !isWide ? (
+          <View style={styles.navigationDock}>
+            <MainNavigation />
+          </View>
+        ) : null}
+      </View>
     </SafeAreaView>
   );
 }
@@ -65,6 +94,10 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     maxWidth: 760,
     width: "100%",
+  },
+  compactScrollContent: {
+    padding: spacingTokens.md,
+    paddingBottom: spacingTokens.lg,
   },
   description: {
     color: colorTokens.mutedText,
@@ -110,6 +143,26 @@ const styles = StyleSheet.create({
     padding: spacingTokens.lg,
     paddingBottom: spacingTokens.xl,
   },
+  mediumContainer: {
+    maxWidth: 900,
+  },
+  navigationDock: {
+    backgroundColor: colorTokens.background,
+    borderTopColor: colorTokens.border,
+    borderTopWidth: 1,
+    paddingHorizontal: spacingTokens.sm,
+    paddingVertical: spacingTokens.xs,
+  },
+  navigationRail: {
+    backgroundColor: colorTokens.background,
+    borderRightColor: colorTokens.border,
+    borderRightWidth: 1,
+    padding: spacingTokens.md,
+    width: 184,
+  },
+  shell: {
+    flex: 1,
+  },
   title: {
     color: colorTokens.text,
     fontSize: 30,
@@ -126,5 +179,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: spacingTokens.md,
     minHeight: 44,
+  },
+  wideContainer: {
+    maxWidth: 1120,
+  },
+  wideShell: {
+    flexDirection: "row",
   },
 });

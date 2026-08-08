@@ -11,7 +11,6 @@ import { useConnectivityStore } from "../src/features/offline/connectivityStore"
 import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
 import { useGrammarTopicList, useVocabularyList } from "../src/features/knowledge/useKnowledge";
 import { ContentScreen } from "../src/components/ContentScreen";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { StatePanel } from "../src/components/StatePanel";
 
 type KnowledgeMode = "vocabulary" | "grammar";
@@ -56,6 +55,7 @@ export default function KnowledgeScreen() {
       <ContentScreen
         description="B1-C2 單字資訊與繁體中文文法解析。"
         eyebrow="學習工具"
+        showMainNavigation
         title="單字與文法"
       >
         <OfflineStatusBand />
@@ -200,7 +200,6 @@ export default function KnowledgeScreen() {
             ) : null}
           </View>
         )}
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );
@@ -330,7 +329,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     flex: 1,
     justifyContent: "center",
-    minHeight: 40,
+    minHeight: 44,
     minWidth: 0,
   },
   levelOptionActive: { backgroundColor: colorTokens.primary },

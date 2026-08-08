@@ -2,6 +2,7 @@ import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "no
 import { resolve } from "node:path";
 import { loadEnvFile } from "node:process";
 import { createApiHandler } from "./app";
+import { SupabaseAiQuotaGate } from "./ai-quota/supabaseAiQuotaGate";
 import { AccountDataService } from "./account-data/accountDataService";
 import { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
 import { AudioLearningService } from "./audio/audioService";
@@ -47,6 +48,11 @@ loadLocalEnvironmentFile();
 const config = readApiConfig();
 assertApiDeploymentConfig(config);
 
+const quotaGate = new SupabaseAiQuotaGate(config.supabaseUrl, config.supabaseServiceRoleKey, {
+  publicEnabled: config.publicAiEnabled,
+  globalDailyProviderCallLimit: config.globalAiDailyProviderCallLimit,
+});
+
 const repository = new SupabaseEvaluationRepository(
   config.supabaseUrl,
   config.supabaseServiceRoleKey,
@@ -64,6 +70,7 @@ const evaluationService = new ResponseEvaluationService({
   repository,
   provider,
   dailyLimit: config.dailyFreeLimit,
+  quotaGate,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
@@ -78,10 +85,6 @@ const learningDataService = new LearningDataService({
 const knowledgeService = new KnowledgeService(
   new SupabaseKnowledgeRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
 );
-const settingsService = new SettingsService({
-  repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
-  rateLimiter: privateRequestRateLimiter,
-});
 const accountDataService = new AccountDataService({
   repository: new SupabaseAccountDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
@@ -103,6 +106,7 @@ const writingService = new WritingEvaluationService({
   repository: writingRepository,
   provider: writingProvider,
   dailyLimit: config.writingDailyFreeLimit,
+  quotaGate,
   rateLimiter: privateRequestRateLimiter,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
@@ -126,6 +130,7 @@ const audioService = new AudioLearningService({
   provider: audioProvider,
   dailyTtsLimit: config.audioTtsDailyFreeLimit,
   dailyTranscriptionLimit: config.audioTranscriptionDailyFreeLimit,
+  quotaGate,
   rateLimiter: privateRequestRateLimiter,
 });
 const contentGenerationRepository = new SupabaseContentGenerationRepository(
@@ -148,6 +153,21 @@ const contentGenerationService = new ContentGenerationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
+const settingsService = new SettingsService({
+  repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  rateLimiter: privateRequestRateLimiter,
+  aiEntitlement: {
+    providerConfigured:
+      provider.configured && writingProvider.configured && audioProvider.configured,
+    publicEnabled: config.publicAiEnabled,
+    quotas: {
+      evaluate_response: config.dailyFreeLimit,
+      evaluate_writing: config.writingDailyFreeLimit,
+      text_to_speech: config.audioTtsDailyFreeLimit,
+      transcribe_audio: config.audioTranscriptionDailyFreeLimit,
+    },
+  },
+});
 const handlerDependencies = {
   accountDataService,
   evaluationService,
@@ -157,6 +177,7 @@ const handlerDependencies = {
   learningDataService,
   knowledgeService,
   settingsService,
+  aiPublicEnabled: config.publicAiEnabled,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&

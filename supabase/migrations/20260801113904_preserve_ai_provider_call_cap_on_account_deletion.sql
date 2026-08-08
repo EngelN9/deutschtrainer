@@ -1,0 +1,11 @@
+alter table public.ai_provider_call_reservations
+drop constraint ai_provider_call_reservations_quota_reservation_id_fkey;
+
+alter table public.ai_provider_call_reservations
+alter column quota_reservation_id drop not null;
+
+alter table public.ai_provider_call_reservations
+add constraint ai_provider_call_reservations_quota_reservation_id_fkey
+foreign key (quota_reservation_id)
+references public.ai_quota_reservations(id)
+on delete set null;

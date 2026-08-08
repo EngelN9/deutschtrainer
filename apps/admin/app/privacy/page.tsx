@@ -26,7 +26,10 @@ export default function PrivacyPage() {
       <section>
         <h2>資料權利</h2>
         <p>
-          帳號匯出與刪除的適用範圍及限制，請參閱<Link href="/account-deletion">帳號與資料刪除</Link>
+          帳號匯出與刪除的適用範圍及限制，請參閱
+          <Link className="inline-action-link" href="/account-deletion">
+            帳號與資料刪除
+          </Link>
           。
         </p>
       </section>

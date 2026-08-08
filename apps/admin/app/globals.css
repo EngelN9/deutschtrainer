@@ -84,9 +84,19 @@ a {
 }
 
 .public-nav a {
+  align-items: center;
+  display: inline-flex;
   font-size: 13px;
   font-weight: 700;
+  min-height: 44px;
+  min-width: 44px;
   text-decoration: none;
+}
+
+.inline-action-link {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
 }
 
 .public-brand {
@@ -398,8 +408,8 @@ a {
 .refresh-button {
   border: 1px solid var(--line);
   color: var(--muted);
-  height: 36px;
-  width: 36px;
+  min-height: 44px;
+  width: 44px;
 }
 
 .admin-content {
@@ -787,7 +797,7 @@ textarea:disabled {
   font-size: 11px;
   font-weight: 750;
   gap: 7px;
-  height: 36px;
+  min-height: 44px;
   justify-content: center;
   padding: 0 13px;
   white-space: nowrap;
@@ -1227,13 +1237,14 @@ textarea:disabled {
     display: flex;
     gap: 5px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     padding-bottom: 3px;
   }
 
   .nav-item {
     flex: 0 0 auto;
     grid-template-columns: 18px auto auto;
-    min-height: 38px;
+    min-height: 44px;
     width: auto;
   }
 
@@ -1277,6 +1288,7 @@ textarea:disabled {
 
   .public-nav {
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 16px;
     padding: 14px 0;
   }
@@ -1284,7 +1296,14 @@ textarea:disabled {
   .public-nav > div {
     flex-wrap: wrap;
     gap: 8px 14px;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .public-actions .button,
+  .command-row .button {
+    flex: 1 1 160px;
+    min-height: 44px;
   }
 
   .public-hero {

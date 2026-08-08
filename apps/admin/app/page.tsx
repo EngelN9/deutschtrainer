@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 export default function HomePage() {
+  const learnerWebUrl =
+    process.env.NEXT_PUBLIC_LEARNER_WEB_URL?.trim() ||
+    "https://deutschtrainer-engeln9-web.onrender.com";
+
   return (
     <main className="public-shell">
       <nav className="public-nav" aria-label="主要導覽">
@@ -21,11 +25,14 @@ export default function HomePage() {
         <p className="public-eyebrow">B1–C2 · 繁體中文德語自學</p>
         <h1>以有脈絡的練習，建立可以長期保留的德語能力。</h1>
         <p>
-          DeutschTrainer 的主要學習產品是 Android
-          App，涵蓋固定題練習、學習進度、間隔複習與錯誤分析。部分功能需要網路連線與已啟用的服務。
+          DeutschTrainer 的主要學習產品是跨裝置學習 App。現在可先透過 Web Preview
+          使用固定題練習、學習進度、間隔複習與錯誤分析；部分功能需要網路連線與已啟用的服務。
         </p>
         <div className="public-actions">
-          <Link className="button button-primary" href="/support">
+          <a className="button button-primary" href={learnerWebUrl}>
+            開始使用 Web 版
+          </a>
+          <Link className="button button-secondary" href="/support">
             取得支援
           </Link>
           <Link className="button button-secondary" href="/account-deletion">

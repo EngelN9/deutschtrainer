@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 6,
     flex: 1,
-    minHeight: 42,
+    minHeight: 44,
     justifyContent: "center",
   },
   pressed: {

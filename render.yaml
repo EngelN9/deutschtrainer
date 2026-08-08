@@ -24,6 +24,10 @@ services:
         sync: false
       - key: AI_EVALUATION_FAKE_MODE
         value: "false"
+      - key: AI_PUBLIC_ENABLED
+        value: "false"
+      - key: AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT
+        value: "100"
       - key: OPENAI_EVALUATION_MODEL
         sync: false
       - key: OPENAI_TTS_MODEL
@@ -37,13 +41,13 @@ services:
       - key: OPENAI_OUTPUT_COST_PER_MILLION
         value: "6"
       - key: AI_DAILY_FREE_LIMIT
-        value: "20"
+        value: "5"
       - key: AI_WRITING_DAILY_FREE_LIMIT
-        value: "10"
+        value: "2"
       - key: AI_AUDIO_TTS_DAILY_FREE_LIMIT
-        value: "20"
+        value: "5"
       - key: AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT
-        value: "10"
+        value: "2"
       - key: AI_CONTENT_GENERATION_DAILY_FREE_LIMIT
         value: "20"
       - key: LEARNING_API_REQUESTS_PER_MINUTE
@@ -69,6 +73,8 @@ services:
         value: 24.18.0
       - key: NEXT_PUBLIC_API_BASE_URL
         sync: false
+      - key: NEXT_PUBLIC_LEARNER_WEB_URL
+        value: https://deutschtrainer-engeln9-web.onrender.com
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY

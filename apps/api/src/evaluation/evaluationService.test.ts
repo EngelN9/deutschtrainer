@@ -1,6 +1,8 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import type { AiEvaluationFeedback } from "@deutschtrainer/ai-schemas";
 import type { EvaluateResponseRequest } from "@deutschtrainer/validation";
+import type { AiQuotaGate } from "../ai-quota/types";
+import { ApiError } from "../errors";
 import { ResponseEvaluationService } from "./evaluationService";
 import { EvaluationProviderError, UnavailableEvaluationProvider } from "./openAiEvaluationProvider";
 import type {
@@ -131,12 +133,17 @@ describe("ResponseEvaluationService", () => {
 
   it("rejects requests after the rolling daily limit", async () => {
     const service = createService(
-      createRepository({ countRecentLogicalRequests: async () => 20 }),
+      createRepository(),
       createProvider([{ payload: feedback }]),
+      createQuotaGate({
+        reserve: async () => {
+          throw new ApiError("AI_QUOTA_EXCEEDED", "quota", 429, true);
+        },
+      }),
     );
 
     await expect(service.evaluate("valid-token", request)).rejects.toMatchObject({
-      code: "RATE_LIMITED",
+      code: "AI_QUOTA_EXCEEDED",
       status: 429,
     });
   });
@@ -181,11 +188,16 @@ describe("ResponseEvaluationService", () => {
   });
 });
 
-function createService(repository: EvaluationRepository, provider: EvaluationProvider) {
+function createService(
+  repository: EvaluationRepository,
+  provider: EvaluationProvider,
+  quotaGate = createQuotaGate(),
+) {
   return new ResponseEvaluationService({
     repository,
     provider,
     dailyLimit: 20,
+    quotaGate,
     inputCostPerMillion: 1,
     outputCostPerMillion: 6,
     now: () => new Date("2026-07-13T05:00:00.000Z"),
@@ -197,13 +209,14 @@ function createRepository(overrides: Partial<EvaluationRepository> = {}): Evalua
   return {
     authenticate: async () => ({
       authUserId: "6926ef44-fbb0-405e-9cb6-4b6fca31a238",
+      emailVerified: true,
       profileId: "6684e3c2-2cf5-4721-9009-b24405c981c3",
+      role: "learner",
       timezone: "Asia/Taipei",
     }),
     findByIdempotency: async () => undefined,
     findCached: async () => undefined,
     getExercise: async () => exercise,
-    countRecentLogicalRequests: async () => 0,
     recordEvaluation: async () => ({
       attemptId: "b446e54a-864d-47a9-a563-e1f1af535774",
       feedbackId: "cc531f79-6c7c-4520-9249-56f98f868987",
@@ -211,6 +224,20 @@ function createRepository(overrides: Partial<EvaluationRepository> = {}): Evalua
       idempotentReplay: false,
     }),
     recordUsage: async () => undefined,
+    ...overrides,
+  };
+}
+
+function createQuotaGate(overrides: Partial<AiQuotaGate> = {}): AiQuotaGate {
+  return {
+    assertEligible: () => undefined,
+    reserve: async () => ({
+      id: "fc072324-ccbb-452c-8e99-a4bbda83eac3",
+      generation: 1,
+    }),
+    reserveProviderCall: async () => undefined,
+    consume: async () => undefined,
+    release: async () => undefined,
     ...overrides,
   };
 }

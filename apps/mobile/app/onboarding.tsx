@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { CefrLevel, LearningGoal } from "@deutschtrainer/shared-types";
 import { SUPPORTED_LEVELS } from "@deutschtrainer/shared-types";
 import type { OnboardingRequest } from "@deutschtrainer/validation";
@@ -51,14 +51,22 @@ export default function OnboardingScreen() {
   return (
     <AuthGate mode="onboarding">
       <AppScreen
-        description="先設定目前程度、目標程度與每日學習節奏。課程內容會從 B1 到 C2，但不包含 A1/A2。"
-        title="初次設定"
+        description="先告訴我們你的程度與使用情境，今天就完成第一輪德文輸出。支援 B1 到 C2。"
+        title="先決定今天怎麼練"
       >
         <MessageBanner message={errorMessage} tone="error" />
         <MessageBanner message={noticeMessage} tone="info" />
 
+        <View style={styles.journeyCard}>
+          <Text style={styles.journeyEyebrow}>第一次訓練只做三步</Text>
+          <JourneyStep number={1} text="寫一段符合程度的德文" />
+          <JourneyStep number={2} text="先看三個最重要的問題" />
+          <JourneyStep number={3} text="重寫並比較自己改善了什麼" />
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>目前程度</Text>
+          <Text style={styles.sectionTitle}>1. 你現在大約在哪個程度？</Text>
+          <Text style={styles.helperText}>不確定時可先選 B1，之後能在設定中調整。</Text>
           <View style={styles.optionRow}>
             {SUPPORTED_LEVELS.map((level) => (
               <SelectablePill
@@ -73,40 +81,8 @@ export default function OnboardingScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>目標程度</Text>
-          <View style={styles.optionRow}>
-            {SUPPORTED_LEVELS.map((level) => (
-              <SelectablePill
-                accessibilityLabel={`目標程度 ${level}`}
-                key={level}
-                label={level}
-                onPress={() => setValue("targetLevel", level, { shouldValidate: true })}
-                selected={targetLevel === level}
-              />
-            ))}
-          </View>
-          {errors.targetLevel?.message ? (
-            <Text style={styles.errorText}>{errors.targetLevel.message}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>每日學習時間</Text>
-          <View style={styles.optionRow}>
-            {dailyMinuteOptions.map((minutes) => (
-              <SelectablePill
-                accessibilityLabel={`每日 ${minutes} 分鐘`}
-                key={minutes}
-                label={`${minutes} 分`}
-                onPress={() => setValue("dailyMinutes", minutes, { shouldValidate: true })}
-                selected={dailyMinutes === minutes}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>學習目標</Text>
+          <Text style={styles.sectionTitle}>2. 你最想在哪些情境用德文？</Text>
+          <Text style={styles.helperText}>可複選；這會保留在你的學習設定中。</Text>
           <View style={styles.optionRow}>
             {learningGoalOptions.map((goal) => (
               <SelectablePill
@@ -128,6 +104,47 @@ export default function OnboardingScreen() {
           ) : null}
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>你的目標程度</Text>
+          <View style={styles.optionRow}>
+            {SUPPORTED_LEVELS.map((level) => (
+              <SelectablePill
+                accessibilityLabel={`目標程度 ${level}`}
+                key={level}
+                label={level}
+                onPress={() => setValue("targetLevel", level, { shouldValidate: true })}
+                selected={targetLevel === level}
+              />
+            ))}
+          </View>
+          {errors.targetLevel?.message ? (
+            <Text style={styles.errorText}>{errors.targetLevel.message}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>3. 今天可以投入多少時間？</Text>
+          <View style={styles.optionRow}>
+            {dailyMinuteOptions.map((minutes) => (
+              <SelectablePill
+                accessibilityLabel={`每日 ${minutes} 分鐘`}
+                key={minutes}
+                label={`${minutes} 分`}
+                onPress={() => setValue("dailyMinutes", minutes, { shouldValidate: true })}
+                selected={dailyMinutes === minutes}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.todayCard}>
+          <Text style={styles.todayLabel}>設定完成後的第一個行動</Text>
+          <Text style={styles.todayTitle}>完成一次 {currentLevel} 德文輸出訓練</Text>
+          <Text style={styles.todayText}>
+            約 {dailyMinutes} 分鐘。你會先寫、只看三個重點，再重寫比較，不需要先瀏覽所有功能。
+          </Text>
+        </View>
+
         <Controller
           control={control}
           name="notificationsEnabled"
@@ -137,26 +154,46 @@ export default function OnboardingScreen() {
                 <Text style={styles.sectionTitle}>學習提醒</Text>
                 <Text style={styles.helperText}>之後可在個人設定關閉。</Text>
               </View>
-              <Switch
+              <Pressable
+                aria-checked={field.value}
                 accessibilityLabel="切換學習提醒"
-                onValueChange={field.onChange}
-                value={field.value}
-              />
+                accessibilityRole="switch"
+                accessibilityState={{ checked: field.value }}
+                onPress={() => field.onChange(!field.value)}
+                style={styles.switchHitArea}
+              >
+                <View style={[styles.switchTrack, field.value ? styles.switchTrackEnabled : null]}>
+                  <View
+                    style={[styles.switchThumb, field.value ? styles.switchThumbEnabled : null]}
+                  />
+                </View>
+              </Pressable>
             </View>
           )}
         />
 
         <PrimaryButton
-          accessibilityLabel="完成初次設定"
+          accessibilityLabel="完成設定並開始德文輸出訓練"
           loading={isSubmitting || status === "loading"}
           onPress={handleSubmit((values) => {
             void completeOnboarding(values);
           })}
         >
-          完成設定
+          完成設定，開始輸出訓練
         </PrimaryButton>
       </AppScreen>
     </AuthGate>
+  );
+}
+
+function JourneyStep({ number, text }: { number: number; text: string }) {
+  return (
+    <View style={styles.journeyStep}>
+      <View style={styles.journeyNumber}>
+        <Text style={styles.journeyNumberText}>{number}</Text>
+      </View>
+      <Text style={styles.journeyText}>{text}</Text>
+    </View>
   );
 }
 
@@ -190,6 +227,45 @@ const styles = StyleSheet.create({
   helperText: {
     color: colorTokens.mutedText,
     fontSize: 13,
+    lineHeight: 20,
+  },
+  journeyCard: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.lg,
+  },
+  journeyEyebrow: {
+    color: colorTokens.teal,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  journeyNumber: {
+    alignItems: "center",
+    backgroundColor: colorTokens.primary,
+    borderRadius: 999,
+    height: 28,
+    justifyContent: "center",
+    width: 28,
+  },
+  journeyNumberText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  journeyStep: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacingTokens.sm,
+  },
+  journeyText: {
+    color: colorTokens.text,
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 22,
   },
   optionRow: {
     flexDirection: "row",
@@ -202,8 +278,8 @@ const styles = StyleSheet.create({
     borderColor: "#CBD5E1",
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 44,
     justifyContent: "center",
+    minHeight: 44,
     paddingHorizontal: spacingTokens.md,
     paddingVertical: spacingTokens.sm,
   },
@@ -226,6 +302,7 @@ const styles = StyleSheet.create({
     color: colorTokens.text,
     fontSize: 16,
     fontWeight: "800",
+    lineHeight: 23,
   },
   switchRow: {
     alignItems: "center",
@@ -237,9 +314,56 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: spacingTokens.md,
   },
+  switchHitArea: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    minWidth: 44,
+  },
+  switchThumb: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
+    height: 20,
+    width: 20,
+  },
+  switchThumbEnabled: {
+    transform: [{ translateX: 20 }],
+  },
+  switchTrack: {
+    backgroundColor: "#94A3B8",
+    borderRadius: 999,
+    justifyContent: "center",
+    padding: 2,
+    width: 44,
+  },
+  switchTrackEnabled: {
+    backgroundColor: colorTokens.primary,
+  },
   switchTextGroup: {
     flex: 1,
     gap: spacingTokens.xs,
     paddingRight: spacingTokens.md,
+  },
+  todayCard: {
+    backgroundColor: "#113B36",
+    borderRadius: 8,
+    gap: spacingTokens.sm,
+    padding: spacingTokens.lg,
+  },
+  todayLabel: {
+    color: "#BFE3DC",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  todayText: {
+    color: "#D7ECE8",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  todayTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "900",
+    lineHeight: 26,
   },
 });

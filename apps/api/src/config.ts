@@ -19,6 +19,8 @@ export interface ApiConfig {
   audioTtsDailyFreeLimit: number;
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
+  publicAiEnabled: boolean;
+  globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
 }
@@ -39,16 +41,21 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     openAiTimeoutMs: readPositiveInteger(env.OPENAI_TIMEOUT_MS, 20_000),
     inputCostPerMillion: readNonNegativeNumber(env.OPENAI_INPUT_COST_PER_MILLION, 1),
     outputCostPerMillion: readNonNegativeNumber(env.OPENAI_OUTPUT_COST_PER_MILLION, 6),
-    dailyFreeLimit: readPositiveInteger(env.AI_DAILY_FREE_LIMIT, 20),
-    writingDailyFreeLimit: readPositiveInteger(env.AI_WRITING_DAILY_FREE_LIMIT, 10),
-    audioTtsDailyFreeLimit: readPositiveInteger(env.AI_AUDIO_TTS_DAILY_FREE_LIMIT, 20),
+    dailyFreeLimit: readPositiveInteger(env.AI_DAILY_FREE_LIMIT, 5),
+    writingDailyFreeLimit: readPositiveInteger(env.AI_WRITING_DAILY_FREE_LIMIT, 2),
+    audioTtsDailyFreeLimit: readPositiveInteger(env.AI_AUDIO_TTS_DAILY_FREE_LIMIT, 5),
     audioTranscriptionDailyFreeLimit: readPositiveInteger(
       env.AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT,
-      10,
+      2,
     ),
     contentGenerationDailyFreeLimit: readPositiveInteger(
       env.AI_CONTENT_GENERATION_DAILY_FREE_LIMIT,
       20,
+    ),
+    publicAiEnabled: env.AI_PUBLIC_ENABLED === "true",
+    globalAiDailyProviderCallLimit: readPositiveInteger(
+      env.AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT,
+      100,
     ),
     learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
@@ -58,6 +65,12 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
 export function assertApiDeploymentConfig(config: ApiConfig): void {
   if (!config.supabaseServiceRoleKey) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is required by the API server.");
+  }
+
+  const localFakeProvider =
+    (config.appEnv === "local" || config.appEnv === "test") && config.fakeEvaluationMode;
+  if (config.publicAiEnabled && !config.openAiApiKey && !localFakeProvider) {
+    throw new Error("OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true.");
   }
 
   if (config.appEnv === "local" || config.appEnv === "test") {

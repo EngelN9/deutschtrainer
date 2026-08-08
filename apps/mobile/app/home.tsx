@@ -1,6 +1,14 @@
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
-import { BookOpen, Clock3, LogOut, RotateCcw, Settings, Target } from "lucide-react-native";
+import {
+  BookOpen,
+  Clock3,
+  FilePenLine,
+  LogOut,
+  RotateCcw,
+  Settings,
+  Target,
+} from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { calculateLearningAnalytics } from "@deutschtrainer/learning-engine";
@@ -16,11 +24,11 @@ import { useUserSettings } from "../src/features/settings/useUserSettings";
 import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
+import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,6 +42,7 @@ export default function HomeScreen() {
   const catalogQuery = useCourseCatalog();
   const learningRecordsQuery = useLearningRecords();
   const settingsQuery = useUserSettings();
+  const writingQuery = useWritingWorkspace({ enabled: authMode === "supabase" });
   const userProgress = useProgressStore((state) =>
     profile ? state.byUserId[profile.id] : undefined,
   );
@@ -71,6 +80,35 @@ export default function HomeScreen() {
     ? [...learningRecords.mastery].sort((left, right) => left.masteryScore - right.masteryScore)[0]
     : undefined;
   const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
+  const pendingWriting = [...(writingQuery.data?.submissions ?? [])]
+    .filter((submission) => submission.status === "revision_requested")
+    .sort(
+      (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
+    )[0];
+  const pendingWritingPrompt = writingQuery.data?.prompts.find(
+    (prompt) => prompt.id === pendingWriting?.promptId,
+  );
+  const recommendedWritingPrompt = writingQuery.data?.prompts.find(
+    (prompt) => prompt.level === currentLevel,
+  );
+
+  function openOutputTraining() {
+    if (pendingWriting) {
+      router.push({
+        pathname: "/writing/[submissionId]",
+        params: { submissionId: pendingWriting.id },
+      } as unknown as Href);
+      return;
+    }
+    if (recommendedWritingPrompt) {
+      router.push({
+        pathname: "/writing/editor/[promptId]",
+        params: { promptId: recommendedWritingPrompt.id },
+      } as unknown as Href);
+      return;
+    }
+    router.push("/writing" as Href);
+  }
 
   async function handleSignOut() {
     await signOut();
@@ -97,8 +135,9 @@ export default function HomeScreen() {
             />
           </View>
         }
-        description="把今天的時間用在真正會影響德語表達的技能上。"
-        eyebrow="今日學習"
+        description="寫一段、看見最值得修的三個問題，再重寫確認自己真的進步。"
+        eyebrow="今日輸出訓練"
+        showMainNavigation
         title={`你好，${profile?.displayName || "學習者"}`}
       >
         <MessageBanner message={errorMessage} tone="error" />
@@ -112,17 +151,61 @@ export default function HomeScreen() {
           tone="info"
         />
         <MessageBanner message={learningRecordsQuery.error?.message ?? null} tone="error" />
+        <MessageBanner
+          message={authMode === "supabase" ? (writingQuery.error?.message ?? null) : null}
+          tone="error"
+        />
         <OfflineStatusBand />
         <View style={styles.goalBand}>
           <View style={styles.goalIcon}>
             <Target color="#FFFFFF" size={23} strokeWidth={2.4} />
           </View>
           <View style={styles.goalCopy}>
-            <Text style={styles.goalLabel}>今日目標</Text>
-            <Text style={styles.goalValue}>完成 1 堂課 · 約 {dailyMinutes} 分鐘</Text>
-            <Text style={styles.goalMeta}>今天已完成 {completedToday} 題</Text>
+            <Text style={styles.goalLabel}>
+              {authMode === "demo" ? "今日目標" : "今天只完成一個循環"}
+            </Text>
+            <Text style={styles.goalValue}>
+              {authMode === "demo" ? "完成 1 堂課" : "寫一稿 · 修 3 個重點 · 重寫"} · 約{" "}
+              {dailyMinutes} 分鐘
+            </Text>
+            <Text style={styles.goalMeta}>
+              {authMode === "demo"
+                ? `今天已完成 ${completedToday} 題`
+                : `${currentLevel} 輸出，朝 ${targetLevel} 前進`}
+            </Text>
           </View>
         </View>
+        {authMode === "supabase" ? (
+          <View style={styles.outputCard}>
+            <View style={styles.outputHeading}>
+              <View style={styles.outputIcon}>
+                <FilePenLine color="#FFFFFF" size={23} />
+              </View>
+              <View style={styles.outputCopy}>
+                <Text style={styles.outputEyebrow}>
+                  {pendingWriting ? "下一步 · 根據回饋重寫" : "今天先做這件事"}
+                </Text>
+                <Text style={styles.outputTitle}>
+                  {pendingWritingPrompt?.titleZhTw ??
+                    recommendedWritingPrompt?.titleZhTw ??
+                    "完成一次德文輸出訓練"}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.outputDescription}>
+              {pendingWriting
+                ? "回到上一稿的三個優先問題，完成重寫後直接比較第一版與最新版。"
+                : "不必先逛完所有功能。寫出第一稿後，系統只先呈現最重要的三個修改重點。"}
+            </Text>
+            <PrimaryButton
+              accessibilityLabel={pendingWriting ? "繼續德文輸出訓練" : "開始一次德文輸出訓練"}
+              loading={writingQuery.isLoading}
+              onPress={openOutputTraining}
+            >
+              {pendingWriting ? "繼續輸出訓練" : "開始一次德文輸出訓練"}
+            </PrimaryButton>
+          </View>
+        ) : null}
         {catalogQuery.isLoading ? (
           <StatePanel message="正在尋找最適合繼續的課堂..." state="loading" title="準備今日課程" />
         ) : catalogQuery.isError ? (
@@ -136,7 +219,9 @@ export default function HomeScreen() {
           <View style={styles.continueSection}>
             <View style={styles.sectionHeading}>
               <View>
-                <Text style={styles.sectionEyebrow}>建議繼續</Text>
+                <Text style={styles.sectionEyebrow}>
+                  {authMode === "demo" ? "建議繼續" : "搭配練習"}
+                </Text>
                 <Text style={styles.lessonTitle}>{continueLesson.titleZhTw}</Text>
               </View>
               <View style={styles.levelBadge}>
@@ -159,6 +244,7 @@ export default function HomeScreen() {
                   params: { lessonId: continueLesson.id },
                 } as Href)
               }
+              variant={authMode === "demo" ? "primary" : "secondary"}
             >
               {percent > 0 ? "繼續課堂" : "查看課堂"}
             </PrimaryButton>
@@ -197,6 +283,7 @@ export default function HomeScreen() {
           <PrimaryButton
             accessibilityLabel="開始今日到期複習"
             onPress={() => router.push("/reviews" as Href)}
+            variant="secondary"
           >
             開始今日複習
           </PrimaryButton>
@@ -208,7 +295,6 @@ export default function HomeScreen() {
         >
           開啟完整課程地圖
         </PrimaryButton>
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );
@@ -354,6 +440,48 @@ const styles = StyleSheet.create({
     color: colorTokens.text,
     fontSize: 14,
     fontWeight: "700",
+  },
+  outputCard: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.lg,
+  },
+  outputCopy: {
+    flex: 1,
+    gap: spacingTokens.xs,
+    minWidth: 0,
+  },
+  outputDescription: {
+    color: colorTokens.text,
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  outputEyebrow: {
+    color: colorTokens.teal,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  outputHeading: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacingTokens.md,
+  },
+  outputIcon: {
+    alignItems: "center",
+    backgroundColor: colorTokens.primary,
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    width: 48,
+  },
+  outputTitle: {
+    color: colorTokens.text,
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 27,
   },
   sectionEyebrow: {
     color: colorTokens.teal,
