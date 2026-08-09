@@ -116,11 +116,6 @@ export interface AudioRepository {
   findGeneratedAudio(cacheKey: string): Promise<StoredGeneratedAudio | undefined>;
   storeGeneratedAudio(input: GeneratedAudioInput): Promise<StoredGeneratedAudio>;
   createSignedUrl(bucket: string, path: string, expiresInSeconds: number): Promise<string>;
-  countRecentLogicalRequests(
-    learnerId: string,
-    feature: AudioUsageLogInput["feature"],
-    since: string,
-  ): Promise<number>;
   recordUsage(input: AudioUsageLogInput): Promise<void>;
   recordListeningActivity(learnerId: string, request: ListeningActivityRequest): Promise<string>;
   findListeningAttemptByIdempotency(

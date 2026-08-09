@@ -22,11 +22,14 @@ Phase 14 將既有 Phase 1–13 功能整理成可交付的第一階段 MVP，�
 ## 原生發行設定
 
 - iOS bundle identifier 與 Android application ID：`com.deutschtrainer.app`
-- iOS build number／Android version code：`1`
-- App version：`0.1.0`
+- iOS build number／Android version code：`3`
+- App version：`0.1.1`
 - `apps/mobile/eas.json` 提供：
   - `preview`：internal distribution；Android 產生可直接安裝的 APK。
-  - `production`：使用 store distribution 預設輸出。
+  - `staging`：internal distribution；使用 EAS `preview` environment、API content source
+    與 production-equivalent remote HTTPS fail-fast。
+  - `production`：使用 store distribution 預設輸出、production EAS environment，並固定
+    `EXPO_PUBLIC_CONTENT_SOURCE=api`。
 - App icon、splash 及 Web favicon 共用專案內的正式圖示資產。
 - Phase 14 第一個 preview 明確使用 `EXPO_PUBLIC_CONTENT_SOURCE=mock`；不把 `localhost` 誤當成可交付的遠端服務。
 
@@ -38,9 +41,12 @@ pnpm dlx eas-cli@latest login
 pnpm dlx eas-cli@latest init
 pnpm dlx eas-cli@latest config --platform android --profile preview --non-interactive
 pnpm dlx eas-cli@latest build --platform android --profile preview
+pnpm dlx eas-cli@latest config --platform android --profile staging --non-interactive
+pnpm dlx eas-cli@latest build --platform android --profile staging
 ```
 
-首次 `init` 會建立或連結 Expo project，並將 project ID 寫入 app config。這是 Expo 帳號層級的外部操作，不在無帳號的本機驗證中假裝完成。
+目前 app config 已有 Expo project ID。重新連結 project、建立 EAS build 或查閱遠端 build
+仍是 Expo 帳號層級的外部操作，不在無帳號的本機驗證中假裝完成。
 
 Production／連線式 preview build 必須在 EAS environment 提供：
 
@@ -50,6 +56,9 @@ Production／連線式 preview build 必須在 EAS environment 提供：
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 
 OpenAI 與 Supabase service-role key 不得出現在 Mobile 或 EAS public variables。
+`app.config.ts` 在 production profile 對缺少的 public API/Supabase 設定、localhost、
+非 HTTPS URL、placeholder anon key 或非 API content source fail fast。此檢查只證明
+build-time contract，不代表遠端服務已驗收。
 
 ## 原生 smoke flow
 
@@ -68,14 +77,19 @@ cd apps/mobile
 maestro test .maestro/guest-smoke.yaml
 ```
 
-通過實機 smoke 後，以 `v0.1.0-preview.1` 建立 GitHub pre-release，附上 APK 與 SHA-256 checksum。EAS build 頁面保留為建置來源與診斷證據，GitHub Release 作為本階段成品的主要交付位置。
+通過實機 smoke 後，使用與當次 `version`、build number、commit SHA 一致且未被占用的
+preview tag 建立 GitHub pre-release，附上 APK 與 SHA-256 checksum。既有歷史 tag 或
+歷史 EAS build 不自動證明目前 revision；EAS build 頁面保留為建置來源與診斷證據，
+GitHub Release 作為 preview 成品的主要交付位置。
 
 ## 驗收證據
 
-- 乾淨 Supabase reset 可重建 Phase 1–13 migrations 與 Phase 14 release seed。
+- 乾淨 Supabase reset 必須可重建全部 append-only migrations 與 Phase 14 release seed。
 - Database 實測 100 題全部為 human／approved／published，且 100 題都有答案。
 - Expo config、EAS schema、Expo Doctor、Web export、Admin build、repository quality gates 需全數通過。
 - 原生 guest flow 已版本化；實際 Android/iOS 執行仍需具備 Java/Android SDK、macOS/iOS simulator 或實體裝置的環境完成。
+- 歷史 device claim 不自動適用於目前 `0.1.1`／build `3`；release evidence 必須記錄
+  當次裝置、OS、app/build ID、流程、結果及 log／截圖。
 
 ## 官方參考
 

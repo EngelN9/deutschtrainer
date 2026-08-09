@@ -5,12 +5,12 @@ import { presentLearningNotification } from "../notifications/notificationRuntim
 import { userSettingsQueryKey } from "../settings/useUserSettings";
 import { deleteWritingSubmission, getWritingWorkspace, submitWriting } from "./writingRepository";
 
-export function useWritingWorkspace() {
+export function useWritingWorkspace({ enabled = true }: { enabled?: boolean } = {}) {
   const profile = useAuthStore((state) => state.profile);
   return useQuery({
     queryKey: writingWorkspaceQueryKey(profile?.id),
     queryFn: getWritingWorkspace,
-    enabled: Boolean(profile),
+    enabled: Boolean(profile) && enabled,
     staleTime: 15 * 1000,
     retry: 1,
   });

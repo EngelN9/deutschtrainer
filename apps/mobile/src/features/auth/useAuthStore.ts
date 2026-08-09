@@ -9,6 +9,7 @@ import type {
 import { create } from "zustand";
 import {
   getCurrentSession,
+  clearLocalSession,
   sendPasswordReset,
   signInWithPassword,
   signOutCurrentUser,
@@ -26,6 +27,8 @@ import {
   isDemoAuthActive,
   persistDemoAuthActive,
 } from "./demoAuth";
+import { clearLocalAccountData } from "../settings/accountLocalData";
+import { deleteRemoteAccount } from "../settings/accountDataRepository";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 export type AuthMode = "demo" | "supabase" | null;
@@ -41,6 +44,7 @@ interface AuthState {
   bootstrap: () => Promise<void>;
   clearMessages: () => void;
   completeOnboarding: (input: OnboardingRequest) => Promise<void>;
+  deleteAccount: (confirmation: string) => Promise<void>;
   resetPassword: (input: ForgotPasswordRequest) => Promise<void>;
   signIn: (input: SignInRequest) => Promise<void>;
   signOut: () => Promise<void>;
@@ -113,6 +117,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         status: "authenticated",
       });
     } catch (error) {
+      set({ errorMessage: toUserFacingError(error), status: "authenticated" });
+    }
+  },
+
+  deleteAccount: async (confirmation) => {
+    const current = get();
+    if (current.authMode !== "supabase" || !current.session || !current.profile) {
+      set({ errorMessage: "只有已登入的連線帳號可以使用完整刪除流程。" });
+      return;
+    }
+
+    set({ errorMessage: null, noticeMessage: null, status: "loading" });
+    let remoteDeleted = false;
+    try {
+      await deleteRemoteAccount(confirmation);
+      remoteDeleted = true;
+      await clearLocalAccountData({
+        authUserId: current.session.user.id,
+        profileId: current.profile.id,
+      });
+      await clearLocalSession();
+      unsubscribeFromAuth?.();
+      unsubscribeFromAuth = null;
+      set({
+        authMode: null,
+        errorMessage: null,
+        noticeMessage: "帳號與資料已刪除。",
+        profile: null,
+        session: null,
+        status: "unauthenticated",
+      });
+    } catch (error) {
+      if (remoteDeleted) {
+        await clearLocalSession().catch(() => undefined);
+        unsubscribeFromAuth?.();
+        unsubscribeFromAuth = null;
+        set({
+          authMode: null,
+          errorMessage:
+            "伺服器帳號已刪除，但裝置資料未能完整清除。請清除 App 資料或解除安裝後再使用。",
+          profile: null,
+          session: null,
+          status: "unauthenticated",
+        });
+        return;
+      }
       set({ errorMessage: toUserFacingError(error), status: "authenticated" });
     }
   },

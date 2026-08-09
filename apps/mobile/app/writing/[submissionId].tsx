@@ -13,12 +13,17 @@ import { PrimaryButton } from "../../src/components/PrimaryButton";
 import { StatePanel } from "../../src/components/StatePanel";
 import { WritingDiffView } from "../../src/features/writing/WritingDiffView";
 import { WritingFeedbackPanel } from "../../src/features/writing/WritingFeedbackPanel";
+import { getWritingImprovementSummary } from "../../src/features/writing/writingJourney";
 import {
   useDeleteWritingSubmission,
   useSubmitWriting,
   useWritingWorkspace,
 } from "../../src/features/writing/useWritingWorkspace";
-import { writingStatusLabel, writingTypeLabel } from "../../src/features/writing/writingLabels";
+import {
+  errorTypeLabel,
+  writingStatusLabel,
+  writingTypeLabel,
+} from "../../src/features/writing/writingLabels";
 
 export default function WritingSubmissionScreen() {
   const router = useRouter();
@@ -28,7 +33,13 @@ export default function WritingSubmissionScreen() {
   const retryMutation = useSubmitWriting();
   const submission = workspaceQuery.data?.submissions.find((entry) => entry.id === submissionId);
   const prompt = workspaceQuery.data?.prompts.find((entry) => entry.id === submission?.promptId);
-  const versions = useMemo(() => submission?.versions ?? [], [submission?.versions]);
+  const versions = useMemo(
+    () =>
+      [...(submission?.versions ?? [])].sort(
+        (left, right) => left.versionNumber - right.versionNumber,
+      ),
+    [submission?.versions],
+  );
   const currentVersion = versions.find((version) => version.id === submission?.currentVersionId);
   const [selectedVersionId, setSelectedVersionId] = useState<string>();
   const [comparisonIds, setComparisonIds] = useState<[string | undefined, string | undefined]>([
@@ -41,7 +52,7 @@ export default function WritingSubmissionScreen() {
       setSelectedVersionId(currentVersion.id);
     }
     if (!comparisonIds[0] && versions.length >= 2) {
-      setComparisonIds([versions.at(-2)?.id, versions.at(-1)?.id]);
+      setComparisonIds([versions[0]?.id, versions.at(-1)?.id]);
     }
   }, [comparisonIds, currentVersion, selectedVersionId, versions]);
 
@@ -139,6 +150,7 @@ export default function WritingSubmissionScreen() {
 
             {selectedVersion?.feedback ? (
               <WritingFeedbackPanel
+                key={selectedVersion.id}
                 feedback={selectedVersion.feedback}
                 textDe={selectedVersion.textDe}
               />
@@ -164,23 +176,30 @@ export default function WritingSubmissionScreen() {
                 重試目前版本
               </PrimaryButton>
             ) : currentVersion?.feedback ? (
-              <PrimaryButton
-                accessibilityLabel="依回饋重寫作文"
-                onPress={() =>
-                  router.push({
-                    pathname: "/writing/editor/[promptId]",
-                    params: { promptId: prompt.id, submissionId: submission.id },
-                  } as unknown as Href)
-                }
-              >
-                依回饋重寫
-              </PrimaryButton>
+              <View style={styles.rewriteAction}>
+                <Text style={styles.rewriteHint}>
+                  下一步只處理上方三個重點，保留已經做好的部分。
+                </Text>
+                <PrimaryButton
+                  accessibilityLabel="根據這些問題重寫作文"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/writing/editor/[promptId]",
+                      params: { promptId: prompt.id, submissionId: submission.id },
+                    } as unknown as Href)
+                  }
+                >
+                  根據這些問題重寫
+                </PrimaryButton>
+              </View>
             ) : null}
 
             {versions.length >= 2 ? (
               <View style={styles.comparisonSection}>
-                <Text style={styles.sectionTitle}>版本比較</Text>
-                <Text style={styles.sectionHint}>選擇任意兩版，新增與刪除的文字會分別標示。</Text>
+                <Text style={styles.sectionTitle}>看見這次的進步</Text>
+                <Text style={styles.sectionHint}>
+                  預設比較第一版與最新版；也可自行選擇任意兩版。
+                </Text>
                 <View style={styles.comparisonControls}>
                   <View style={styles.comparisonControl}>
                     <Text style={styles.controlLabel}>前版</Text>
@@ -203,12 +222,25 @@ export default function WritingSubmissionScreen() {
                   comparisonPrevious.id === comparisonCurrent.id ? (
                     <MessageBanner message="請選擇兩個不同版本進行比較。" tone="info" />
                   ) : (
-                    <WritingDiffView
-                      currentLabel={`第 ${comparisonCurrent.versionNumber} 版`}
-                      currentText={comparisonCurrent.textDe}
-                      previousLabel={`第 ${comparisonPrevious.versionNumber} 版`}
-                      previousText={comparisonPrevious.textDe}
-                    />
+                    <>
+                      {comparisonPrevious.feedback && comparisonCurrent.feedback ? (
+                        <ImprovementSummary
+                          currentFeedback={comparisonCurrent.feedback}
+                          previousFeedback={comparisonPrevious.feedback}
+                        />
+                      ) : (
+                        <MessageBanner
+                          message="其中一版尚無批改結果，目前只能比較文字差異。"
+                          tone="info"
+                        />
+                      )}
+                      <WritingDiffView
+                        currentLabel={`第 ${comparisonCurrent.versionNumber} 版`}
+                        currentText={comparisonCurrent.textDe}
+                        previousLabel={`第 ${comparisonPrevious.versionNumber} 版`}
+                        previousText={comparisonPrevious.textDe}
+                      />
+                    </>
                   )
                 ) : null}
               </View>
@@ -217,6 +249,38 @@ export default function WritingSubmissionScreen() {
         )}
       </ContentScreen>
     </AuthGate>
+  );
+}
+
+function ImprovementSummary({
+  currentFeedback,
+  previousFeedback,
+}: {
+  currentFeedback: NonNullable<WritingVersionData["feedback"]>;
+  previousFeedback: NonNullable<WritingVersionData["feedback"]>;
+}) {
+  const summary = getWritingImprovementSummary(previousFeedback, currentFeedback);
+  const scoreCopy =
+    summary.scoreDelta > 0
+      ? `總分提高 ${summary.scoreDelta} 分`
+      : summary.scoreDelta === 0
+        ? "總分維持不變"
+        : `總分變化 ${summary.scoreDelta} 分`;
+
+  return (
+    <View style={styles.improvementCard}>
+      <Text style={styles.improvementTitle}>{scoreCopy}</Text>
+      <Text style={styles.improvementMeta}>
+        {summary.resolvedErrorTypes.length > 0
+          ? `已改善：${summary.resolvedErrorTypes.map(errorTypeLabel).join("、")}`
+          : "尚未辨識出已完全消失的錯誤類型。"}
+      </Text>
+      <Text style={styles.improvementMeta}>
+        {summary.remainingErrorTypes.length > 0
+          ? `仍要加強：${summary.remainingErrorTypes.map(errorTypeLabel).join("、")}`
+          : "最新版沒有行內錯誤，可繼續加強表達自然度。"}
+      </Text>
+    </View>
   );
 }
 
@@ -282,6 +346,24 @@ const styles = StyleSheet.create({
     gap: spacingTokens.md,
     paddingTop: spacingTokens.lg,
   },
+  improvementCard: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.sm,
+    padding: spacingTokens.md,
+  },
+  improvementMeta: {
+    color: colorTokens.text,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  improvementTitle: {
+    color: colorTokens.success,
+    fontSize: 17,
+    fontWeight: "900",
+  },
   controlLabel: {
     color: colorTokens.mutedText,
     fontSize: 13,
@@ -289,6 +371,15 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  rewriteAction: {
+    gap: spacingTokens.sm,
+  },
+  rewriteHint: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
   },
   sectionHint: {
     color: colorTokens.mutedText,
@@ -305,7 +396,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     flexGrow: 1,
     justifyContent: "center",
-    minHeight: 38,
+    minHeight: 44,
     minWidth: 44,
     paddingHorizontal: spacingTokens.sm,
   },

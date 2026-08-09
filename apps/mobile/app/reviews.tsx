@@ -10,7 +10,6 @@ import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
 import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
 import { useConnectivityStore } from "../src/features/offline/connectivityStore";
 import { ContentScreen } from "../src/components/ContentScreen";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { StatePanel } from "../src/components/StatePanel";
@@ -39,6 +38,7 @@ export default function ReviewsScreen() {
       <ContentScreen
         description="優先處理近期答錯、使用提示或反應較慢的技能。"
         eyebrow="間隔複習"
+        showMainNavigation
         title="今日複習"
       >
         <MessageBanner
@@ -135,7 +135,6 @@ export default function ReviewsScreen() {
         >
           查看錯題紀錄
         </PrimaryButton>
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );

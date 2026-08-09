@@ -9,7 +9,6 @@ import { AuthGate } from "../src/features/auth/AuthGate";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { LevelSelector } from "../src/components/LevelSelector";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { StatePanel } from "../src/components/StatePanel";
 import { listeningKindLabel } from "../src/features/audio-learning/audioLabels";
@@ -49,6 +48,7 @@ export default function AudioTrainingScreen() {
       <ContentScreen
         description="從聽懂、聽寫到朗讀重錄，逐步建立可實際使用的德語。"
         eyebrow="聽力與口說"
+        showMainNavigation
         title="把輸入轉成輸出"
       >
         <LevelSelector onChange={setLevel} value={level} />
@@ -189,7 +189,6 @@ export default function AudioTrainingScreen() {
             </View>
           </>
         )}
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );

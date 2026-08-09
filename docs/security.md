@@ -33,8 +33,19 @@
 - speaking：結構化 metadata/submission 由 API 讀取與刪除；錄音 binary 只能上傳到 `speaking-audio/{auth.uid()}/...`，Storage object 仍只允許 folder owner 操作。
 - content governance：learner 不可讀取版本／審核／AI job；課程與題目沒有 authenticated 直接 mutation policy，只能經角色驗證 RPC 寫入。
 - publishing：content_editor 送審、reviewer 核准、admin 發布；相同版本沒有 approved review 時，RPC 與資料庫 trigger 都拒絕發布。
-- conversation：只允許 owner；必要審核需使用去識別化內容。
+- function execution：identity/content-role helpers 與管理 RPC 先撤銷預設
+  `PUBLIC/anon/authenticated EXECUTE`，再只對 `authenticated` 回授必要入口；trigger
+  functions 不提供 client 直接執行權。service-only functions 維持明確
+  `service_role` allowlist。所有 `SECURITY DEFINER` functions 與共用
+  `set_updated_at` trigger function 都固定 `search_path`，避免 caller-controlled schema
+  影響名稱解析。
+- conversation：目前沒有 API 或 database tables；未來實作時必須採 owner isolation，
+  必要審核只可使用去識別化內容。
 - ai_usage_logs：使用者只能讀取自己的摘要；admin 可看聚合成本。
+- ai_quota_reservations / ai_provider_call_reservations：無 anon/authenticated table grant 或
+  policy；只由 service role 呼叫固定 `search_path` 的 reservation/finalization RPC。帳號刪除
+  透過 profile FK cascade 移除個人 quota rows；不含 key／內容的 provider-call 全域計數將
+  FK 設為 null 後保留，避免刪帳繞過 UTC-day 硬上限。
 - audit_logs：admin only。
 
 ## 4. Secrets
@@ -43,6 +54,22 @@
 - `SUPABASE_SERVICE_ROLE_KEY` 只存在 backend runtime。
 - Mobile 只允許 `EXPO_PUBLIC_SUPABASE_URL`、`EXPO_PUBLIC_SUPABASE_ANON_KEY` 與 `EXPO_PUBLIC_API_BASE_URL`。
 - CI secrets 不輸出到 logs。
+- `AI_PUBLIC_ENABLED` 是 server-only emergency switch；staging/production 啟用時若缺少
+  `OPENAI_API_KEY`，API 必須在啟動時 fail fast。健康檢查只回傳 boolean 狀態，不回傳 key。
+- BYOK 尚未實作。完成 KMS-backed envelope encryption、threat model、刪除與備份驗證前，
+  Mobile、Admin、API contract 與資料庫都不得接受或保存使用者 OpenAI Key。
+- staging／production 的 `CORS_ALLOWED_ORIGINS` 必須是精確 HTTPS origin allowlist；API 不得
+  回傳 wildcard，也不得對未允許的 browser origin 回傳 CORS header。
+
+Gate 3 remote evidence verifies zero `PUBLIC` function execute privileges, service-role-only
+account deletion, protected writing/listening tables without client grants, 36/36 public tables
+with RLS, and zero anon/authenticated mutation or `MAINTAIN` grants on current public tables and
+the `postgres` defaults used by repository migrations. Supabase advisors still flag the eight intentionally authenticated identity/Admin
+`SECURITY DEFINER` entry points; they remain an explicit allowlist whose remote role behavior must
+be rechecked by the deployed two-user suite rather than suppressed or treated as automatically
+safe. The platform-owned `supabase_admin` default ACL is outside repository-migration authority;
+application tables must not be created through an unreviewed dashboard path and every new table
+migration must verify its effective client privileges.
 
 ## 5. AI 安全
 
@@ -65,12 +92,16 @@
 
 - 固定題型提交：60/min。
 - 課程讀取：120/min。
-- AI 自由回答：依方案限制，例如免費 20/day。
-- AI 作文：依方案限制，例如免費 10/day。
-- TTS：依受信任內容 hash 快取，預設免費 20/day；cache hit 不占新生成額度。
-- STT：預設免費 10/day。
+- AI 自由回答：已驗證 learner 預設 5/rolling 24h。
+- AI 作文：已驗證 learner 預設 2/rolling 24h。
+- TTS：依受信任內容 hash 快取，預設 5/rolling 24h；cache hit 不占額度。
+- STT：已驗證 learner 預設 2/rolling 24h。
+- 平台所有 learner AI provider attempts 合計預設 100/UTC day；資料庫 advisory lock 與
+  unique constraints 防止並行穿透。provider 失敗釋放個人額度，但已發生的 provider attempt
+  仍保留在全域硬上限與 usage/cost log。
 - AI 題目草稿：內容編輯與 admin 預設 20/rolling 24h；idempotent replay 不重複計數。
-- 對話：受 scenario maximumTurns 與 daily limit 限制。
+- 對話：尚未實作；未來必須同時受 scenario maximumTurns、daily limit 與 owner
+  isolation 限制。
 
 Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 內採每位 profile 60/min sliding window；正式多執行個體部署仍需由 gateway 或共享 rate-limit store 提供全域限制。
 
@@ -80,7 +111,14 @@ Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 
 - 使用者可刪除錄音與作文。
 - `DELETE /writing/submissions/:id` 經 service-only wrapper hard-delete owner 作文原文、版本與 AI feedback；不含原文的 cost/usage metadata 依稽核需求保留。
 - `DELETE /speaking/submissions/:id` hard-delete owner 錄音、audio metadata 與轉錄回饋；不含錄音或逐字稿的 usage metadata可依稽核需求保留。
-- 帳號刪除需刪除或匿名化個人資料、學習紀錄與使用者上傳內容。
+- `GET /users/me/export` 匯出 owner profile、設定、學習／AI／作文／聽說與內容工作紀錄；
+  私人錄音只提供一小時 signed URL，不輸出 secret、受保護答案或其他使用者資料。
+- `DELETE /users/me` 必須收到精確確認詞。API 先用 service-only transaction 將 profile
+  標記為刪除中並取得 owner 錄音路徑，成功刪除 Storage 後才 hard-delete Auth user；
+  profile 相關私人 rows 由 FK cascade 清除，治理紀錄的 requester 以 null 匿名化。
+- Mobile 在 server deletion 成功後清除 profile-scoped settings、通知、下載／pending
+  attempts、progress 與 Auth session。遠端雙使用者、舊 token 與實機 cache 驗證完成前，
+  不得宣稱完整資料刪除已 production-ready。
 - AI logs 保存成本與狀態，避免保存完整敏感內容。
 - audio_assets 需記錄來源與授權。
 
@@ -99,3 +137,11 @@ Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 
 ## 9. 前端錯誤顯示
 
 前端不得顯示伺服器 stack trace。錯誤需顯示清楚、不羞辱使用者的繁體中文訊息，並提供可用的 retry 或下一步。
+
+## 10. Request tracing 與 logs
+
+- API adapter 驗證或產生 bounded `x-request-id`，在 response header 與錯誤 envelope 使用同一值。
+- HTTP log 只含 request ID、method、pathname、status 與 duration；不記錄 query string、
+  headers、token、body、作文、逐字稿或錄音。
+- process-local rate limiter 不是多執行個體的全域限制；部署前須使用 gateway 或共享
+  store 並驗證。完整營運邊界見 `docs/operations.md`。

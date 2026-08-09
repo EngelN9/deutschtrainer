@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import type { WritingFeedback } from "@deutschtrainer/ai-schemas";
 import type { EvaluateWritingRequest } from "@deutschtrainer/validation";
+import type { AiQuotaGate } from "../ai-quota/types";
 import { UnavailableWritingProvider } from "./openAiWritingProvider";
 import { WritingEvaluationService, countGermanWords, createWritingDiff } from "./writingService";
 import type {
@@ -260,6 +261,7 @@ function createService(repository: WritingRepository, provider: WritingProvider)
     repository,
     provider,
     dailyLimit: 10,
+    quotaGate: createQuotaGate(),
     inputCostPerMillion: 1,
     outputCostPerMillion: 6,
     now: () => new Date("2026-07-13T05:00:00.000Z"),
@@ -271,14 +273,15 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
   return {
     authenticate: async () => ({
       authUserId: "a2a0a460-f0a8-49d3-b046-4748eb241ce8",
+      emailVerified: true,
       profileId: "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f",
+      role: "learner",
       timezone: "Asia/Taipei",
     }),
     getWorkspace: async () => ({ prompts: [], submissions: [] }),
     findByIdempotency: async () => undefined,
     getPrompt: async () => prompt,
     getSubmissionContext: async () => undefined,
-    countRecentLogicalRequests: async () => 0,
     prepareVersion: async () => preparedVersion(1),
     recordFeedback: async () => ({
       feedbackId: "12578dad-2288-4c55-8230-5bc3d7bc0934",
@@ -288,6 +291,19 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
     recordUsage: async () => undefined,
     deleteSubmission: async () => undefined,
     ...overrides,
+  };
+}
+
+function createQuotaGate(): AiQuotaGate {
+  return {
+    assertEligible: () => undefined,
+    reserve: async () => ({
+      id: "fc072324-ccbb-452c-8e99-a4bbda83eac3",
+      generation: 1,
+    }),
+    reserveProviderCall: async () => undefined,
+    consume: async () => undefined,
+    release: async () => undefined,
   };
 }
 

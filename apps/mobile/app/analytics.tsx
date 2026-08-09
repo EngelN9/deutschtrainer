@@ -17,7 +17,6 @@ import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
 import { ContentScreen } from "../src/components/ContentScreen";
-import { MainNavigation } from "../src/components/MainNavigation";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
@@ -75,6 +74,7 @@ export default function AnalyticsScreen() {
       <ContentScreen
         description="從作答品質、技能掌握度與複習負荷觀察真正的學習進展。"
         eyebrow="學習分析"
+        showMainNavigation
         title="你的學習狀態"
       >
         {recordsQuery.isLoading ? (
@@ -245,7 +245,6 @@ export default function AnalyticsScreen() {
             </PrimaryButton>
           </>
         ) : null}
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );

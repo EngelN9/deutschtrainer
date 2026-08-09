@@ -1,11 +1,13 @@
 import type { AiEvaluationFeedback } from "@deutschtrainer/ai-schemas";
 import type { AiPromptMessage } from "@deutschtrainer/ai-prompts";
-import type { AiEvaluatedExerciseType, CefrLevel } from "@deutschtrainer/shared-types";
+import type { AiEvaluatedExerciseType, CefrLevel, UserProfile } from "@deutschtrainer/shared-types";
 import type { EvaluateResponseRequest, EvaluateResponseResponse } from "@deutschtrainer/validation";
 
 export interface AuthenticatedLearner {
   authUserId: string;
+  emailVerified: boolean;
   profileId: string;
+  role: UserProfile["role"];
   timezone: string;
 }
 
@@ -85,7 +87,6 @@ export interface EvaluationRepository {
   ): Promise<StoredEvaluation | undefined>;
   findCached(learnerId: string, cacheKey: string): Promise<CachedEvaluation | undefined>;
   getExercise(exerciseId: string): Promise<EvaluationExercise | undefined>;
-  countRecentLogicalRequests(learnerId: string, since: string): Promise<number>;
   recordEvaluation(input: EvaluationRecordInput): Promise<EvaluationRecordResult>;
   recordUsage(input: UsageLogInput): Promise<void>;
 }

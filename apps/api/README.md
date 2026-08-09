@@ -8,6 +8,8 @@ Node backend for learner data, AI evaluation, audio processing, and content-gove
 - `/courses`, `/lessons`, `/attempts`, `/users/me/progress`, and `/users/me/reviews`: published course delivery and owner-scoped learning records.
 - `GET /vocabulary`, `GET /vocabulary/:id`, `GET /grammar-topics`, and `GET /grammar-topics/:id`: published B1-C2 knowledge search, details, and related exercises.
 - `GET /users/me/settings`, `PUT /users/me/onboarding`, and `PUT /users/me/notification-preferences`: owner-scoped profile, learning setup, and notification preferences.
+- `GET /users/me/export` and `DELETE /users/me`: owner-scoped account export and Storage-first,
+  server-authoritative account deletion.
 - `GET /users/me/writing` and `DELETE /writing/submissions/:id`: owner-scoped writing workspace and deletion.
 - `POST /ai/evaluate-response`: AI grading for published `translation` and `free_response` exercises.
 - `POST /ai/evaluate-writing`: versioned long-form writing evaluation with inline feedback.
@@ -36,7 +38,9 @@ pnpm --filter @deutschtrainer/api verify:bundle
 pnpm --filter @deutschtrainer/api start
 ```
 
-`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures and require an HTTPS Supabase URL. `SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance.
+`APP_ENV=staging` and `APP_ENV=production` reject deterministic AI fixtures, require an HTTPS Supabase URL, and require `CORS_ALLOWED_ORIGINS` to contain an explicit comma-separated list of remote HTTPS browser origins. The Node adapter removes the handler's local wildcard CORS header and only echoes an approved request origin. Native clients and server-to-server requests do not need an `Origin` header.
+
+`SUPABASE_SERVICE_ROLE_KEY` is required in every runtime. `OPENAI_API_KEY` remains optional at process startup so `/health` can report `aiConfigured: false`, but it is required before AI grading, writing, audio, or content generation can pass connected staging acceptance. The Render Blueprint prompts for the OpenAI key and evaluation model as protected runtime inputs rather than committing either value.
 
 The API reads platform-provided environment variables first. For local development it also looks for `.env` in the current directory and repository root. Set `API_ENV_FILE` only when an explicit local environment-file path is needed; containers should inject secrets through their runtime rather than copy an environment file into the image.
 
@@ -62,6 +66,9 @@ pnpm --filter @deutschtrainer/api verify:workspaces:local
 pnpm --filter @deutschtrainer/api verify:settings:local
 pnpm --filter @deutschtrainer/api verify:offline-sync:local
 pnpm --filter @deutschtrainer/api verify:knowledge:local
+pnpm --filter @deutschtrainer/api verify:admin:local
+pnpm --filter @deutschtrainer/api verify:content-readiness:local
+pnpm --filter @deutschtrainer/api verify:account-data:local
 ```
 
 `verify:local` requires a running local Supabase stack, a running API, and `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the current shell. It creates and removes temporary users while checking evaluation, replay, cache, persistence, RLS, protected answers, and RPC permissions.
@@ -75,3 +82,12 @@ pnpm --filter @deutschtrainer/api verify:knowledge:local
 `verify:offline-sync:local` verifies original offline submission timestamps, review scheduling from that timestamp, idempotent replay, the 30-day replay window, and authenticated denial of the service-only sync RPC.
 
 `verify:knowledge:local` verifies published-only vocabulary and grammar delivery, German/Traditional Chinese search, bounded pagination, detailed metadata, structured grammar content, related exercises, cache headers, invalid filters, and missing records.
+
+`verify:admin:local` verifies the learner/editor/reviewer/admin role matrix, anonymous helper-function
+denial, immutable versions, review-gated publishing, and audit actors.
+
+`verify:content-readiness:local` verifies the exact release content count, CEFR distribution, type
+minimums, review/source status, and answer completeness.
+
+`verify:account-data:local` verifies two-user export isolation, private Storage denial, exact
+confirmation, Storage/Auth/database deletion, old-token denial, and survivor-account integrity.

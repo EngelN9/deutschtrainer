@@ -38,6 +38,7 @@ interface OfflineState {
   enqueueAttempt: (input: EnqueueOfflineAttemptInput) => Promise<void>;
   retryAttempt: (profileId: string, idempotencyKey: string) => Promise<void>;
   discardAttempt: (profileId: string, idempotencyKey: string) => Promise<void>;
+  clearProfile: (profileId: string) => Promise<void>;
   syncPendingAttempts: (profileId: string) => Promise<OfflineSyncSummary>;
 }
 
@@ -107,6 +108,18 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
     const next = removeOfflineAttempt(get().profiles, profileId, idempotencyKey);
     await writeOfflineProfiles(next);
     set({ profiles: next });
+  },
+
+  clearProfile: async (profileId) => {
+    const next = { ...get().profiles };
+    delete next[profileId];
+    await writeOfflineProfiles(next);
+    set({
+      profiles: next,
+      lastSyncError: undefined,
+      lastSyncProfileId: undefined,
+      lastSyncSummary: undefined,
+    });
   },
 
   syncPendingAttempts: async (profileId) => {

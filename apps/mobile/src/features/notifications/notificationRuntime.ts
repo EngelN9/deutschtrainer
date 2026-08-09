@@ -22,3 +22,5 @@ export async function presentLearningNotification(
 ): Promise<boolean> {
   return false;
 }
+
+export async function clearAccountNotifications(_profileId: string): Promise<void> {}

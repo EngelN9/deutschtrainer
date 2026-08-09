@@ -2,6 +2,9 @@ import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "no
 import { resolve } from "node:path";
 import { loadEnvFile } from "node:process";
 import { createApiHandler } from "./app";
+import { SupabaseAiQuotaGate } from "./ai-quota/supabaseAiQuotaGate";
+import { AccountDataService } from "./account-data/accountDataService";
+import { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
 import { AudioLearningService } from "./audio/audioService";
 import {
   DeterministicAudioProvider,
@@ -9,7 +12,7 @@ import {
   UnavailableAudioProvider,
 } from "./audio/openAiAudioProvider";
 import { SupabaseAudioRepository } from "./audio/supabaseAudioRepository";
-import { assertApiDeploymentConfig, readApiConfig } from "./config";
+import { assertApiDeploymentConfig, readApiConfig, resolveCorsResponseOrigin } from "./config";
 import { ContentGenerationService } from "./content-generation/contentGenerationService";
 import {
   DeterministicContentGenerationProvider,
@@ -28,6 +31,7 @@ import { LearningDataService } from "./learning-data/learningDataService";
 import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearningDataRepository";
 import { KnowledgeService } from "./knowledge/knowledgeService";
 import { SupabaseKnowledgeRepository } from "./knowledge/supabaseKnowledgeRepository";
+import { createHttpRequestLog, resolveRequestId } from "./observability";
 import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
 import { SettingsService } from "./settings/settingsService";
 import { SupabaseSettingsRepository } from "./settings/supabaseSettingsRepository";
@@ -43,6 +47,11 @@ loadLocalEnvironmentFile();
 
 const config = readApiConfig();
 assertApiDeploymentConfig(config);
+
+const quotaGate = new SupabaseAiQuotaGate(config.supabaseUrl, config.supabaseServiceRoleKey, {
+  publicEnabled: config.publicAiEnabled,
+  globalDailyProviderCallLimit: config.globalAiDailyProviderCallLimit,
+});
 
 const repository = new SupabaseEvaluationRepository(
   config.supabaseUrl,
@@ -61,6 +70,7 @@ const evaluationService = new ResponseEvaluationService({
   repository,
   provider,
   dailyLimit: config.dailyFreeLimit,
+  quotaGate,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
@@ -75,8 +85,8 @@ const learningDataService = new LearningDataService({
 const knowledgeService = new KnowledgeService(
   new SupabaseKnowledgeRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
 );
-const settingsService = new SettingsService({
-  repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+const accountDataService = new AccountDataService({
+  repository: new SupabaseAccountDataRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
 });
 const writingRepository = new SupabaseWritingRepository(
@@ -96,6 +106,7 @@ const writingService = new WritingEvaluationService({
   repository: writingRepository,
   provider: writingProvider,
   dailyLimit: config.writingDailyFreeLimit,
+  quotaGate,
   rateLimiter: privateRequestRateLimiter,
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
@@ -119,6 +130,7 @@ const audioService = new AudioLearningService({
   provider: audioProvider,
   dailyTtsLimit: config.audioTtsDailyFreeLimit,
   dailyTranscriptionLimit: config.audioTranscriptionDailyFreeLimit,
+  quotaGate,
   rateLimiter: privateRequestRateLimiter,
 });
 const contentGenerationRepository = new SupabaseContentGenerationRepository(
@@ -141,7 +153,23 @@ const contentGenerationService = new ContentGenerationService({
   inputCostPerMillion: config.inputCostPerMillion,
   outputCostPerMillion: config.outputCostPerMillion,
 });
-const handleRequest = createApiHandler({
+const settingsService = new SettingsService({
+  repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  rateLimiter: privateRequestRateLimiter,
+  aiEntitlement: {
+    providerConfigured:
+      provider.configured && writingProvider.configured && audioProvider.configured,
+    publicEnabled: config.publicAiEnabled,
+    quotas: {
+      evaluate_response: config.dailyFreeLimit,
+      evaluate_writing: config.writingDailyFreeLimit,
+      text_to_speech: config.audioTtsDailyFreeLimit,
+      transcribe_audio: config.audioTranscriptionDailyFreeLimit,
+    },
+  },
+});
+const handlerDependencies = {
+  accountDataService,
   evaluationService,
   writingService,
   audioService,
@@ -149,49 +177,90 @@ const handleRequest = createApiHandler({
   learningDataService,
   knowledgeService,
   settingsService,
+  aiPublicEnabled: config.publicAiEnabled,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&
     audioProvider.configured &&
     contentGenerationProvider.configured,
-});
+};
 
 const server = createServer(async (incoming, outgoing) => {
+  const startedAt = performance.now();
+  const requestId = resolveRequestId(incoming.headers["x-request-id"]?.toString());
+  const requestUrl = new URL(incoming.url ?? "/", `http://${incoming.headers.host ?? "localhost"}`);
+  let status = 500;
+
   try {
     const body = await readRequestBody(incoming);
-    const request = new Request(
-      new URL(incoming.url ?? "/", `http://${incoming.headers.host ?? "localhost"}`),
-      {
-        method: incoming.method ?? "GET",
-        headers: toWebHeaders(incoming.headers),
-        ...(body.length > 0 ? { body: new Uint8Array(body) } : {}),
-      },
-    );
+    const requestHeaders = toWebHeaders(incoming.headers);
+    requestHeaders.set("x-request-id", requestId);
+    const request = new Request(requestUrl, {
+      method: incoming.method ?? "GET",
+      headers: requestHeaders,
+      ...(body.length > 0 ? { body: new Uint8Array(body) } : {}),
+    });
+    const handleRequest = createApiHandler({
+      ...handlerDependencies,
+      requestId: () => requestId,
+    });
     const response = await handleRequest(request);
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
+    responseHeaders["x-request-id"] = requestId;
+    applyCorsResponseHeaders(
+      responseHeaders,
+      readSingleHeader(incoming.headers.origin),
+      config.corsAllowedOrigins,
+    );
+    status = response.status;
     outgoing.writeHead(response.status, responseHeaders);
     outgoing.end(Buffer.from(await response.arrayBuffer()));
   } catch {
-    outgoing.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+    const responseHeaders: Record<string, string> = {
+      "content-type": "application/json; charset=utf-8",
+      "x-request-id": requestId,
+    };
+    applyCorsResponseHeaders(
+      responseHeaders,
+      readSingleHeader(incoming.headers.origin),
+      config.corsAllowedOrigins,
+    );
+    outgoing.writeHead(500, responseHeaders);
     outgoing.end(
       JSON.stringify({
         error: {
           code: "DATABASE_ERROR",
           message: "API 伺服器無法處理要求。",
           retryable: true,
-          requestId: "server-adapter",
+          requestId,
         },
       }),
     );
+  } finally {
+    const logEntry = createHttpRequestLog({
+      requestId,
+      method: incoming.method ?? "GET",
+      pathname: requestUrl.pathname,
+      status,
+      durationMs: performance.now() - startedAt,
+    });
+    const writeLog = logEntry.level === "error" ? console.error : console.log;
+    writeLog(JSON.stringify(logEntry));
   }
 });
 
 server.listen(config.port, config.host, () => {
   console.log(
-    `Deutschtrainer API listening on http://${config.host}:${config.port} (${config.appEnv})`,
+    JSON.stringify({
+      level: "info",
+      event: "api_started",
+      host: config.host,
+      port: config.port,
+      appEnv: config.appEnv,
+    }),
   );
 });
 
@@ -200,7 +269,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 function shutdown(signal: NodeJS.Signals): void {
-  console.log(`Deutschtrainer API received ${signal}; shutting down.`);
+  console.log(JSON.stringify({ level: "info", event: "api_shutdown_started", signal }));
   const forcedShutdown = setTimeout(() => {
     server.closeAllConnections();
     process.exit(1);
@@ -210,7 +279,13 @@ function shutdown(signal: NodeJS.Signals): void {
   server.close((error) => {
     clearTimeout(forcedShutdown);
     if (error) {
-      console.error("Deutschtrainer API shutdown failed.", error);
+      console.error(
+        JSON.stringify({
+          level: "error",
+          event: "api_shutdown_failed",
+          errorCategory: "SERVER_CLOSE_ERROR",
+        }),
+      );
       process.exit(1);
     }
     process.exit(0);
@@ -240,6 +315,34 @@ function toWebHeaders(headers: IncomingHttpHeaders): Headers {
     }
   }
   return result;
+}
+
+function applyCorsResponseHeaders(
+  headers: Record<string, string>,
+  requestOrigin: string | undefined,
+  allowedOrigins: readonly string[],
+): void {
+  delete headers["access-control-allow-origin"];
+  const responseOrigin = resolveCorsResponseOrigin(requestOrigin, allowedOrigins);
+  if (!responseOrigin) {
+    return;
+  }
+
+  headers["access-control-allow-origin"] = responseOrigin;
+  if (responseOrigin !== "*") {
+    const varyValues = new Set(
+      (headers.vary ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    );
+    varyValues.add("Origin");
+    headers.vary = [...varyValues].join(", ");
+  }
+}
+
+function readSingleHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function isMissingFileError(error: unknown): boolean {

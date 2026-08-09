@@ -97,7 +97,7 @@ export interface ContentReviewRow {
   entity_type: "course" | "exercise";
   entity_id: string;
   content_version_id: string;
-  requested_by: string;
+  requested_by: string | null;
   reviewer_id: string | null;
   status: "pending" | "approved" | "rejected" | "superseded";
   request_notes: string;

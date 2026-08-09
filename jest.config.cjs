@@ -12,6 +12,7 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   testMatch: [
+    "<rootDir>/apps/admin/src/**/*.test.ts",
     "<rootDir>/apps/api/**/*.test.ts",
     "<rootDir>/apps/mobile/src/**/*.test.ts",
     "<rootDir>/packages/**/*.test.ts",

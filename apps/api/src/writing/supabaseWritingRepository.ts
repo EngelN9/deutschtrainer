@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { userRoleSchema } from "@deutschtrainer/validation";
 import { writingFeedbackSchema, type WritingFeedback } from "@deutschtrainer/ai-schemas";
 import {
   SUPPORTED_LEVELS,
@@ -96,7 +97,7 @@ export class SupabaseWritingRepository implements WritingRepository {
 
     const profileResult = await this.client
       .from("profiles")
-      .select("id, timezone")
+      .select("id, role, timezone")
       .eq("auth_user_id", userResult.data.user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -107,7 +108,9 @@ export class SupabaseWritingRepository implements WritingRepository {
 
     return {
       authUserId: userResult.data.user.id,
+      emailVerified: Boolean(userResult.data.user.email_confirmed_at),
       profileId: profileResult.data.id,
+      role: userRoleSchema.parse(profileResult.data.role),
       timezone: profileResult.data.timezone,
     };
   }
@@ -319,18 +322,6 @@ export class SupabaseWritingRepository implements WritingRepository {
       currentTextDe: versionResult.data.text_de,
       ...(feedback ? { currentFeedback: feedback.feedback } : {}),
     };
-  }
-
-  async countRecentLogicalRequests(learnerId: string, since: string): Promise<number> {
-    const result = await this.client
-      .from("ai_usage_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", learnerId)
-      .eq("feature", "evaluate_writing")
-      .eq("logical_request", true)
-      .gte("created_at", since);
-    assertDatabaseResult(result.error, "無法檢查作文 AI 使用額度。");
-    return result.count ?? 0;
   }
 
   async prepareVersion(input: PrepareWritingVersionInput): Promise<PreparedWritingVersion> {

@@ -1,7 +1,31 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Clock3, Settings as SettingsIcon } from "lucide-react-native";
-import { Linking, Pressable, StyleSheet, Switch, Text, View } from "react-native";
-import type { UpdateNotificationPreferencesRequest } from "@deutschtrainer/validation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import {
+  Bell,
+  BellOff,
+  Clock3,
+  Download,
+  Sparkles,
+  Settings as SettingsIcon,
+  Trash2,
+} from "lucide-react-native";
+import {
+  Alert,
+  Linking,
+  Pressable,
+  Share,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import {
+  ACCOUNT_DELETION_CONFIRMATION,
+  type AiEntitlementResponse,
+  type UpdateNotificationPreferencesRequest,
+} from "@deutschtrainer/validation";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { ContentScreen } from "../src/components/ContentScreen";
@@ -14,21 +38,33 @@ import {
 } from "../src/features/notifications/notificationRuntime";
 import type { NotificationPermissionState } from "../src/features/notifications/notificationTypes";
 import {
+  useAiEntitlement,
   useUpdateNotificationPreferences,
   useUserSettings,
 } from "../src/features/settings/useUserSettings";
+import { useResponsiveLayout } from "../src/layout/useResponsiveLayout";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
+import { exportAccountData } from "../src/features/settings/accountDataRepository";
 
 const reminderTimes = ["18:00", "20:00", "21:30"] as const;
 const inactivityDayOptions = [2, 3, 7, 14] as const;
 
 export default function SettingsScreen() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const authMode = useAuthStore((state) => state.authMode);
+  const authError = useAuthStore((state) => state.errorMessage);
+  const deleteAccount = useAuthStore((state) => state.deleteAccount);
   const settingsQuery = useUserSettings();
+  const aiEntitlementQuery = useAiEntitlement();
   const updateMutation = useUpdateNotificationPreferences();
+  const { isCompact } = useResponsiveLayout();
   const [draft, setDraft] = useState<UpdateNotificationPreferencesRequest>();
   const [permission, setPermission] = useState<NotificationPermissionState>("undetermined");
   const [notice, setNotice] = useState<string | null>(null);
+  const [deletionText, setDeletionText] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const notifications = settingsQuery.data?.notifications;
@@ -75,6 +111,53 @@ export default function SettingsScreen() {
     }
   };
 
+  const exportData = async () => {
+    setNotice(null);
+    setExporting(true);
+    try {
+      const data = await exportAccountData();
+      await Share.share({
+        title: "DeutschTrainer 帳號資料匯出",
+        message: JSON.stringify(data, null, 2),
+      });
+      setNotice("帳號資料已交給你選擇的分享目標；錄音連結有效一小時。");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "無法匯出帳號資料。");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const confirmDeletion = () => {
+    if (deletionText !== ACCOUNT_DELETION_CONFIRMATION) {
+      setNotice(`請完整輸入「${ACCOUNT_DELETION_CONFIRMATION}」。`);
+      return;
+    }
+    Alert.alert(
+      "永久刪除帳號？",
+      "伺服器資料、私人錄音、裝置快取與待同步作答將被刪除，且無法復原。",
+      [
+        { style: "cancel", text: "取消" },
+        {
+          style: "destructive",
+          text: "永久刪除",
+          onPress: () => void performDeletion(),
+        },
+      ],
+    );
+  };
+
+  const performDeletion = async () => {
+    setDeleting(true);
+    setNotice(null);
+    await deleteAccount(deletionText);
+    setDeleting(false);
+    if (useAuthStore.getState().status === "unauthenticated") {
+      queryClient.clear();
+      router.replace("/welcome");
+    }
+  };
+
   return (
     <AuthGate mode="protected">
       <ContentScreen
@@ -89,6 +172,7 @@ export default function SettingsScreen() {
           tone="info"
         />
         <MessageBanner message={updateMutation.error?.message ?? null} tone="error" />
+        <MessageBanner message={authError} tone="error" />
 
         {settingsQuery.isError ? (
           <StatePanel
@@ -113,7 +197,7 @@ export default function SettingsScreen() {
                 <Text style={styles.masterTitle}>學習通知</Text>
                 <Text style={styles.masterMeta}>{permissionLabel(permission)}</Text>
               </View>
-              <Switch
+              <AccessibleSwitch
                 accessibilityLabel="切換全部學習通知"
                 disabled={updateMutation.isPending}
                 onValueChange={(value) => setDraft({ ...draft, notificationsEnabled: value })}
@@ -216,11 +300,164 @@ export default function SettingsScreen() {
             >
               保存設定
             </PrimaryButton>
+
+            <SettingsSection icon={Sparkles} title="AI 使用額度">
+              {authMode === "demo" ? (
+                <Text style={styles.dataRightsCopy}>
+                  Demo 不會呼叫 AI，也不會顯示假的 AI 評量。登入並完成 Email
+                  驗證後，才能查看平台免費額度。
+                </Text>
+              ) : aiEntitlementQuery.isLoading ? (
+                <Text style={styles.dataRightsCopy}>正在載入 AI 額度...</Text>
+              ) : aiEntitlementQuery.isError ? (
+                <View style={styles.quotaMessage}>
+                  <Text style={styles.dataRightsCopy}>{aiEntitlementQuery.error.message}</Text>
+                  <Pressable
+                    accessibilityLabel="重新載入 AI 額度"
+                    accessibilityRole="button"
+                    onPress={() => void aiEntitlementQuery.refetch()}
+                    style={({ pressed }) => [
+                      styles.settingsButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                  >
+                    <Text style={styles.settingsButtonText}>重新載入</Text>
+                  </Pressable>
+                </View>
+              ) : aiEntitlementQuery.data ? (
+                <>
+                  <MessageBanner
+                    message={
+                      aiEntitlementQuery.data.providerAvailable
+                        ? "平台免費 AI 已啟用；額度以 rolling 24 小時計算。"
+                        : "平台 AI 尚未開放，或帳號尚未完成 Email 驗證。"
+                    }
+                    tone="info"
+                  />
+                  <View style={styles.quotaGrid}>
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="一般批改"
+                      quota={aiEntitlementQuery.data.quotas.responseEvaluation}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="作文批改"
+                      quota={aiEntitlementQuery.data.quotas.writingEvaluation}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="語音合成"
+                      quota={aiEntitlementQuery.data.quotas.textToSpeech}
+                    />
+                    <AiQuotaCard
+                      compact={isCompact}
+                      label="錄音轉錄"
+                      quota={aiEntitlementQuery.data.quotas.transcription}
+                    />
+                  </View>
+                  <Text style={styles.dataRightsCopy}>
+                    系統不會顯示或回傳任何 API Key；個人 OpenAI Key 功能尚未開放。
+                  </Text>
+                </>
+              ) : null}
+            </SettingsSection>
+
+            <SettingsSection icon={Download} title="帳號資料">
+              {authMode === "supabase" ? (
+                <>
+                  <Text style={styles.dataRightsCopy}>
+                    匯出包含個人設定、學習紀錄、作文、評量、錄音
+                    metadata，以及一小時內有效的私人錄音下載連結。
+                  </Text>
+                  <PrimaryButton
+                    accessibilityLabel="匯出帳號資料"
+                    loading={exporting}
+                    onPress={() => void exportData()}
+                  >
+                    匯出我的資料
+                  </PrimaryButton>
+                </>
+              ) : (
+                <Text style={styles.dataRightsCopy}>
+                  Demo 沒有雲端帳號；登出或清除 App 資料即可移除這台裝置上的 Demo 資料。
+                </Text>
+              )}
+            </SettingsSection>
+
+            {authMode === "supabase" ? (
+              <View style={styles.dangerSection}>
+                <View style={styles.sectionHeading}>
+                  <Trash2 color={colorTokens.danger} size={20} />
+                  <Text style={styles.dangerTitle}>永久刪除帳號</Text>
+                </View>
+                <Text style={styles.dataRightsCopy}>
+                  此操作不可逆。請先匯出需要保留的資料，再輸入「
+                  {ACCOUNT_DELETION_CONFIRMATION}」。
+                </Text>
+                <TextInput
+                  accessibilityLabel="帳號刪除確認文字"
+                  autoCapitalize="none"
+                  editable={!deleting}
+                  onChangeText={setDeletionText}
+                  placeholder={ACCOUNT_DELETION_CONFIRMATION}
+                  style={styles.deletionInput}
+                  value={deletionText}
+                />
+                <Pressable
+                  accessibilityLabel="永久刪除帳號"
+                  accessibilityRole="button"
+                  disabled={deleting || deletionText !== ACCOUNT_DELETION_CONFIRMATION}
+                  onPress={confirmDeletion}
+                  style={({ pressed }) => [
+                    styles.deleteButton,
+                    deletionText !== ACCOUNT_DELETION_CONFIRMATION ? styles.disabled : null,
+                    pressed ? styles.pressed : null,
+                  ]}
+                >
+                  <Trash2 color="#FFFFFF" size={18} />
+                  <Text style={styles.deleteButtonText}>
+                    {deleting ? "正在刪除..." : "永久刪除帳號"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </>
         )}
       </ContentScreen>
     </AuthGate>
   );
+}
+
+function AiQuotaCard({
+  compact,
+  label,
+  quota,
+}: {
+  compact: boolean;
+  label: string;
+  quota: AiEntitlementResponse["quotas"]["responseEvaluation"];
+}) {
+  return (
+    <View style={[styles.quotaCard, compact ? styles.quotaCardCompact : null]}>
+      <Text style={styles.quotaLabel}>{label}</Text>
+      <Text style={styles.quotaValue}>
+        剩餘 {quota.remaining} / {quota.limit}
+      </Text>
+      <Text style={styles.quotaReset}>
+        {quota.resetsAt ? `${formatQuotaReset(quota.resetsAt)} 起逐次恢復` : "目前沒有待恢復用量"}
+      </Text>
+    </View>
+  );
+}
+
+function formatQuotaReset(value: string): string {
+  return new Intl.DateTimeFormat("zh-TW", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function SettingsSection({
@@ -257,13 +494,45 @@ function ToggleRow({
   return (
     <View style={[styles.toggleRow, disabled ? styles.disabled : null]}>
       <Text style={styles.toggleLabel}>{label}</Text>
-      <Switch
+      <AccessibleSwitch
         accessibilityLabel={`切換${label}`}
         disabled={disabled}
         onValueChange={onValueChange}
         value={value}
       />
     </View>
+  );
+}
+
+function AccessibleSwitch({
+  accessibilityLabel,
+  disabled,
+  onValueChange,
+  value,
+}: {
+  accessibilityLabel: string;
+  disabled: boolean;
+  onValueChange: (value: boolean) => void;
+  value: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
+      disabled={disabled}
+      onPress={() => onValueChange(!value)}
+      style={styles.switchTarget}
+    >
+      <Switch
+        accessibilityElementsHidden
+        accessible={false}
+        disabled={disabled}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        value={value}
+      />
+    </Pressable>
   );
 }
 
@@ -328,6 +597,47 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.45,
   },
+  dangerSection: {
+    backgroundColor: "#FFF5F5",
+    borderColor: "#E8B5B5",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.md,
+  },
+  dangerTitle: {
+    color: colorTokens.danger,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  dataRightsCopy: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  deleteButton: {
+    alignItems: "center",
+    backgroundColor: colorTokens.danger,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: spacingTokens.sm,
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  deletionInput: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D88B8B",
+    borderRadius: 8,
+    borderWidth: 1,
+    color: colorTokens.text,
+    minHeight: 46,
+    paddingHorizontal: spacingTokens.md,
+  },
   masterBand: {
     alignItems: "center",
     backgroundColor: "#113B36",
@@ -355,6 +665,45 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  quotaCard: {
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "47%",
+    flexGrow: 1,
+    gap: spacingTokens.xs,
+    minWidth: 220,
+    padding: spacingTokens.md,
+  },
+  quotaCardCompact: {
+    flexBasis: "100%",
+    minWidth: 0,
+  },
+  quotaGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacingTokens.sm,
+  },
+  quotaLabel: {
+    color: colorTokens.mutedText,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  quotaMessage: {
+    alignItems: "flex-start",
+    gap: spacingTokens.sm,
+  },
+  quotaReset: {
+    color: colorTokens.mutedText,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  quotaValue: {
+    color: colorTokens.primary,
+    fontSize: 17,
+    fontWeight: "900",
   },
   section: {
     borderBottomColor: colorTokens.border,
@@ -406,7 +755,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.xs,
-    minHeight: 42,
+    minHeight: 44,
     paddingHorizontal: spacingTokens.md,
   },
   settingsButtonText: {
@@ -432,6 +781,12 @@ const styles = StyleSheet.create({
     color: colorTokens.text,
     fontSize: 16,
     fontWeight: "700",
+  },
+  switchTarget: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
+    minWidth: 44,
   },
   toggleLabel: {
     color: colorTokens.text,

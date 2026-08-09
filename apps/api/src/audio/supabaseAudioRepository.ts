@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { userRoleSchema } from "@deutschtrainer/validation";
 import {
   audioLearningWorkspaceResponseSchema,
   speechComparisonChangeSchema,
@@ -119,7 +120,7 @@ export class SupabaseAudioRepository implements AudioRepository {
     }
     const profileResult = await this.client
       .from("profiles")
-      .select("id, timezone")
+      .select("id, role, timezone")
       .eq("auth_user_id", userResult.data.user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -129,7 +130,9 @@ export class SupabaseAudioRepository implements AudioRepository {
     }
     return {
       authUserId: userResult.data.user.id,
+      emailVerified: Boolean(userResult.data.user.email_confirmed_at),
       profileId: profileResult.data.id,
+      role: userRoleSchema.parse(profileResult.data.role),
       timezone: profileResult.data.timezone,
     };
   }
@@ -328,22 +331,6 @@ export class SupabaseAudioRepository implements AudioRepository {
       );
     }
     return result.data.signedUrl;
-  }
-
-  async countRecentLogicalRequests(
-    learnerId: string,
-    feature: AudioUsageLogInput["feature"],
-    since: string,
-  ): Promise<number> {
-    const result = await this.client
-      .from("ai_usage_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", learnerId)
-      .eq("feature", feature)
-      .eq("logical_request", true)
-      .gte("created_at", since);
-    assertDatabaseResult(result.error, "無法檢查音訊功能使用額度。");
-    return result.count ?? 0;
   }
 
   async recordUsage(input: AudioUsageLogInput): Promise<void> {

@@ -1,9 +1,11 @@
 import type {
+  AiEntitlementResponse,
   NotificationPreferencesResponse,
   OnboardingRequest,
   UpdateNotificationPreferencesRequest,
   UserSettingsResponse,
 } from "@deutschtrainer/validation";
+import type { AiQuotaFeature } from "../ai-quota/types";
 import { ApiError } from "../errors";
 import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import type {
@@ -17,21 +19,64 @@ interface SettingsServiceOptions {
   privateRequestsPerMinute?: number;
   rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
+  aiEntitlement: {
+    providerConfigured: boolean;
+    publicEnabled: boolean;
+    quotas: Record<AiQuotaFeature, number>;
+  };
 }
 
 export class SettingsService implements SettingsServiceContract {
   private readonly rateLimiter: PrivateRequestRateLimiter;
+  private readonly now: () => Date;
 
   constructor(private readonly options: SettingsServiceOptions) {
-    const now = options.now ?? (() => new Date());
+    this.now = options.now ?? (() => new Date());
     this.rateLimiter =
       options.rateLimiter ??
-      new PrivateRequestRateLimiter(options.privateRequestsPerMinute ?? 60, now);
+      new PrivateRequestRateLimiter(options.privateRequestsPerMinute ?? 60, this.now);
   }
 
   async getSettings(accessToken: string): Promise<UserSettingsResponse> {
     const learner = await this.requireLearner(accessToken);
     return this.options.repository.getSettings(learner.profileId);
+  }
+
+  async getAiEntitlement(accessToken: string): Promise<AiEntitlementResponse> {
+    const learner = await this.requireLearner(accessToken);
+    const now = this.now();
+    const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const rows = await this.options.repository.listAiQuotaUsage(learner.profileId, since);
+    const quota = (feature: AiQuotaFeature) => {
+      const featureRows = rows.filter((row) => row.feature === feature);
+      const limit = this.options.aiEntitlement.quotas[feature];
+      const used = featureRows.length;
+      const oldest = featureRows[0]?.reservedAt;
+      return {
+        limit,
+        used,
+        remaining: Math.max(0, limit - used),
+        resetsAt: oldest
+          ? new Date(new Date(oldest).getTime() + 24 * 60 * 60 * 1000).toISOString()
+          : null,
+      };
+    };
+
+    return {
+      providerAvailable:
+        this.options.aiEntitlement.publicEnabled &&
+        this.options.aiEntitlement.providerConfigured &&
+        learner.emailVerified &&
+        learner.role === "learner",
+      source: "platform_free",
+      windowHours: 24,
+      quotas: {
+        responseEvaluation: quota("evaluate_response"),
+        writingEvaluation: quota("evaluate_writing"),
+        textToSpeech: quota("text_to_speech"),
+        transcription: quota("transcribe_audio"),
+      },
+    };
   }
 
   async completeOnboarding(

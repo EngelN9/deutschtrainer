@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { CefrLevel, UserProfile } from "@deutschtrainer/shared-types";
 import {
   learningGoalSchema,
+  userRoleSchema,
   userSettingsResponseSchema,
   type OnboardingRequest,
   type UpdateNotificationPreferencesRequest,
@@ -9,7 +10,7 @@ import {
 } from "@deutschtrainer/validation";
 import { z } from "zod";
 import { ApiError } from "../errors";
-import type { AuthenticatedSettingsUser, SettingsRepository } from "./types";
+import type { AiQuotaUsageRow, AuthenticatedSettingsUser, SettingsRepository } from "./types";
 
 interface ProfileRow {
   id: string;
@@ -43,6 +44,17 @@ interface UserLevelRow {
 }
 
 const learningGoalsSchema = z.array(learningGoalSchema).max(5);
+const aiQuotaUsageRowsSchema = z.array(
+  z.object({
+    feature: z.enum([
+      "evaluate_response",
+      "evaluate_writing",
+      "text_to_speech",
+      "transcribe_audio",
+    ]),
+    reserved_at: z.string().datetime({ offset: true }),
+  }),
+);
 
 export class SupabaseSettingsRepository implements SettingsRepository {
   private readonly client: SupabaseClient;
@@ -60,7 +72,7 @@ export class SupabaseSettingsRepository implements SettingsRepository {
     }
     const profileResult = await this.client
       .from("profiles")
-      .select("id")
+      .select("id, role")
       .eq("auth_user_id", userResult.data.user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -68,7 +80,27 @@ export class SupabaseSettingsRepository implements SettingsRepository {
     if (!profileResult.data) {
       return undefined;
     }
-    return { authUserId: userResult.data.user.id, profileId: profileResult.data.id };
+    return {
+      authUserId: userResult.data.user.id,
+      emailVerified: Boolean(userResult.data.user.email_confirmed_at),
+      profileId: profileResult.data.id,
+      role: userRoleSchema.parse(profileResult.data.role),
+    };
+  }
+
+  async listAiQuotaUsage(profileId: string, since: string): Promise<AiQuotaUsageRow[]> {
+    const result = await this.client
+      .from("ai_quota_reservations")
+      .select("feature, reserved_at")
+      .eq("user_id", profileId)
+      .eq("status", "consumed")
+      .gte("reserved_at", since)
+      .order("reserved_at", { ascending: true });
+    assertDatabaseResult(result.error, "無法載入 AI 使用額度。");
+    return aiQuotaUsageRowsSchema.parse(result.data ?? []).map((row) => ({
+      feature: row.feature,
+      reservedAt: row.reserved_at,
+    }));
   }
 
   async getSettings(profileId: string): Promise<UserSettingsResponse> {

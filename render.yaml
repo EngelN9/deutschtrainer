@@ -1,0 +1,112 @@
+services:
+  - type: web
+    name: deutschtrainer-engeln9-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_EVALUATION_FAKE_MODE
+        value: "false"
+      - key: AI_PUBLIC_ENABLED
+        value: "false"
+      - key: AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT
+        value: "100"
+      - key: OPENAI_EVALUATION_MODEL
+        sync: false
+      - key: OPENAI_TTS_MODEL
+        value: gpt-4o-mini-tts
+      - key: OPENAI_TRANSCRIPTION_MODEL
+        value: whisper-1
+      - key: OPENAI_TIMEOUT_MS
+        value: "20000"
+      - key: OPENAI_INPUT_COST_PER_MILLION
+        value: "1"
+      - key: OPENAI_OUTPUT_COST_PER_MILLION
+        value: "6"
+      - key: AI_DAILY_FREE_LIMIT
+        value: "5"
+      - key: AI_WRITING_DAILY_FREE_LIMIT
+        value: "2"
+      - key: AI_AUDIO_TTS_DAILY_FREE_LIMIT
+        value: "5"
+      - key: AI_AUDIO_TRANSCRIPTION_DAILY_FREE_LIMIT
+        value: "2"
+      - key: AI_CONTENT_GENERATION_DAILY_FREE_LIMIT
+        value: "20"
+      - key: LEARNING_API_REQUESTS_PER_MINUTE
+        value: "60"
+      - key: STORAGE_AUDIO_BUCKET
+        value: audio-assets
+
+  - type: web
+    name: deutschtrainer-engeln9-site
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: >-
+      corepack pnpm install --frozen-lockfile &&
+      corepack pnpm --filter @deutschtrainer/admin build
+    startCommand: corepack pnpm --filter @deutschtrainer/admin start
+    healthCheckPath: /
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.18.0
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_LEARNER_WEB_URL
+        value: https://deutschtrainer-engeln9-web.onrender.com
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+
+  - type: web
+    name: deutschtrainer-engeln9-web
+    runtime: static
+    buildCommand: >-
+      corepack pnpm install --frozen-lockfile &&
+      corepack pnpm --filter @deutschtrainer/mobile export:web
+    staticPublishPath: ./apps/mobile/dist
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DEUTSCHTRAINER_BUILD_PROFILE
+        value: production
+      - key: EXPO_PUBLIC_CONTENT_SOURCE
+        value: api
+      - key: EXPO_PUBLIC_API_BASE_URL
+        sync: false
+      - key: EXPO_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: EXPO_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

@@ -19,6 +19,7 @@ import type {
   TranscribeRequest,
   TranscribeResponse,
 } from "@deutschtrainer/validation";
+import type { AiQuotaGate, AiQuotaReservation } from "../ai-quota/types";
 import { ApiError } from "../errors";
 import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import { AudioProviderError, type AudioProviderErrorCode } from "./openAiAudioProvider";
@@ -35,6 +36,7 @@ export interface AudioLearningServiceOptions {
   provider: AudioProvider;
   dailyTtsLimit: number;
   dailyTranscriptionLimit: number;
+  quotaGate: AiQuotaGate;
   privateRequestsPerMinute?: number;
   rateLimiter?: PrivateRequestRateLimiter;
   signedUrlSeconds?: number;
@@ -85,6 +87,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
   ): Promise<TextToSpeechResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
+    this.options.quotaGate.assertEligible(learner);
     const asset = await this.options.repository.getListeningAsset(request.listeningAssetId);
     if (!asset) {
       throw new ApiError("NOT_FOUND", "找不到可使用的聽力素材。", 404, false);
@@ -115,31 +118,6 @@ export class AudioLearningService implements AudioLearningServiceContract {
       return this.createTtsResponse(requestId, cached, signedUrl, true);
     }
 
-    try {
-      await this.enforceDailyLimit(
-        learner.profileId,
-        "text_to_speech",
-        this.options.dailyTtsLimit,
-        "今日語音合成額度已用完，仍可使用先前產生的音檔。",
-      );
-    } catch (error) {
-      if (!(error instanceof ApiError) || error.code !== "RATE_LIMITED") {
-        throw error;
-      }
-      await this.options.repository.recordUsage({
-        learnerId: learner.profileId,
-        requestId,
-        idempotencyKey: request.idempotencyKey,
-        feature: "text_to_speech",
-        model: this.options.provider.ttsModel,
-        latencyMs: 0,
-        success: false,
-        cached: false,
-        logicalRequest: true,
-        errorCode: "RATE_LIMITED",
-      });
-      throw error;
-    }
     if (!this.options.provider.configured) {
       await this.logUnavailable(
         learner.profileId,
@@ -151,7 +129,15 @@ export class AudioLearningService implements AudioLearningServiceContract {
       throw new ApiError("AI_NOT_CONFIGURED", "伺服器尚未設定語音合成服務。", 503, true);
     }
 
+    const reservation = await this.options.quotaGate.reserve({
+      learnerId: learner.profileId,
+      feature: "text_to_speech",
+      idempotencyKey: request.idempotencyKey,
+      limit: this.options.dailyTtsLimit,
+    });
+
     try {
+      await this.options.quotaGate.reserveProviderCall(reservation, 1);
       const generated = await this.options.provider.synthesize({
         textDe: asset.transcriptDe,
         voice: request.voice,
@@ -182,8 +168,13 @@ export class AudioLearningService implements AudioLearningServiceContract {
         stored.storagePath,
         this.signedUrlSeconds,
       );
+      await this.options.quotaGate.consume(reservation);
       return this.createTtsResponse(requestId, stored, signedUrl, false);
     } catch (error) {
+      await this.options.quotaGate.release(reservation);
+      if (error instanceof ApiError) {
+        throw error;
+      }
       await this.recordProviderFailure(
         learner.profileId,
         requestId,
@@ -267,6 +258,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
   async transcribe(accessToken: string, request: TranscribeRequest): Promise<TranscribeResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
+    this.options.quotaGate.assertEligible(learner);
     const prompt = await this.options.repository.getSpeakingPrompt(request.speakingPromptId);
     if (!prompt) {
       throw new ApiError("NOT_FOUND", "找不到可使用的口說題目。", 404, false);
@@ -301,44 +293,6 @@ export class AudioLearningService implements AudioLearningServiceContract {
     const prepared = existing
       ? { submissionId: existing.id, audioAssetId: existing.audioAssetId, created: false }
       : await this.options.repository.prepareSpeakingSubmission(learner, request);
-    if (prepared.created) {
-      try {
-        await this.enforceDailyLimit(
-          learner.profileId,
-          "transcribe_audio",
-          this.options.dailyTranscriptionLimit,
-          "今日錄音轉錄額度已用完，請明天再試。",
-        );
-      } catch (error) {
-        if (!(error instanceof ApiError) || error.code !== "RATE_LIMITED") {
-          throw error;
-        }
-        await this.options.repository.markSpeakingFailed(
-          learner.profileId,
-          prepared.submissionId,
-          "RATE_LIMITED",
-        );
-        await this.options.repository.recordUsage({
-          learnerId: learner.profileId,
-          requestId,
-          idempotencyKey: request.idempotencyKey,
-          feature: "transcribe_audio",
-          model: this.options.provider.transcriptionModel,
-          latencyMs: 0,
-          success: false,
-          cached: false,
-          logicalRequest: true,
-          errorCode: "RATE_LIMITED",
-        });
-        return this.fallbackTranscriptionResponse(
-          requestId,
-          prepared.submissionId,
-          prepared.audioAssetId,
-          "RATE_LIMITED",
-          false,
-        );
-      }
-    }
     if (!this.options.provider.configured) {
       await this.options.repository.markSpeakingFailed(
         learner.profileId,
@@ -361,6 +315,32 @@ export class AudioLearningService implements AudioLearningServiceContract {
       );
     }
 
+    let reservation: AiQuotaReservation | undefined;
+    try {
+      reservation = await this.options.quotaGate.reserve({
+        learnerId: learner.profileId,
+        feature: "transcribe_audio",
+        idempotencyKey: request.idempotencyKey,
+        limit: this.options.dailyTranscriptionLimit,
+      });
+      await this.options.quotaGate.reserveProviderCall(reservation, 1);
+    } catch (error) {
+      if (reservation) {
+        await this.options.quotaGate.release(reservation);
+      }
+      await this.options.repository.markSpeakingFailed(
+        learner.profileId,
+        prepared.submissionId,
+        error instanceof ApiError ? error.code : "DATABASE_ERROR",
+      );
+      throw error;
+    }
+
+    if (!reservation) {
+      throw new ApiError("DATABASE_ERROR", "AI 額度保留資料不完整。", 500, true);
+    }
+
+    let completedResponse: TranscribeResponse;
     try {
       const bytes = await this.options.repository.downloadSpeakingAudio(request.storagePath);
       const result = await this.options.provider.transcribe({
@@ -408,7 +388,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
         cached: false,
         logicalRequest: prepared.created,
       });
-      return {
+      completedResponse = {
         requestId,
         submissionId: prepared.submissionId,
         audioAssetId: prepared.audioAssetId,
@@ -423,6 +403,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
         fallbackReason: null,
       };
     } catch (error) {
+      await this.options.quotaGate.release(reservation);
       const code = normalizeProviderErrorCode(
         error instanceof AudioProviderError ? error.code : "NETWORK_ERROR",
       );
@@ -448,6 +429,8 @@ export class AudioLearningService implements AudioLearningServiceContract {
         false,
       );
     }
+    await this.options.quotaGate.consume(reservation);
+    return completedResponse;
   }
 
   async deleteSpeakingSubmission(
@@ -474,23 +457,6 @@ export class AudioLearningService implements AudioLearningServiceContract {
     }
     this.rateLimiter.assertAllowed(learner.profileId);
     return learner;
-  }
-
-  private async enforceDailyLimit(
-    learnerId: string,
-    feature: AudioUsageLogInputFeature,
-    limit: number,
-    message: string,
-  ): Promise<void> {
-    const since = new Date(this.now().getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const count = await this.options.repository.countRecentLogicalRequests(
-      learnerId,
-      feature,
-      since,
-    );
-    if (count >= limit) {
-      throw new ApiError("RATE_LIMITED", message, 429, true);
-    }
   }
 
   private createTtsResponse(

@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 const host = "127.0.0.1";
 const port = 18787;
 const healthUrl = `http://${host}:${port}/health`;
+const allowedOrigin = "https://app.example.com";
 const output = [];
 const server = spawn(process.execPath, ["dist/server.mjs"], {
   cwd: process.cwd(),
@@ -13,6 +14,7 @@ const server = spawn(process.execPath, ["dist/server.mjs"], {
     APP_ENV: "staging",
     HOST: host,
     PORT: String(port),
+    CORS_ALLOWED_ORIGINS: allowedOrigin,
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "bundle-smoke-service-key",
     OPENAI_API_KEY: "",
@@ -25,15 +27,33 @@ server.stdout.on("data", (chunk) => output.push(chunk.toString()));
 server.stderr.on("data", (chunk) => output.push(chunk.toString()));
 
 try {
-  const payload = await waitForHealth();
+  const { payload, requestId, responseOrigin, vary } = await waitForHealth();
   if (
     payload.status !== "ok" ||
     payload.service !== "deutschtrainer-api" ||
-    payload.aiConfigured !== false
+    payload.aiConfigured !== false ||
+    requestId !== "bundle-smoke-request" ||
+    responseOrigin !== allowedOrigin ||
+    !vary?.split(",").some((value) => value.trim().toLowerCase() === "origin")
   ) {
-    throw new Error(`Unexpected health payload: ${JSON.stringify(payload)}`);
+    throw new Error(
+      `Unexpected health response: ${JSON.stringify({
+        payload,
+        requestId,
+        responseOrigin,
+        vary,
+      })}`,
+    );
   }
-  console.log(`Production bundle health check passed at ${healthUrl}.`);
+
+  const disallowedResponse = await fetch(healthUrl, {
+    headers: { origin: "https://untrusted.example.com" },
+  });
+  if (disallowedResponse.headers.get("access-control-allow-origin") !== null) {
+    throw new Error("Disallowed browser origin received a CORS response header.");
+  }
+
+  console.log(`Production bundle health and CORS checks passed at ${healthUrl}.`);
 } finally {
   await stopServer();
 }
@@ -45,9 +65,19 @@ async function waitForHealth() {
     }
 
     try {
-      const response = await fetch(healthUrl);
+      const response = await fetch(healthUrl, {
+        headers: {
+          origin: allowedOrigin,
+          "x-request-id": "bundle-smoke-request",
+        },
+      });
       if (response.ok) {
-        return await response.json();
+        return {
+          payload: await response.json(),
+          requestId: response.headers.get("x-request-id"),
+          responseOrigin: response.headers.get("access-control-allow-origin"),
+          vary: response.headers.get("vary"),
+        };
       }
     } catch {
       // The bundle may still be starting.

@@ -8,6 +8,7 @@ import {
 import { buildEvaluateResponsePrompt, promptRegistry } from "@deutschtrainer/ai-prompts";
 import type { CefrLevel } from "@deutschtrainer/shared-types";
 import type { EvaluateResponseRequest, EvaluateResponseResponse } from "@deutschtrainer/validation";
+import type { AiQuotaGate, AiQuotaReservation } from "../ai-quota/types";
 import { ApiError } from "../errors";
 import { EvaluationProviderError, type ProviderErrorCode } from "./openAiEvaluationProvider";
 import type {
@@ -26,6 +27,7 @@ export interface ResponseEvaluationServiceOptions {
   dailyLimit: number;
   inputCostPerMillion: number;
   outputCostPerMillion: number;
+  quotaGate: AiQuotaGate;
   now?: () => Date;
   requestId?: () => string;
 }
@@ -61,6 +63,7 @@ export class ResponseEvaluationService implements EvaluationService {
     if (!learner) {
       throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
     }
+    this.options.quotaGate.assertEligible(learner);
 
     const existing = await this.options.repository.findByIdempotency(
       learner.profileId,
@@ -88,20 +91,6 @@ export class ResponseEvaluationService implements EvaluationService {
       throw new ApiError("NOT_FOUND", "找不到可批改的已發布題目。", 404, false);
     }
     validateLearnerResponse(request.responseDe, exercise);
-
-    const since = new Date(this.now().getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const recentRequests = await this.options.repository.countRecentLogicalRequests(
-      learner.profileId,
-      since,
-    );
-    if (recentRequests >= this.options.dailyLimit) {
-      throw new ApiError(
-        "RATE_LIMITED",
-        `過去 24 小時的 AI 批改額度已用完（${this.options.dailyLimit} 次）。`,
-        429,
-        true,
-      );
-    }
 
     const cacheKey = createEvaluationCacheKey(learner.profileId, exercise, request.responseDe);
     const cached = await this.options.repository.findCached(learner.profileId, cacheKey);
@@ -175,7 +164,32 @@ export class ResponseEvaluationService implements EvaluationService {
       );
     }
 
-    return this.evaluateWithProvider(requestId, learner, request, exercise, cacheKey);
+    const reservation = await this.options.quotaGate.reserve({
+      learnerId: learner.profileId,
+      feature: "evaluate_response",
+      idempotencyKey: request.idempotencyKey,
+      limit: this.options.dailyLimit,
+    });
+    let result: EvaluateResponseResponse;
+    try {
+      result = await this.evaluateWithProvider(
+        requestId,
+        learner,
+        request,
+        exercise,
+        cacheKey,
+        reservation,
+      );
+    } catch (error) {
+      await this.options.quotaGate.release(reservation);
+      throw error;
+    }
+    if (result.status === "completed") {
+      await this.options.quotaGate.consume(reservation);
+    } else {
+      await this.options.quotaGate.release(reservation);
+    }
+    return result;
   }
 
   private async evaluateWithProvider(
@@ -184,12 +198,14 @@ export class ResponseEvaluationService implements EvaluationService {
     request: EvaluateResponseRequest,
     exercise: EvaluationExercise,
     cacheKey: string,
+    reservation: AiQuotaReservation,
   ): Promise<EvaluateResponseResponse> {
     const totals = emptyUsage();
     let retryIssues: string[] = [];
     let fallbackReason: ProviderErrorCode = "AI_RESPONSE_INVALID";
 
     for (let providerAttempt = 1; providerAttempt <= 2; providerAttempt += 1) {
+      await this.options.quotaGate.reserveProviderCall(reservation, providerAttempt);
       const messages = buildEvaluateResponsePrompt({
         exerciseType: exercise.type,
         targetLevel: exercise.level,

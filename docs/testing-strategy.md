@@ -133,6 +133,8 @@ pnpm test
 - `pnpm --filter @deutschtrainer/api verify:admin:local` 建立 learner、content_editor、reviewer、admin 四個臨時帳號。
 - 驗證草稿保存、不可變版本、送審、核准、admin-only 發布、audit actor 與測試資料清理。
 - 驗證 learner 看不到版本，editor 不可核准／直發，reviewer 不可發布，admin 不可發布未審 AI 草稿。
+- 驗證 anonymous 無法直接執行 `current_profile_id`、`current_app_role` 與
+  `is_content_team`；合法 authenticated 管理流程仍依角色通過或拒絕。
 - deterministic content provider 不依賴真實 OpenAI；測試 schema invalid retry、quota、idempotency 與 draft-only persistence。
 - Next production build 必須在缺少公開環境設定時仍可預渲染；執行時顯示設定狀態而非載入 server secret。
 - 瀏覽器巡檢 1440 px 與 390 px 的登入、角色拒絕、六個工作區、長德文／UUID／JSON 及水平溢出。
@@ -186,6 +188,39 @@ pnpm test
 
 - `verify:content-readiness:local` 驗證 100 題 human／approved／published content、CEFR 分布、題型下限與答案完整性。
 - `expo config` 與 EAS CLI `config --non-interactive` 驗證原生 app config 及 preview／production profiles。
-- Expo Doctor、Web export、Admin production build、lint、typecheck、Jest 與既有七組 Supabase/API E2E 全數回歸。
+- Expo Doctor、Web export、Admin production build、lint、typecheck、Jest 與 manifests
+  列出的 Supabase/API local verification suites 全數回歸。
 - Maestro guest smoke 使用 internal preview build 驗證歡迎、登入與忘記密碼導覽；不使用測試帳密。
 - Android/iOS device matrix 另驗證通知權限與送達、麥克風、錄音播放、process relaunch、飛航模式與 reconnect race。
+
+## 19. Phase 15 artifact 與可觀測性驗證
+
+- `pnpm --filter @deutschtrainer/api build` 與
+  `pnpm --filter @deutschtrainer/api verify:bundle` 驗證 plain Node production artifact。
+- Docker 從 monorepo root 建置；檢查 non-root user、health check、runtime secrets 與 shutdown。
+- clean local reset 後執行 Supabase security advisors，並確認 public tables 全部啟用 RLS、
+  `SECURITY DEFINER` functions 全部固定 `search_path` 且沒有預設 `PUBLIC EXECUTE`。
+- observability 單元測試驗證安全 request ID、bounded structured fields 與 5xx level；bundle
+  smoke 應驗證 response `x-request-id`。
+- staging/production 必須拒絕 fake AI、placeholder key 與非 HTTPS Supabase。
+- Gate 3 remote verification 檢查 migration head、36/36 public table RLS、protected-content
+  grants、function execute/search-path、Storage policies、current/default table mutation 與
+  `MAINTAIN` privileges、anonymous Data API denial 與 release seed；這些靜態／anonymous
+  證據不得取代 deployed API 的雙使用者 role/owner suite。
+- 集中 log、alerts、distributed rate limit、backup/restore 與 rollback 必須在部署環境驗證；
+  repository 文件不能替代營運證據。
+
+## 20. 帳號資料權利驗證
+
+- validation/service/Mobile 單元測試覆蓋精確刪除確認、owner export、Storage-first failure、
+  Storage/Auth partial-failure retry、replay-safe deletion 與 profile-scoped local cleanup。
+- `pnpm --filter @deutschtrainer/api verify:account-data:local` 建立兩位臨時 learner，驗證
+  unauthenticated export `401`、self-only export、cross-user Storage denial、invalid
+  confirmation `400`、Storage/Auth/database deletion、舊 token `401` 及另一位使用者不受影響。
+- clean `supabase db reset` 必須套用 append-only account-data migration，且整合腳本需由
+  同一 revision 的 API bundle 對該資料庫執行。
+- local API-based verification 仍須由使用者或受保護 runtime 安全提供
+  `SUPABASE_SERVICE_ROLE_KEY`；不得從 CLI output、Docker metadata 或 log 擷取後寫入文件或
+  env file，也不得以 placeholder 取代。
+- connected staging 重複雙使用者流程；Android 實機另驗證 settings、notification、
+  downloads/pending queue、progress 與 Auth session 在 restart 後仍已清除。

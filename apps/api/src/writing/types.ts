@@ -101,7 +101,6 @@ export interface WritingRepository {
     learnerId: string,
     submissionId: string,
   ): Promise<WritingSubmissionContext | undefined>;
-  countRecentLogicalRequests(learnerId: string, since: string): Promise<number>;
   prepareVersion(input: PrepareWritingVersionInput): Promise<PreparedWritingVersion>;
   recordFeedback(input: WritingFeedbackRecordInput): Promise<WritingFeedbackRecordResult>;
   markEvaluationFailed(learnerId: string, versionId: string): Promise<void>;

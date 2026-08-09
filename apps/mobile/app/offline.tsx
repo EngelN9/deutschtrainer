@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.sm,
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: spacingTokens.md,
   },
   inlineActionText: {

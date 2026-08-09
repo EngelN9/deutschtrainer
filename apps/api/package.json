@@ -20,7 +20,9 @@
     "verify:offline-sync:local": "tsx scripts/verify-offline-sync-e2e.ts",
     "verify:knowledge:local": "tsx scripts/verify-knowledge-library-e2e.ts",
     "verify:content-readiness:local": "tsx scripts/verify-content-readiness-e2e.ts",
-    "verify:settings:local": "tsx scripts/verify-settings-e2e.ts"
+    "verify:settings:local": "tsx scripts/verify-settings-e2e.ts",
+    "verify:account-data:local": "tsx scripts/verify-account-data-e2e.ts",
+    "verify:ai-quota:local": "tsx scripts/verify-ai-quota-e2e.ts"
   },
   "dependencies": {
     "@deutschtrainer/ai-prompts": "workspace:*",
@@ -28,7 +30,7 @@
     "@deutschtrainer/grading": "workspace:*",
     "@deutschtrainer/shared-types": "workspace:*",
     "@deutschtrainer/validation": "workspace:*",
-    "@supabase/supabase-js": "2.110.2",
+    "@supabase/supabase-js": "2.110.5",
     "diff": "9.0.0",
     "openai": "6.46.0",
     "zod": "4.4.3"

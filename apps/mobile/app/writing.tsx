@@ -8,26 +8,38 @@ import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { LevelSelector } from "../src/components/LevelSelector";
-import { MainNavigation } from "../src/components/MainNavigation";
+import { PrimaryButton } from "../src/components/PrimaryButton";
 import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
 import { writingStatusLabel, writingTypeLabel } from "../src/features/writing/writingLabels";
+import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 
 export default function WritingScreen() {
   const router = useRouter();
-  const [level, setLevel] = useState<CefrLevel>("B1");
+  const currentLevel = useLearningSetupStore((state) => state.currentLevel);
+  const [level, setLevel] = useState<CefrLevel>(currentLevel);
   const workspaceQuery = useWritingWorkspace();
   const prompts = useMemo(
     () => workspaceQuery.data?.prompts.filter((prompt) => prompt.level === level) ?? [],
     [level, workspaceQuery.data],
   );
+  const recommendedPrompt = prompts[0];
+  const otherPrompts = prompts.slice(1);
   const submissions = workspaceQuery.data?.submissions ?? [];
+
+  function openPrompt(promptId: string) {
+    router.push({
+      pathname: "/writing/editor/[promptId]",
+      params: { promptId },
+    } as unknown as Href);
+  }
 
   return (
     <AuthGate mode="protected">
       <ContentScreen
         description="選擇符合程度的任務，完成第一稿後依批改重寫並比較版本。"
         eyebrow="作文訓練"
+        showMainNavigation
         title="把德語寫得更精準"
       >
         <LevelSelector onChange={setLevel} value={level} />
@@ -42,24 +54,46 @@ export default function WritingScreen() {
           />
         ) : (
           <>
-            <View style={styles.section}>
-              <View style={styles.sectionHeading}>
-                <FilePenLine color={colorTokens.primary} size={20} />
-                <Text style={styles.sectionTitle}>{level} 寫作任務</Text>
+            {recommendedPrompt ? (
+              <View style={styles.recommendedCard}>
+                <Text style={styles.recommendedEyebrow}>今天先完成一次輸出循環</Text>
+                <Text style={styles.recommendedTitle}>{recommendedPrompt.titleZhTw}</Text>
+                <Text style={styles.recommendedDescription}>
+                  寫出第一稿後，只先看三個最重要的問題，再重寫一次比較改善。
+                </Text>
+                <View style={styles.metaRow}>
+                  <Text style={styles.typeLabel}>
+                    {level} · {writingTypeLabel(recommendedPrompt.writingType)}
+                  </Text>
+                  <View style={styles.inlineMeta}>
+                    <Clock3 color={colorTokens.mutedText} size={14} />
+                    <Text style={styles.meta}>{recommendedPrompt.estimatedMinutes} 分</Text>
+                  </View>
+                </View>
+                <PrimaryButton
+                  accessibilityLabel={`開始德文輸出訓練：${recommendedPrompt.titleZhTw}`}
+                  onPress={() => openPrompt(recommendedPrompt.id)}
+                >
+                  開始一次德文輸出訓練
+                </PrimaryButton>
               </View>
-              {prompts.length > 0 ? (
+            ) : (
+              <Text style={styles.emptyText}>這個程度目前沒有已發布的作文題目。</Text>
+            )}
+
+            {otherPrompts.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHeading}>
+                  <FilePenLine color={colorTokens.primary} size={20} />
+                  <Text style={styles.sectionTitle}>其他 {level} 寫作任務</Text>
+                </View>
                 <View style={styles.promptList}>
-                  {prompts.map((prompt) => (
+                  {otherPrompts.map((prompt) => (
                     <Pressable
                       accessibilityLabel={`開始 ${prompt.titleZhTw}`}
                       accessibilityRole="button"
                       key={prompt.id}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/writing/editor/[promptId]",
-                          params: { promptId: prompt.id },
-                        } as unknown as Href)
-                      }
+                      onPress={() => openPrompt(prompt.id)}
                       style={({ pressed }) => [styles.prompt, pressed ? styles.pressed : null]}
                     >
                       <View style={styles.promptCopy}>
@@ -84,10 +118,8 @@ export default function WritingScreen() {
                     </Pressable>
                   ))}
                 </View>
-              ) : (
-                <Text style={styles.emptyText}>這個程度目前沒有已發布的作文題目。</Text>
-              )}
-            </View>
+              </View>
+            ) : null}
 
             <View style={styles.section}>
               <View style={styles.sectionHeading}>
@@ -139,7 +171,6 @@ export default function WritingScreen() {
             </View>
           </>
         )}
-        <MainNavigation />
       </ContentScreen>
     </AuthGate>
   );
@@ -199,6 +230,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     lineHeight: 25,
+  },
+  recommendedCard: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.lg,
+  },
+  recommendedDescription: {
+    color: colorTokens.text,
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  recommendedEyebrow: {
+    color: colorTokens.teal,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  recommendedTitle: {
+    color: colorTokens.text,
+    fontSize: 21,
+    fontWeight: "900",
+    lineHeight: 28,
   },
   section: {
     borderTopColor: colorTokens.border,

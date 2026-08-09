@@ -11,14 +11,14 @@
 
 ## 2. AI 功能
 
-| 功能         | API                              | 輸出 Schema              | 是否可快取                       |
-| ------------ | -------------------------------- | ------------------------ | -------------------------------- |
-| 自由回答批改 | POST /ai/evaluate-response       | AiEvaluationFeedback     | learner+exercise+answer+versions |
-| 作文批改     | POST /ai/evaluate-writing        | WritingFeedback          | no, but versioned                |
-| 生成題目草稿 | POST /admin/ai/exercise-drafts   | GeneratedExerciseDraft   | idempotent replay only           |
-| 德語 TTS     | POST /audio/text-to-speech       | TextToSpeechResult       | yes by text+voice hash           |
-| STT          | POST /audio/transcribe           | TranscriptionResult      | no                               |
-| 對話         | POST /conversations/:id/messages | ConversationTurnFeedback | no                               |
+| 功能         | API                            | 輸出 Schema            | 是否可快取                       |
+| ------------ | ------------------------------ | ---------------------- | -------------------------------- |
+| 自由回答批改 | POST /ai/evaluate-response     | AiEvaluationFeedback   | learner+exercise+answer+versions |
+| 作文批改     | POST /ai/evaluate-writing      | WritingFeedback        | no, but versioned                |
+| 生成題目草稿 | POST /admin/ai/exercise-drafts | GeneratedExerciseDraft | idempotent replay only           |
+| 德語 TTS     | POST /audio/text-to-speech     | TextToSpeechResult     | yes by text+voice hash           |
+| STT          | POST /audio/transcribe         | TranscriptionResult    | no                               |
+| 對話（規劃） | 尚無 endpoint                  | 尚未實作               | not applicable                   |
 
 ## 3. 驗證管線
 
@@ -87,7 +87,10 @@ AI output 需包含 cefrLevelEstimate。後端需檢查估計程度與 targetLev
 - 重複請求使用 idempotency key。
 - AI 失敗時使用預設錯誤說明。
 - 相同 learner、exercise/version、正規化回答、prompt/version 與 schema/version 才能共用快取。
-- `logical_request=true` 的 rolling 24 小時紀錄用於額度計算；idempotent replay 不重複計數。
+- `ai_quota_reservations` 的成功 reservation 使用 server time 計算 rolling 24 小時額度；
+  idempotent replay、cache hit 與 provider 失敗不消耗 learner 額度。
+- 每次新的 provider call 另由 `ai_provider_call_reservations` 原子計入全平台 UTC 日上限；
+  provider 失敗仍保留 usage/cost 與全平台上限證據。
 
 ## 7. TTS 與 STT
 
@@ -117,9 +120,11 @@ STT：
 - 預設模型為 server-configurable `gpt-5.6-luna`。
 - 每次 provider attempt 記錄 tokens、latency、success、errorCode 與估算成本。
 - AI 題參考答案只允許 service role 讀取。
-- 作文已完成 save-before-provider、十項 rubric、UTF-16 行內錯誤、first/second pass reference、版本 diff、10/day rolling quota、重試與 owner delete。
+- 作文已完成 save-before-provider、十項 rubric、UTF-16 行內錯誤、first/second pass reference、版本 diff、2/rolling 24h 平台額度、重試與 owner delete。
 - TTS 已完成受信任 listening asset 輸入、private cache、短效 signed URL、idempotency 與 rolling quota。
 - STT 已完成 owner 錄音驗證、逐字稿、時間點、文字差異、語速、停頓、繁中回饋、免責聲明、失敗降級與 owner delete。
 - AI 題目草稿已完成內容角色驗證、三種受約束題型、Structured Output、Zod／語意重驗、retry、rolling quota、usage log 與冪等重播。
 - 生成結果不接受模型提供 UUID、status 或 review decision；成功後由 service-only RPC 固定寫成 `ai_generated + draft`。
 - 自由口說與多輪 AI 對話仍屬後續階段。
+- `AI_EVALUATION_FAKE_MODE=true` 僅是 local/test deterministic fixture；不得作為 real AI
+  品質、成本、latency、staging 或 production 驗收證據。

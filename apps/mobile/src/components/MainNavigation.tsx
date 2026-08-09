@@ -9,9 +9,10 @@ import {
   Library,
   RotateCcw,
 } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useAuthStore } from "../features/auth/useAuthStore";
+import { useResponsiveLayout } from "../layout/useResponsiveLayout";
 
 const items: Array<{
   href: Href;
@@ -28,17 +29,21 @@ const items: Array<{
   { href: "/analytics" as Href, icon: BarChart3, label: "分析", path: "/analytics" },
 ];
 
-export function MainNavigation() {
+export function MainNavigation({ layout = "bar" }: { layout?: "bar" | "rail" }) {
   const pathname = usePathname();
   const router = useRouter();
   const authMode = useAuthStore((state) => state.authMode);
+  const { isCompact } = useResponsiveLayout();
   const visibleItems =
     authMode === "demo"
       ? items.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
       : items;
 
-  return (
-    <View accessibilityRole="tablist" style={styles.navigation}>
+  const navigation = (
+    <View
+      accessibilityRole="tablist"
+      style={[styles.navigation, layout === "rail" ? styles.railNavigation : styles.barNavigation]}
+    >
       {visibleItems.map((item) => {
         const active = pathname === item.path;
         const Icon = item.icon;
@@ -52,6 +57,7 @@ export function MainNavigation() {
             onPress={() => router.replace(item.href)}
             style={({ pressed }) => [
               styles.item,
+              layout === "rail" ? styles.railItem : styles.barItem,
               active ? styles.activeItem : null,
               pressed ? styles.pressed : null,
             ]}
@@ -63,6 +69,21 @@ export function MainNavigation() {
       })}
     </View>
   );
+
+  if (layout === "bar" && isCompact) {
+    return (
+      <ScrollView
+        contentContainerStyle={styles.compactScrollContent}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.compactScroll}
+      >
+        {navigation}
+      </ScrollView>
+    );
+  }
+
+  return navigation;
 }
 
 const styles = StyleSheet.create({
@@ -75,7 +96,6 @@ const styles = StyleSheet.create({
   item: {
     alignItems: "center",
     borderRadius: 8,
-    flex: 1,
     gap: spacingTokens.xs,
     justifyContent: "center",
     minHeight: 58,
@@ -92,12 +112,37 @@ const styles = StyleSheet.create({
     borderColor: colorTokens.border,
     borderRadius: 8,
     borderWidth: 1,
-    flexDirection: "row",
     gap: spacingTokens.xs,
-    marginTop: spacingTokens.md,
     padding: spacingTokens.xs,
+  },
+  barItem: {
+    flex: 1,
+    minWidth: 64,
+  },
+  barNavigation: {
+    flexDirection: "row",
+    minWidth: "100%",
+  },
+  compactScroll: {
+    flexGrow: 0,
+    width: "100%",
+  },
+  compactScrollContent: {
+    minWidth: "100%",
   },
   pressed: {
     opacity: 0.72,
+  },
+  railItem: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    minHeight: 48,
+    paddingHorizontal: spacingTokens.md,
+    width: "100%",
+  },
+  railNavigation: {
+    flexDirection: "column",
+    width: "100%",
   },
 });

@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { userRoleSchema } from "@deutschtrainer/validation";
 import { aiEvaluationFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import { SUPPORTED_LEVELS, type CefrLevel } from "@deutschtrainer/shared-types";
 import { ApiError } from "../errors";
@@ -30,7 +31,7 @@ export class SupabaseEvaluationRepository implements EvaluationRepository {
 
     const profileResult = await this.client
       .from("profiles")
-      .select("id, timezone")
+      .select("id, role, timezone")
       .eq("auth_user_id", userResult.data.user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -41,7 +42,9 @@ export class SupabaseEvaluationRepository implements EvaluationRepository {
 
     return {
       authUserId: userResult.data.user.id,
+      emailVerified: Boolean(userResult.data.user.email_confirmed_at),
       profileId: profileResult.data.id,
+      role: userRoleSchema.parse(profileResult.data.role),
       timezone: profileResult.data.timezone,
     };
   }
@@ -185,18 +188,6 @@ export class SupabaseEvaluationRepository implements EvaluationRepository {
       minimumCharacters: readInteger(payload, "minimumCharacters", 10),
       maximumCharacters: readInteger(payload, "maximumCharacters", 800),
     };
-  }
-
-  async countRecentLogicalRequests(learnerId: string, since: string): Promise<number> {
-    const result = await this.client
-      .from("ai_usage_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", learnerId)
-      .eq("feature", "evaluate_response")
-      .eq("logical_request", true)
-      .gte("created_at", since);
-    assertDatabaseResult(result.error, "無法檢查 AI 使用額度。");
-    return result.count ?? 0;
   }
 
   async recordEvaluation(input: EvaluationRecordInput): Promise<EvaluationRecordResult> {

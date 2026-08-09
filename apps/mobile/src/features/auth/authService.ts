@@ -73,6 +73,13 @@ export async function signOutCurrentUser(): Promise<void> {
   }
 }
 
+export async function clearLocalSession(): Promise<void> {
+  const { error } = await supabase.auth.signOut({ scope: "local" });
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export function subscribeToAuthChanges(callback: (session: Session | null) => void): () => void {
   const {
     data: { subscription },

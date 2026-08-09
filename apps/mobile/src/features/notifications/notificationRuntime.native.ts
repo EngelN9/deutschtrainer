@@ -116,6 +116,16 @@ export function presentLearningNotification(event: LearningNotificationEvent): P
   return task;
 }
 
+export async function clearAccountNotifications(profileId: string): Promise<void> {
+  await syncScheduledReminders([]);
+  const ledger = await readNumberRecord(eventLedgerStorageKey);
+  const profileMarker = `:${profileId}:`;
+  const retained = Object.fromEntries(
+    Object.entries(ledger).filter(([key]) => !key.includes(profileMarker)),
+  );
+  await writeJson(eventLedgerStorageKey, retained);
+}
+
 async function presentDeduplicatedLearningNotification(
   event: LearningNotificationEvent,
 ): Promise<boolean> {
