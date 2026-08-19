@@ -865,7 +865,7 @@ function assertDatabaseResult(
   message: string,
 ): asserts error is null {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw createSafeDatabaseError(message, error);
   }
 }
 
@@ -875,6 +875,11 @@ function assertFirstDatabaseError(
 ): void {
   const error = errors.find(Boolean);
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw createSafeDatabaseError(message, error);
   }
+}
+
+export function createSafeDatabaseError(message: string, cause: unknown): ApiError {
+  void cause;
+  return new ApiError("DATABASE_ERROR", message, 500, true);
 }
