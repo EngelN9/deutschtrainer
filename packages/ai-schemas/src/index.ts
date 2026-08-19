@@ -6,6 +6,80 @@ export const aiSchemaVersions = {
   writingFeedback: "WritingFeedback.v1",
   speakingFeedback: "SpeakingFeedback.v1",
   generatedExerciseDraft: "GeneratedExerciseDraft.v1",
+  conversationTurn: "ConversationTurn.v1",
+  conversationFeedback: "ConversationFeedback.v1",
+} as const;
+
+export const conversationTurnSchema = z
+  .object({
+    replyDe: z.string().trim().min(1).max(2000),
+    suggestCompletion: z.boolean(),
+  })
+  .strict();
+export type ConversationTurn = z.infer<typeof conversationTurnSchema>;
+
+export const conversationFeedbackSchema = z
+  .object({
+    summaryZhTw: z.string().trim().min(1).max(2000),
+    strengths: z.array(z.string().trim().min(1).max(500)).min(1).max(3),
+    priorityIssues: z
+      .array(
+        z
+          .object({
+            titleZhTw: z.string().trim().min(1).max(200),
+            evidenceDe: z.string().trim().min(1).max(500),
+            explanationZhTw: z.string().trim().min(1).max(800),
+            actionZhTw: z.string().trim().min(1).max(500),
+          })
+          .strict(),
+      )
+      .max(3),
+    retryTaskZhTw: z.string().trim().min(1).max(1000),
+    requiresHumanReview: z.boolean(),
+  })
+  .strict();
+export type ConversationFeedback = z.infer<typeof conversationFeedbackSchema>;
+
+export const conversationTurnJsonSchema = {
+  type: "object",
+  properties: {
+    replyDe: { type: "string", minLength: 1, maxLength: 2000 },
+    suggestCompletion: { type: "boolean" },
+  },
+  required: ["replyDe", "suggestCompletion"],
+  additionalProperties: false,
+} as const;
+
+export const conversationFeedbackJsonSchema = {
+  type: "object",
+  properties: {
+    summaryZhTw: { type: "string", minLength: 1, maxLength: 2000 },
+    strengths: {
+      type: "array",
+      minItems: 1,
+      maxItems: 3,
+      items: { type: "string", minLength: 1, maxLength: 500 },
+    },
+    priorityIssues: {
+      type: "array",
+      maxItems: 3,
+      items: {
+        type: "object",
+        properties: {
+          titleZhTw: { type: "string", minLength: 1, maxLength: 200 },
+          evidenceDe: { type: "string", minLength: 1, maxLength: 500 },
+          explanationZhTw: { type: "string", minLength: 1, maxLength: 800 },
+          actionZhTw: { type: "string", minLength: 1, maxLength: 500 },
+        },
+        required: ["titleZhTw", "evidenceDe", "explanationZhTw", "actionZhTw"],
+        additionalProperties: false,
+      },
+    },
+    retryTaskZhTw: { type: "string", minLength: 1, maxLength: 1000 },
+    requiresHumanReview: { type: "boolean" },
+  },
+  required: ["summaryZhTw", "strengths", "priorityIssues", "retryTaskZhTw", "requiresHumanReview"],
+  additionalProperties: false,
 } as const;
 
 export const generatedExerciseOptionSchema = z

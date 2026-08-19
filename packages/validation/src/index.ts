@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   aiEvaluationFeedbackSchema,
+  conversationFeedbackSchema,
   generatedExerciseDraftSchema,
   writingFeedbackSchema,
 } from "@deutschtrainer/ai-schemas";
@@ -55,26 +56,92 @@ export const adminExerciseOptionDraftSchema = z.object({
   metadataJson: z.record(z.string(), z.unknown()).default({}),
 });
 
-export const adminExerciseDraftSchema = z.object({
-  activityId: databaseUuidSchema,
-  level: cefrLevelSchema,
-  type: exerciseTypeSchema,
-  title: z.string().trim().min(1).max(120),
-  instructionZhTw: z.string().trim().min(1).max(300),
-  promptDe: z.string().trim().min(1).max(1000),
-  payloadJson: z.record(z.string(), z.unknown()),
-  skillIds: z.array(z.string().trim().min(1)).min(1).max(12),
-  grammarTopicIds: z.array(z.string().trim().min(1)).max(12),
-  vocabularyIds: z.array(z.string().trim().min(1)).max(20),
-  estimatedSeconds: z.number().int().min(1).max(3600),
-  difficulty: z.number().int().min(1).max(5),
-  sourceType: z.enum(["human", "ai_assisted"]),
-  orderIndex: z.number().int().nonnegative(),
-  options: z.array(adminExerciseOptionDraftSchema).max(12),
-  answerJson: z.record(z.string(), z.unknown()),
-  gradingPolicyJson: z.record(z.string(), z.unknown()),
-  explanationZhTw: z.string().trim().max(1000),
+const adminReadingQuestionSchema = z.object({
+  id: databaseUuidSchema,
+  promptDe: z.string().trim().min(1).max(500),
+  supportZhTw: z.string().trim().min(1).max(500).optional(),
+  options: z
+    .array(
+      z.object({
+        id: databaseUuidSchema,
+        label: z.string().trim().min(1).max(12),
+        textDe: z.string().trim().min(1).max(300),
+        textZhTw: z.string().trim().min(1).max(300).optional(),
+        orderIndex: z.number().int().nonnegative(),
+      }),
+    )
+    .min(2)
+    .max(5),
+  explanationZhTw: z.string().trim().min(1).max(1000),
 });
+
+const adminReadingPayloadSchema = z.object({
+  passageTitleDe: z.string().trim().min(1).max(200),
+  passageDe: z.string().trim().min(1).max(8_000),
+  estimatedReadingMinutes: z.number().int().min(1).max(20),
+  questions: z.array(adminReadingQuestionSchema).length(4),
+});
+
+export const adminExerciseDraftSchema = z
+  .object({
+    activityId: databaseUuidSchema,
+    level: cefrLevelSchema,
+    type: exerciseTypeSchema,
+    title: z.string().trim().min(1).max(120),
+    instructionZhTw: z.string().trim().min(1).max(300),
+    promptDe: z.string().trim().min(1).max(1000),
+    payloadJson: z.record(z.string(), z.unknown()),
+    skillIds: z.array(z.string().trim().min(1)).min(1).max(12),
+    grammarTopicIds: z.array(z.string().trim().min(1)).max(12),
+    vocabularyIds: z.array(z.string().trim().min(1)).max(20),
+    estimatedSeconds: z.number().int().min(1).max(3600),
+    difficulty: z.number().int().min(1).max(5),
+    sourceType: z.enum(["human", "ai_assisted"]),
+    orderIndex: z.number().int().nonnegative(),
+    options: z.array(adminExerciseOptionDraftSchema).max(12),
+    answerJson: z.record(z.string(), z.unknown()),
+    gradingPolicyJson: z.record(z.string(), z.unknown()),
+    explanationZhTw: z.string().trim().max(1000),
+  })
+  .superRefine((draft, context) => {
+    if (draft.type !== "reading_comprehension") {
+      return;
+    }
+    const payload = adminReadingPayloadSchema.safeParse(draft.payloadJson);
+    const answers = z
+      .object({ optionIdsByQuestion: z.record(databaseUuidSchema, databaseUuidSchema) })
+      .safeParse(draft.answerJson);
+    if (!payload.success) {
+      context.addIssue({
+        code: "custom",
+        message: "reading_comprehension payload is incomplete",
+        path: ["payloadJson"],
+      });
+      return;
+    }
+    if (!answers.success) {
+      context.addIssue({
+        code: "custom",
+        message: "reading_comprehension answers are incomplete",
+        path: ["answerJson"],
+      });
+      return;
+    }
+    const entries = Object.entries(answers.data.optionIdsByQuestion);
+    if (
+      entries.length !== payload.data.questions.length ||
+      payload.data.questions.some((question) => {
+        const selected = answers.data.optionIdsByQuestion[question.id];
+        return !question.options.some((option) => option.id === selected);
+      })
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "reading_comprehension answers must match all four questions",
+        path: ["answerJson", "optionIdsByQuestion"],
+      });
+    }
+  });
 export type AdminExerciseDraft = z.infer<typeof adminExerciseDraftSchema>;
 
 export const generateExerciseDraftRequestSchema = z.object({
@@ -121,6 +188,7 @@ export const apiErrorCodeSchema = z.enum([
   "AI_NOT_CONFIGURED",
   "AI_QUOTA_EXCEEDED",
   "AI_GLOBALLY_DISABLED",
+  "AI_ACCESS_RESTRICTED",
   "CONFLICT",
   "AUDIO_UPLOAD_FAILED",
   "CONTENT_NOT_PUBLISHED",
@@ -258,9 +326,101 @@ export const aiEntitlementResponseSchema = z.object({
     writingEvaluation: aiEntitlementQuotaSchema,
     textToSpeech: aiEntitlementQuotaSchema,
     transcription: aiEntitlementQuotaSchema,
+    conversation: aiEntitlementQuotaSchema,
   }),
 });
 export type AiEntitlementResponse = z.infer<typeof aiEntitlementResponseSchema>;
+
+export const conversationScenarioSchema = z.object({
+  id: databaseUuidSchema,
+  level: cefrLevelSchema,
+  titleZhTw: z.string().min(1).max(120),
+  titleDe: z.string().min(1).max(120),
+  descriptionZhTw: z.string().min(1).max(1000),
+  maxLearnerTurns: z.literal(6),
+  version: z.number().int().positive(),
+});
+export const conversationScenarioListResponseSchema = z.object({
+  enabled: z.boolean(),
+  scenarios: z.array(conversationScenarioSchema),
+});
+export type ConversationScenario = z.infer<typeof conversationScenarioSchema>;
+export type ConversationScenarioListResponse = z.infer<
+  typeof conversationScenarioListResponseSchema
+>;
+
+export const conversationMessageSchema = z.object({
+  id: databaseUuidSchema,
+  role: z.enum(["user", "assistant"]),
+  sequenceNumber: z.number().int().nonnegative(),
+  content: z.string().min(1).max(2000),
+  createdAt: z.string().datetime({ offset: true }),
+});
+
+export const conversationSessionSchema = z.object({
+  id: databaseUuidSchema,
+  scenario: conversationScenarioSchema,
+  status: z.enum(["active", "completed", "failed"]),
+  learnerTurnCount: z.number().int().min(0).max(6),
+  retryOfSessionId: databaseUuidSchema.nullable(),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+  messages: z.array(conversationMessageSchema).max(13),
+  feedback: conversationFeedbackSchema.nullable(),
+});
+export type ConversationSession = z.infer<typeof conversationSessionSchema>;
+
+export const conversationListResponseSchema = z.object({
+  sessions: z.array(conversationSessionSchema.omit({ messages: true })).max(100),
+});
+export const conversationDetailResponseSchema = z.object({ session: conversationSessionSchema });
+export type ConversationListResponse = z.infer<typeof conversationListResponseSchema>;
+export type ConversationDetailResponse = z.infer<typeof conversationDetailResponseSchema>;
+
+export const createConversationRequestSchema = z
+  .object({
+    scenarioId: databaseUuidSchema,
+    idempotencyKey: z.string().trim().min(12).max(200),
+    retryOfSessionId: databaseUuidSchema.optional(),
+  })
+  .strict();
+export const createConversationResponseSchema = z.object({
+  session: conversationSessionSchema,
+  idempotentReplay: z.boolean(),
+});
+
+export const sendConversationMessageRequestSchema = z
+  .object({
+    contentDe: z.string().trim().min(1).max(2000),
+    expectedLearnerTurn: z.number().int().min(0).max(5),
+    idempotencyKey: z.string().trim().min(12).max(200),
+  })
+  .strict();
+export const sendConversationMessageResponseSchema = z.object({
+  session: conversationSessionSchema,
+  idempotentReplay: z.boolean(),
+});
+
+export const completeConversationRequestSchema = z
+  .object({ idempotencyKey: z.string().trim().min(12).max(200) })
+  .strict();
+export const completeConversationResponseSchema = z.object({
+  session: conversationSessionSchema,
+  idempotentReplay: z.boolean(),
+});
+export const deleteConversationResponseSchema = z.object({
+  requestId: z.string().min(1),
+  deleted: z.literal(true),
+});
+export type DeleteConversationResponse = z.infer<typeof deleteConversationResponseSchema>;
+
+export type CreateConversationRequest = z.infer<typeof createConversationRequestSchema>;
+export type CreateConversationResponse = z.infer<typeof createConversationResponseSchema>;
+export type SendConversationMessageRequest = z.infer<typeof sendConversationMessageRequestSchema>;
+export type SendConversationMessageResponse = z.infer<typeof sendConversationMessageResponseSchema>;
+export type CompleteConversationRequest = z.infer<typeof completeConversationRequestSchema>;
+export type CompleteConversationResponse = z.infer<typeof completeConversationResponseSchema>;
 
 export const notificationPreferencesResponseSchema = z.object({
   notifications: notificationPreferencesSchema,
@@ -347,6 +507,50 @@ export const errorCorrectionExerciseSchema = baseExerciseSchema.extend({
   explanationZhTw: z.string().min(1),
 });
 
+export const readingComprehensionQuestionSchema = z.object({
+  id: databaseUuidSchema,
+  promptDe: z.string().min(1).max(500),
+  supportZhTw: z.string().min(1).max(500).optional(),
+  options: z.array(exerciseOptionSchema).min(2).max(5),
+  explanationZhTw: z.string().min(1).max(1000),
+});
+
+export const readingComprehensionExerciseSchema = baseExerciseSchema
+  .extend({
+    type: z.literal("reading_comprehension"),
+    passageTitleDe: z.string().min(1).max(200),
+    passageDe: z.string().min(1).max(8_000),
+    estimatedReadingMinutes: z.number().int().min(1).max(20),
+    questions: z.array(readingComprehensionQuestionSchema).length(4),
+    answer: z.object({
+      optionIdsByQuestion: z.record(databaseUuidSchema, databaseUuidSchema),
+    }),
+  })
+  .superRefine((exercise, context) => {
+    const questionIds = new Set(exercise.questions.map((question) => question.id));
+    const answerEntries = Object.entries(exercise.answer.optionIdsByQuestion);
+    if (
+      answerEntries.length !== exercise.questions.length ||
+      answerEntries.some(([questionId]) => !questionIds.has(questionId))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "reading answers must contain exactly one entry for every question",
+        path: ["answer", "optionIdsByQuestion"],
+      });
+    }
+    for (const question of exercise.questions) {
+      const optionId = exercise.answer.optionIdsByQuestion[question.id];
+      if (!optionId || !question.options.some((option) => option.id === optionId)) {
+        context.addIssue({
+          code: "custom",
+          message: "reading answer must reference an option from its question",
+          path: ["answer", "optionIdsByQuestion", question.id],
+        });
+      }
+    }
+  });
+
 export const fixedExerciseSchema = z.discriminatedUnion("type", [
   multipleChoiceExerciseSchema,
   multipleSelectExerciseSchema,
@@ -354,6 +558,7 @@ export const fixedExerciseSchema = z.discriminatedUnion("type", [
   sentenceOrderExerciseSchema,
   matchingExerciseSchema,
   errorCorrectionExerciseSchema,
+  readingComprehensionExerciseSchema,
 ]);
 
 export const aiEvaluatedExerciseSchema = baseExerciseSchema
@@ -1228,14 +1433,3 @@ export const accountDataExportResponseSchema = z.object({
   ),
 });
 export type AccountDataExportResponse = z.infer<typeof accountDataExportResponseSchema>;
-
-export const createConversationRequestSchema = z.object({
-  scenarioId: z.string().uuid(),
-  idempotencyKey: z.string().min(12),
-});
-
-export const sendConversationMessageRequestSchema = z.object({
-  conversationId: z.string().uuid(),
-  messageDe: z.string().min(1).max(2000),
-  idempotencyKey: z.string().min(12),
-});

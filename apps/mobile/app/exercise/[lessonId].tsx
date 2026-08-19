@@ -449,6 +449,7 @@ function exerciseTypeLabel(type: string) {
     sentence_order: "句子排序",
     matching: "配對題 · 可部分得分",
     error_correction: "錯誤修正",
+    reading_comprehension: "閱讀理解 · 四題",
     translation: "AI 翻譯批改",
     free_response: "AI 自由回答",
   };
@@ -463,6 +464,7 @@ function exerciseHint(type: string) {
     sentence_order: "德語主句通常讓限定動詞位於第二位置，從句則靠近句尾。",
     matching: "先完成最有把握的配對，再用剩餘項目交叉檢查。",
     error_correction: "先定位動詞、連接詞與名詞格位，再重寫完整句子。",
+    reading_comprehension: "先快速掌握段落主旨，再回到本文定位支持每個答案的句子。",
     translation: "先保留原句語意，再檢查德語語序、格位與自然搭配。",
     free_response: "先完整回應任務，再加入理由、連接詞與必要細節。",
   };

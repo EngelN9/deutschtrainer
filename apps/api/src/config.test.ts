@@ -10,6 +10,8 @@ describe("API deployment config", () => {
     expect(config.port).toBe(8787);
     expect(config.corsAllowedOrigins).toEqual(["*"]);
     expect(config.publicAiEnabled).toBe(false);
+    expect(config.aiPublicAccessMode).toBe("testers");
+    expect(config.aiTestProfileIds).toEqual([]);
     expect(config.dailyFreeLimit).toBe(5);
     expect(config.writingDailyFreeLimit).toBe(2);
     expect(config.audioTtsDailyFreeLimit).toBe(5);
@@ -72,9 +74,29 @@ describe("API deployment config", () => {
       SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
       AI_EVALUATION_FAKE_MODE: "true",
       AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ACCESS_MODE: "verified_learners",
     });
 
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
+  });
+
+  it("fails closed when tester-only public AI has no valid profile allowlist", () => {
+    const providerEnvironment = {
+      APP_ENV: "staging",
+      CORS_ALLOWED_ORIGINS: "https://app.example.com",
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "staging-service-key",
+      OPENAI_API_KEY: "provider-key",
+      AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ACCESS_MODE: "testers",
+    };
+
+    expect(() => assertApiDeploymentConfig(readApiConfig(providerEnvironment))).toThrow(
+      "AI_TEST_PROFILE_IDS must contain at least one profile ID",
+    );
+    expect(() =>
+      readApiConfig({ ...providerEnvironment, AI_TEST_PROFILE_IDS: "not-a-profile-id" }),
+    ).toThrow("AI_TEST_PROFILE_IDS must contain comma-separated UUIDs");
   });
 
   it("requires HTTPS Supabase in staging and production", () => {

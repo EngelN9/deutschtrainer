@@ -57,6 +57,7 @@ import type { LearningDataServiceContract } from "./learning-data/types";
 import type { KnowledgeServiceContract } from "./knowledge/types";
 import type { SettingsServiceContract } from "./settings/types";
 import type { WritingService } from "./writing/types";
+import type { AiPublicAccessMode } from "./config";
 
 export interface ApiHandlerOptions {
   accountDataService: AccountDataServiceContract;
@@ -69,6 +70,7 @@ export interface ApiHandlerOptions {
   settingsService: SettingsServiceContract;
   aiConfigured: boolean;
   aiPublicEnabled: boolean;
+  aiAccessMode: AiPublicAccessMode;
   requestId?: () => string;
 }
 
@@ -88,6 +90,7 @@ export function createApiHandler(options: ApiHandlerOptions) {
           service: "deutschtrainer-api",
           aiConfigured: options.aiConfigured,
           aiPublicEnabled: options.aiPublicEnabled,
+          aiAccessMode: options.aiAccessMode,
         },
         200,
       );

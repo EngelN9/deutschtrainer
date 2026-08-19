@@ -106,6 +106,7 @@ describe("SettingsService", () => {
         writingEvaluation: { limit: 2, used: 0, remaining: 2, resetsAt: null },
         textToSpeech: { limit: 5, used: 0, remaining: 5, resetsAt: null },
         transcription: { limit: 2, used: 0, remaining: 2, resetsAt: null },
+        conversation: { limit: 1, used: 0, remaining: 1, resetsAt: null },
       },
     });
   });
@@ -116,6 +117,7 @@ function createService(repository: SettingsRepository) {
     repository,
     now: () => new Date("2026-07-15T09:00:00.000Z"),
     aiEntitlement: {
+      accessMode: "verified_learners",
       providerConfigured: true,
       publicEnabled: true,
       quotas: {
@@ -123,7 +125,9 @@ function createService(repository: SettingsRepository) {
         evaluate_writing: 2,
         text_to_speech: 5,
         transcribe_audio: 2,
+        conversation: 1,
       },
+      testProfileIds: [],
     },
   });
 }

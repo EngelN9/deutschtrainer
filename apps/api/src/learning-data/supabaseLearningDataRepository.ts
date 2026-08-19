@@ -735,6 +735,16 @@ function mapLessonExercise(
         explanationZhTw: answerRow.explanation_zh_tw,
       };
       break;
+    case "reading_comprehension":
+      candidate = {
+        ...base,
+        passageTitleDe: payload.passageTitleDe,
+        passageDe: payload.passageDe,
+        estimatedReadingMinutes: payload.estimatedReadingMinutes,
+        questions: payload.questions,
+        answer: { optionIdsByQuestion: answer.optionIdsByQuestion },
+      };
+      break;
   }
   return {
     activityId: row.activity_id,

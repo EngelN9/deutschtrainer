@@ -49,8 +49,10 @@ const config = readApiConfig();
 assertApiDeploymentConfig(config);
 
 const quotaGate = new SupabaseAiQuotaGate(config.supabaseUrl, config.supabaseServiceRoleKey, {
+  accessMode: config.aiPublicAccessMode,
   publicEnabled: config.publicAiEnabled,
   globalDailyProviderCallLimit: config.globalAiDailyProviderCallLimit,
+  testProfileIds: config.aiTestProfileIds,
 });
 
 const repository = new SupabaseEvaluationRepository(
@@ -157,6 +159,7 @@ const settingsService = new SettingsService({
   repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
   aiEntitlement: {
+    accessMode: config.aiPublicAccessMode,
     providerConfigured:
       provider.configured && writingProvider.configured && audioProvider.configured,
     publicEnabled: config.publicAiEnabled,
@@ -165,7 +168,9 @@ const settingsService = new SettingsService({
       evaluate_writing: config.writingDailyFreeLimit,
       text_to_speech: config.audioTtsDailyFreeLimit,
       transcribe_audio: config.audioTranscriptionDailyFreeLimit,
+      conversation: config.conversationDailyFreeLimit,
     },
+    testProfileIds: config.aiTestProfileIds,
   },
 });
 const handlerDependencies = {
@@ -178,6 +183,7 @@ const handlerDependencies = {
   knowledgeService,
   settingsService,
   aiPublicEnabled: config.publicAiEnabled,
+  aiAccessMode: config.aiPublicAccessMode,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&

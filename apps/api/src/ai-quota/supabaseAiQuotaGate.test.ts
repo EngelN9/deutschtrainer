@@ -28,12 +28,33 @@ describe("SupabaseAiQuotaGate eligibility", () => {
     ).toMatchObject({ code: "FORBIDDEN", status: 403 });
     expect(() => gate.assertEligible(verifiedLearner)).not.toThrow();
   });
+
+  it("restricts tester mode to the server-side profile allowlist", () => {
+    const gate = new SupabaseAiQuotaGate("http://127.0.0.1:54321", "test-service-role", {
+      accessMode: "testers",
+      publicEnabled: true,
+      globalDailyProviderCallLimit: 100,
+      testProfileIds: [verifiedLearner.profileId],
+    });
+
+    expect(() => gate.assertEligible(verifiedLearner)).not.toThrow();
+    expect(
+      captureError(() =>
+        gate.assertEligible({
+          ...verifiedLearner,
+          profileId: "00000000-0000-4000-8000-000000000002",
+        }),
+      ),
+    ).toMatchObject({ code: "AI_ACCESS_RESTRICTED", status: 403 });
+  });
 });
 
 function createGate(publicEnabled: boolean) {
   return new SupabaseAiQuotaGate("http://127.0.0.1:54321", "test-service-role", {
+    accessMode: "verified_learners",
     publicEnabled,
     globalDailyProviderCallLimit: 100,
+    testProfileIds: [],
   });
 }
 

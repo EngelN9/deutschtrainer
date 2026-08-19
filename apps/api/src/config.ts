@@ -1,4 +1,5 @@
 export type AppEnvironment = "local" | "test" | "staging" | "production";
+export type AiPublicAccessMode = "testers" | "verified_learners";
 
 export interface ApiConfig {
   appEnv: AppEnvironment;
@@ -19,7 +20,11 @@ export interface ApiConfig {
   audioTtsDailyFreeLimit: number;
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
+  conversationDailyFreeLimit: number;
+  conversationPublicEnabled: boolean;
   publicAiEnabled: boolean;
+  aiPublicAccessMode: AiPublicAccessMode;
+  aiTestProfileIds: string[];
   globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
@@ -52,7 +57,11 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       env.AI_CONTENT_GENERATION_DAILY_FREE_LIMIT,
       20,
     ),
+    conversationDailyFreeLimit: readPositiveInteger(env.AI_CONVERSATION_DAILY_FREE_LIMIT, 1),
+    conversationPublicEnabled: env.CONVERSATION_PUBLIC_ENABLED === "true",
     publicAiEnabled: env.AI_PUBLIC_ENABLED === "true",
+    aiPublicAccessMode: readAiPublicAccessMode(env.AI_PUBLIC_ACCESS_MODE),
+    aiTestProfileIds: readUuidList(env.AI_TEST_PROFILE_IDS),
     globalAiDailyProviderCallLimit: readPositiveInteger(
       env.AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT,
       100,
@@ -71,6 +80,15 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     (config.appEnv === "local" || config.appEnv === "test") && config.fakeEvaluationMode;
   if (config.publicAiEnabled && !config.openAiApiKey && !localFakeProvider) {
     throw new Error("OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true.");
+  }
+  if (
+    config.publicAiEnabled &&
+    config.aiPublicAccessMode === "testers" &&
+    config.aiTestProfileIds.length === 0
+  ) {
+    throw new Error(
+      "AI_TEST_PROFILE_IDS must contain at least one profile ID when AI_PUBLIC_ACCESS_MODE=testers.",
+    );
   }
 
   if (config.appEnv === "local" || config.appEnv === "test") {
@@ -93,6 +111,27 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
   if (supabaseUrl.protocol !== "https:") {
     throw new Error("SUPABASE_URL must use HTTPS in staging and production.");
   }
+}
+
+function readAiPublicAccessMode(value: string | undefined): AiPublicAccessMode {
+  const normalized = value?.trim() || "testers";
+  if (normalized === "testers" || normalized === "verified_learners") {
+    return normalized;
+  }
+  throw new Error("AI_PUBLIC_ACCESS_MODE must be testers or verified_learners.");
+}
+
+function readUuidList(value: string | undefined): string[] {
+  const entries = value
+    ?.split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry.length > 0);
+  const uniqueEntries = [...new Set(entries ?? [])];
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  if (uniqueEntries.some((entry) => !uuidPattern.test(entry))) {
+    throw new Error("AI_TEST_PROFILE_IDS must contain comma-separated UUIDs.");
+  }
+  return uniqueEntries;
 }
 
 export function resolveCorsResponseOrigin(

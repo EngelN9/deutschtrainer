@@ -3,6 +3,7 @@ import {
   gradeMatching,
   gradeMultipleChoice,
   gradeMultipleSelect,
+  gradeReadingComprehension,
   gradeSentenceOrder,
   gradeTextAnswer,
   normalizeAnswer,
@@ -10,6 +11,7 @@ import {
 import type {
   MatchingExercise,
   MultipleSelectExercise,
+  ReadingComprehensionExercise,
   SentenceOrderExercise,
 } from "@deutschtrainer/shared-types";
 
@@ -114,5 +116,45 @@ describe("grading", () => {
     const result = gradeMatching(exercise, { a: "one", b: "one" });
     expect(result.score).toBe(50);
     expect(result.isCorrect).toBe(false);
+  });
+
+  it("grades all four reading questions deterministically with partial credit", () => {
+    const questions = ["q1", "q2", "q3", "q4"].map((id, index) => ({
+      id,
+      promptDe: `Frage ${index + 1}`,
+      options: [
+        { id: `${id}-a`, label: "A", textDe: "Richtig", orderIndex: 0 },
+        { id: `${id}-b`, label: "B", textDe: "Falsch", orderIndex: 1 },
+      ],
+      explanationZhTw: "答案可由本文定位。",
+    }));
+    const exercise: ReadingComprehensionExercise = {
+      ...baseExercise,
+      type: "reading_comprehension",
+      passageTitleDe: "Ein Text",
+      passageDe: "Dies ist ein eigenständiger Lesetext.",
+      estimatedReadingMinutes: 3,
+      questions,
+      answer: {
+        optionIdsByQuestion: Object.fromEntries(
+          questions.map((question) => [question.id, `${question.id}-a`]),
+        ),
+      },
+    };
+
+    const answers = Object.fromEntries(
+      questions.map((question, index) => [
+        question.id,
+        `${question.id}-${index === 3 ? "b" : "a"}`,
+      ]),
+    );
+    expect(gradeReadingComprehension(exercise, answers)).toMatchObject({
+      isCorrect: false,
+      score: 75,
+      details: { correctQuestions: 3, totalQuestions: 4 },
+    });
+    expect(gradeReadingComprehension(exercise, answers)).toEqual(
+      gradeReadingComprehension(exercise, answers),
+    );
   });
 });

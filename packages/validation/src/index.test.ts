@@ -28,6 +28,61 @@ import {
   writingWorkspaceResponseSchema,
 } from "./index";
 
+const readingQuestionIds = [
+  "10000000-0000-4000-8000-000000000001",
+  "10000000-0000-4000-8000-000000000002",
+  "10000000-0000-4000-8000-000000000003",
+  "10000000-0000-4000-8000-000000000004",
+] as const;
+
+function createReadingExercise() {
+  const questions = readingQuestionIds.map((id, index) => ({
+    id,
+    promptDe: `Frage ${index + 1}`,
+    supportZhTw: `第 ${index + 1} 題支架`,
+    options: [
+      {
+        id: `20000000-0000-4000-8000-00000000000${index * 2 + 1}`,
+        label: "A",
+        textDe: "Antwort A",
+        orderIndex: 0,
+      },
+      {
+        id: `20000000-0000-4000-8000-00000000000${index * 2 + 2}`,
+        label: "B",
+        textDe: "Antwort B",
+        orderIndex: 1,
+      },
+    ],
+    explanationZhTw: "可由本文中的明確資訊判斷。",
+  }));
+  return {
+    id: "30000000-0000-4000-8000-000000000001",
+    level: "B1" as const,
+    type: "reading_comprehension" as const,
+    title: "閱讀理解",
+    instructionZhTw: "閱讀後回答四題。",
+    promptDe: "Lies den Text und beantworte die Fragen.",
+    passageTitleDe: "Ein ruhiger Arbeitsweg",
+    passageDe: "Mara fährt jeden Morgen mit dem Bus zur Arbeit.",
+    estimatedReadingMinutes: 3,
+    questions,
+    answer: {
+      optionIdsByQuestion: Object.fromEntries(
+        questions.map((question) => [question.id, question.options[0]?.id]),
+      ),
+    },
+    skillIds: ["B1.reading.detail"],
+    grammarTopicIds: [],
+    vocabularyIds: [],
+    estimatedSeconds: 240,
+    difficulty: 2,
+    sourceType: "human" as const,
+    reviewStatus: "pending_review" as const,
+    version: 1,
+  };
+}
+
 describe("generateExerciseDraftRequestSchema", () => {
   it("accepts a constrained admin generation brief", () => {
     const result = generateExerciseDraftRequestSchema.parse({
@@ -61,6 +116,26 @@ describe("generateExerciseDraftRequestSchema", () => {
 });
 
 describe("validation schemas", () => {
+  it("requires exactly four internally consistent reading questions", () => {
+    const reading = createReadingExercise();
+    expect(fixedExerciseSchema.parse(reading).type).toBe("reading_comprehension");
+
+    expect(
+      fixedExerciseSchema.safeParse({ ...reading, questions: reading.questions.slice(0, 3) })
+        .success,
+    ).toBe(false);
+    expect(
+      fixedExerciseSchema.safeParse({
+        ...reading,
+        answer: {
+          optionIdsByQuestion: {
+            ...reading.answer.optionIdsByQuestion,
+            [readingQuestionIds[0]]: "90000000-0000-4000-8000-000000000001",
+          },
+        },
+      }).success,
+    ).toBe(false);
+  });
   it("accepts the Phase 10 workspace and mutation response contracts", () => {
     const writing = writingWorkspaceResponseSchema.parse({ prompts: [], submissions: [] });
     const audio = audioLearningWorkspaceResponseSchema.parse({

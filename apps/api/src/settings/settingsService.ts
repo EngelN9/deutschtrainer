@@ -6,6 +6,7 @@ import type {
   UserSettingsResponse,
 } from "@deutschtrainer/validation";
 import type { AiQuotaFeature } from "../ai-quota/types";
+import type { AiPublicAccessMode } from "../config";
 import { ApiError } from "../errors";
 import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import type {
@@ -20,9 +21,11 @@ interface SettingsServiceOptions {
   rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
   aiEntitlement: {
+    accessMode: AiPublicAccessMode;
     providerConfigured: boolean;
     publicEnabled: boolean;
     quotas: Record<AiQuotaFeature, number>;
+    testProfileIds: readonly string[];
   };
 }
 
@@ -67,7 +70,9 @@ export class SettingsService implements SettingsServiceContract {
         this.options.aiEntitlement.publicEnabled &&
         this.options.aiEntitlement.providerConfigured &&
         learner.emailVerified &&
-        learner.role === "learner",
+        learner.role === "learner" &&
+        (this.options.aiEntitlement.accessMode === "verified_learners" ||
+          this.options.aiEntitlement.testProfileIds.includes(learner.profileId)),
       source: "platform_free",
       windowHours: 24,
       quotas: {
@@ -75,6 +80,7 @@ export class SettingsService implements SettingsServiceContract {
         writingEvaluation: quota("evaluate_writing"),
         textToSpeech: quota("text_to_speech"),
         transcription: quota("transcribe_audio"),
+        conversation: quota("conversation"),
       },
     };
   }

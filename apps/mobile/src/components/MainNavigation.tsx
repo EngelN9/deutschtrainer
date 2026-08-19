@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "expo-router";
 import {
   BarChart3,
   BookOpen,
+  BookOpenText,
   FilePenLine,
   Headphones,
   Home,
@@ -22,6 +23,7 @@ const items: Array<{
 }> = [
   { href: "/home", icon: Home, label: "首頁", path: "/home" },
   { href: "/courses", icon: BookOpen, label: "課程", path: "/courses" },
+  { href: "/reading" as Href, icon: BookOpenText, label: "閱讀", path: "/reading" },
   { href: "/knowledge" as Href, icon: Library, label: "知識", path: "/knowledge" },
   { href: "/writing" as Href, icon: FilePenLine, label: "寫作", path: "/writing" },
   { href: "/audio-training" as Href, icon: Headphones, label: "聽說", path: "/audio-training" },

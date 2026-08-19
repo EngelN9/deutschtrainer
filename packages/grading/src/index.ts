@@ -6,6 +6,7 @@ import type {
   MatchingExercise,
   MultipleChoiceExercise,
   MultipleSelectExercise,
+  ReadingComprehensionExercise,
   SentenceOrderExercise,
 } from "@deutschtrainer/shared-types";
 
@@ -178,6 +179,26 @@ export function gradeMatching(
   };
 }
 
+export function gradeReadingComprehension(
+  exercise: ReadingComprehensionExercise,
+  optionIdsByQuestion: Record<string, string>,
+): GradingResult<Record<string, string>, Record<string, string>> {
+  const accepted = exercise.answer.optionIdsByQuestion;
+  const correctQuestions = exercise.questions.filter(
+    (question) => optionIdsByQuestion[question.id] === accepted[question.id],
+  ).length;
+  const totalQuestions = exercise.questions.length;
+  const isCorrect = correctQuestions === totalQuestions;
+
+  return {
+    score: Math.round((correctQuestions / Math.max(totalQuestions, 1)) * 100),
+    isCorrect,
+    normalizedAnswer: optionIdsByQuestion,
+    acceptedAnswer: accepted,
+    details: { correctQuestions, totalQuestions },
+  };
+}
+
 export function gradeFixedExercise(exercise: FixedExercise, answer: unknown): GradingResult {
   switch (exercise.type) {
     case "multiple_choice":
@@ -202,6 +223,8 @@ export function gradeFixedExercise(exercise: FixedExercise, answer: unknown): Gr
       return gradeMatching(exercise, isStringRecord(answer) ? answer : {});
     case "error_correction":
       return gradeErrorCorrection(exercise, typeof answer === "string" ? answer : "");
+    case "reading_comprehension":
+      return gradeReadingComprehension(exercise, isStringRecord(answer) ? answer : {});
   }
 }
 

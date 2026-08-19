@@ -1,7 +1,7 @@
 import type { UserProfile } from "@deutschtrainer/shared-types";
 
 export type AiQuotaFeature =
-  "evaluate_response" | "evaluate_writing" | "text_to_speech" | "transcribe_audio";
+  "evaluate_response" | "evaluate_writing" | "text_to_speech" | "transcribe_audio" | "conversation";
 
 export interface AiQuotaLearner {
   emailVerified: boolean;

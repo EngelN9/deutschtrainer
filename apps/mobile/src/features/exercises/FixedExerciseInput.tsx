@@ -124,6 +124,49 @@ export function FixedExerciseInput({
       return (
         <MatchingInput disabled={disabled} exercise={exercise} onChange={onChange} value={value} />
       );
+    case "reading_comprehension": {
+      const selections = stringRecord(value);
+      return (
+        <View style={styles.readingStack}>
+          <View style={styles.passageCard}>
+            <Text style={styles.readingMeta}>預估閱讀 {exercise.estimatedReadingMinutes} 分鐘</Text>
+            <Text selectable style={styles.passageTitle}>
+              {exercise.passageTitleDe}
+            </Text>
+            <Text selectable style={styles.passageText}>
+              {exercise.passageDe}
+            </Text>
+          </View>
+          {exercise.questions.map((question, index) => (
+            <View key={question.id} style={styles.questionCard}>
+              <Text style={styles.questionNumber}>第 {index + 1} 題</Text>
+              <Text selectable style={styles.questionPrompt}>
+                {question.promptDe}
+              </Text>
+              {question.supportZhTw ? (
+                <Text style={styles.questionSupport}>{question.supportZhTw}</Text>
+              ) : null}
+              <View style={styles.optionList}>
+                {question.options.map((option) => (
+                  <OptionButton
+                    disabled={disabled}
+                    key={option.id}
+                    label={option.label}
+                    onPress={() => onChange({ ...selections, [question.id]: option.id })}
+                    selected={selections[question.id] === option.id}
+                    textDe={option.textDe}
+                    textZhTw={option.textZhTw}
+                  />
+                ))}
+              </View>
+              {disabled ? (
+                <Text style={styles.questionExplanation}>{question.explanationZhTw}</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      );
+    }
   }
 }
 
@@ -139,6 +182,12 @@ export function isExerciseAnswered(exercise: FixedExercise, value: unknown): boo
       return stringArray(value).length === exercise.segments.length;
     case "matching":
       return Object.keys(stringRecord(value)).length === exercise.leftItems.length;
+    case "reading_comprehension": {
+      const selections = stringRecord(value);
+      return exercise.questions.every((question) =>
+        question.options.some((option) => option.id === selections[question.id]),
+      );
+    }
   }
 }
 
@@ -167,6 +216,14 @@ export function formatAcceptedAnswer(exercise: FixedExercise): string {
           const left = exercise.leftItems.find((item) => item.id === leftId)?.textDe ?? leftId;
           const right = exercise.rightItems.find((item) => item.id === rightId)?.textDe ?? rightId;
           return `${left} → ${right}`;
+        })
+        .join("；");
+    case "reading_comprehension":
+      return exercise.questions
+        .map((question, index) => {
+          const optionId = exercise.answer.optionIdsByQuestion[question.id];
+          const answer = question.options.find((option) => option.id === optionId)?.textDe ?? "";
+          return `${index + 1}. ${answer}`;
         })
         .join("；");
   }
@@ -402,6 +459,60 @@ const styles = StyleSheet.create({
     color: colorTokens.mutedText,
     fontSize: 14,
     lineHeight: 20,
+  },
+  passageCard: {
+    backgroundColor: "#F8FAFC",
+    borderColor: colorTokens.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.sm,
+    padding: spacingTokens.lg,
+  },
+  passageText: {
+    color: colorTokens.text,
+    fontSize: 17,
+    lineHeight: 29,
+  },
+  passageTitle: {
+    color: colorTokens.text,
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 30,
+  },
+  questionCard: {
+    borderBottomColor: colorTokens.border,
+    borderBottomWidth: 1,
+    gap: spacingTokens.sm,
+    paddingBottom: spacingTokens.lg,
+  },
+  questionExplanation: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  questionNumber: {
+    color: colorTokens.teal,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  questionPrompt: {
+    color: colorTokens.text,
+    fontSize: 17,
+    fontWeight: "700",
+    lineHeight: 25,
+  },
+  questionSupport: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  readingMeta: {
+    color: colorTokens.mutedText,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  readingStack: {
+    gap: spacingTokens.xl,
   },
   placeholder: {
     color: colorTokens.mutedText,
