@@ -1,4 +1,8 @@
-import type { FixedExercise, MatchingExercise } from "@deutschtrainer/shared-types";
+import type {
+  FixedExercise,
+  MatchingExercise,
+  ReadingComprehensionExercise,
+} from "@deutschtrainer/shared-types";
 import { Check } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
@@ -7,6 +11,7 @@ interface FixedExerciseInputProps {
   disabled?: boolean;
   exercise: FixedExercise;
   onChange: (answer: unknown) => void;
+  showExplanations?: boolean;
   value: unknown;
 }
 
@@ -14,6 +19,7 @@ export function FixedExerciseInput({
   disabled = false,
   exercise,
   onChange,
+  showExplanations = false,
   value,
 }: FixedExerciseInputProps) {
   switch (exercise.type) {
@@ -124,6 +130,16 @@ export function FixedExerciseInput({
       return (
         <MatchingInput disabled={disabled} exercise={exercise} onChange={onChange} value={value} />
       );
+    case "reading_comprehension":
+      return (
+        <ReadingComprehensionInput
+          disabled={disabled}
+          exercise={exercise}
+          onChange={onChange}
+          showExplanations={showExplanations}
+          value={value}
+        />
+      );
   }
 }
 
@@ -139,6 +155,14 @@ export function isExerciseAnswered(exercise: FixedExercise, value: unknown): boo
       return stringArray(value).length === exercise.segments.length;
     case "matching":
       return Object.keys(stringRecord(value)).length === exercise.leftItems.length;
+    case "reading_comprehension": {
+      const answers = stringRecord(value);
+      return exercise.questions.every(
+        (question) =>
+          typeof answers[question.id] === "string" &&
+          question.options.some((option) => option.id === answers[question.id]),
+      );
+    }
   }
 }
 
@@ -169,7 +193,82 @@ export function formatAcceptedAnswer(exercise: FixedExercise): string {
           return `${left} → ${right}`;
         })
         .join("；");
+    case "reading_comprehension":
+      return exercise.questions
+        .map((question, index) => {
+          const option = question.options.find(
+            (entry) => entry.id === exercise.answer.optionIdsByQuestion[question.id],
+          );
+          return `${index + 1}. ${option?.textDe ?? ""}`;
+        })
+        .join("\n");
   }
+}
+
+function ReadingComprehensionInput({
+  disabled,
+  exercise,
+  onChange,
+  showExplanations,
+  value,
+}: {
+  disabled: boolean;
+  exercise: ReadingComprehensionExercise;
+  onChange: (answer: unknown) => void;
+  showExplanations: boolean;
+  value: unknown;
+}) {
+  const answers = stringRecord(value);
+
+  return (
+    <View style={styles.readingStack}>
+      <View accessibilityLabel="閱讀文章" style={styles.readingArticle}>
+        <View style={styles.readingArticleHeading}>
+          <Text selectable style={styles.readingArticleTitle}>
+            {exercise.articleTitleDe}
+          </Text>
+          <Text style={styles.readingTime}>約 {exercise.estimatedReadingMinutes} 分鐘</Text>
+        </View>
+        <Text selectable style={styles.readingPassage}>
+          {exercise.passageDe}
+        </Text>
+      </View>
+      {exercise.questions.map((question, index) => (
+        <View
+          accessibilityLabel={`閱讀問題 ${index + 1}`}
+          key={question.id}
+          style={styles.questionCard}
+        >
+          <Text selectable style={styles.questionTitle}>
+            {index + 1}. {question.promptDe}
+          </Text>
+          {question.supportZhTw ? (
+            <Text selectable style={styles.questionSupport}>
+              {question.supportZhTw}
+            </Text>
+          ) : null}
+          <View style={styles.optionList}>
+            {question.options.map((option) => (
+              <OptionButton
+                disabled={disabled}
+                key={option.id}
+                label={option.label}
+                onPress={() => onChange({ ...answers, [question.id]: option.id })}
+                selected={answers[question.id] === option.id}
+                textDe={option.textDe}
+                textZhTw={option.textZhTw}
+              />
+            ))}
+          </View>
+          {showExplanations ? (
+            <Text selectable style={styles.questionExplanation}>
+              {question.explanationZhTw}
+            </Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  );
 }
 
 interface OptionButtonProps {
@@ -409,6 +508,69 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.74,
+  },
+  questionCard: {
+    borderBottomColor: colorTokens.border,
+    borderBottomWidth: 1,
+    gap: spacingTokens.sm,
+    paddingBottom: spacingTokens.lg,
+  },
+  questionExplanation: {
+    backgroundColor: "#F4F7FF",
+    borderColor: "#B8CCFF",
+    borderRadius: 6,
+    borderWidth: 1,
+    color: colorTokens.primaryDark,
+    fontSize: 14,
+    lineHeight: 21,
+    padding: spacingTokens.sm,
+  },
+  questionSupport: {
+    color: colorTokens.mutedText,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  questionTitle: {
+    color: colorTokens.text,
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 25,
+  },
+  readingArticle: {
+    backgroundColor: colorTokens.subtle,
+    borderColor: colorTokens.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacingTokens.md,
+    padding: spacingTokens.lg,
+  },
+  readingArticleHeading: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacingTokens.sm,
+    justifyContent: "space-between",
+  },
+  readingArticleTitle: {
+    color: colorTokens.text,
+    flexGrow: 1,
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 30,
+  },
+  readingPassage: {
+    color: colorTokens.text,
+    fontSize: 16,
+    lineHeight: 26,
+  },
+  readingStack: {
+    gap: spacingTokens.lg,
+  },
+  readingTime: {
+    color: colorTokens.mutedText,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 20,
   },
   segment: {
     backgroundColor: colorTokens.surface,

@@ -74,6 +74,410 @@ set
   updated_at = now(),
   deleted_at = null;
 
+-- The reading drafts are inserted before the established Phase 3 catalog block below.
+-- Create transient parent rows with the stable IDs that the catalog block subsequently enriches.
+insert into public.units (
+  id,
+  course_id,
+  title_zh_tw,
+  title_de,
+  description_zh_tw,
+  order_index,
+  status,
+  version
+)
+values
+  (md5('deutschtrainer:unit:b1-alltag')::uuid, md5('deutschtrainer:course:b1')::uuid, '閱讀草稿暫存單元', 'Entwurfseinheit Lesen', '', 0, 'draft', 1),
+  (md5('deutschtrainer:unit:b2-argumentation')::uuid, md5('deutschtrainer:course:b2')::uuid, '閱讀草稿暫存單元', 'Entwurfseinheit Lesen', '', 0, 'draft', 1),
+  (md5('deutschtrainer:unit:c1-academic')::uuid, md5('deutschtrainer:course:c1')::uuid, '閱讀草稿暫存單元', 'Entwurfseinheit Lesen', '', 0, 'draft', 1),
+  (md5('deutschtrainer:unit:c2-style')::uuid, md5('deutschtrainer:course:c2')::uuid, '閱讀草稿暫存單元', 'Entwurfseinheit Lesen', '', 0, 'draft', 1)
+on conflict (id) do nothing;
+
+insert into public.lessons (
+  id,
+  unit_id,
+  level,
+  title_zh_tw,
+  title_de,
+  order_index,
+  estimated_minutes,
+  skill_categories,
+  prerequisite_skill_ids,
+  learning_objectives,
+  vocabulary_tags,
+  grammar_tags,
+  cefr_descriptor,
+  status,
+  version
+)
+values
+  (md5('deutschtrainer:lesson:b1-meinung')::uuid, md5('deutschtrainer:unit:b1-alltag')::uuid, 'B1', '閱讀草稿暫存課堂', 'Lesen: Entwurf', 4, 10, array['reading']::public.skill_category[], '{}', array['閱讀草稿暫存'], '{}', '{}', '待完整目錄資料覆寫。', 'draft', 1),
+  (md5('deutschtrainer:lesson:b2-argumente')::uuid, md5('deutschtrainer:unit:b2-argumentation')::uuid, 'B2', '閱讀草稿暫存課堂', 'Lesen: Entwurf', 0, 10, array['reading']::public.skill_category[], '{}', array['閱讀草稿暫存'], '{}', '{}', '待完整目錄資料覆寫。', 'draft', 1),
+  (md5('deutschtrainer:lesson:c1-zusammenfassung')::uuid, md5('deutschtrainer:unit:c1-academic')::uuid, 'C1', '閱讀草稿暫存課堂', 'Lesen: Entwurf', 0, 10, array['reading']::public.skill_category[], '{}', array['閱讀草稿暫存'], '{}', '{}', '待完整目錄資料覆寫。', 'draft', 1),
+  (md5('deutschtrainer:lesson:c2-ironie')::uuid, md5('deutschtrainer:unit:c2-style')::uuid, 'C2', '閱讀草稿暫存課堂', 'Lesen: Entwurf', 0, 10, array['reading']::public.skill_category[], '{}', array['閱讀草稿暫存'], '{}', '{}', '待完整目錄資料覆寫。', 'draft', 1)
+on conflict (id) do nothing;
+
+-- Reading Center v1: original AI-assisted drafts. These records intentionally remain draft until
+-- a qualified German-language reviewer has approved the text, questions, answers, and zh-TW support.
+create table public._reading_center_draft_seed (
+  slug text primary key,
+  lesson_slug text not null,
+  level public.cefr_level not null,
+  title text not null,
+  article_title_de text not null,
+  passage_de text not null,
+  estimated_reading_minutes integer not null,
+  questions_json jsonb not null,
+  options_json jsonb not null
+);
+
+insert into public._reading_center_draft_seed values
+  (
+    'b1-gemeinschaftsgarten',
+    'b1-meinung',
+    'B1',
+    '社區花園的合作計畫',
+    'Ein Gemeinschaftsgarten im Viertel',
+    $reading_b1$
+In einem Viertel am Stadtrand lag viele Jahre lang ein kleines Grundstück leer. Es gehörte der Stadt, aber niemand nutzte es. Im Frühjahr fragte eine Gruppe von Nachbarinnen und Nachbarn im Rathaus, ob sie dort einen Gemeinschaftsgarten anlegen dürften. Die Stadt sagte ja, wenn die Gruppe selbst für Ordnung und Sicherheit sorgt.
+
+Zuerst sammelten die Beteiligten alte Holzkisten und machten daraus Beete. Eine lokale Gärtnerei spendete Erde und Samen. Jede Person konnte entscheiden, welche Pflanzen sie pflegen wollte: Tomaten, Kräuter, Salat oder Blumen. Damit die Arbeit gerecht verteilt ist, hängt am Eingang ein Plan. Wer in einer Woche gießt, trägt seinen Namen ein. Besonders im Sommer ist das wichtig, weil die Pflanzen schnell trocken werden.
+
+Einmal im Monat gibt es einen kleinen Markt im Garten. Dort verkaufen die Teilnehmenden nicht die gesamte Ernte. Sie bieten nur Überschüsse an, zum Beispiel zu viele Zucchini oder Kräuter. Das Geld wird für neue Werkzeuge und Wasser verwendet. Niemand soll damit Gewinn machen.
+
+Viele Menschen kommen nicht nur wegen des Gemüses. Sie lernen ihre Nachbarn kennen und sprechen miteinander, auch wenn sie vorher kaum Kontakt hatten. Im nächsten Monat will die Gruppe einen offenen Nachmittag organisieren. Kinder sollen dann lernen, wie man Samen einpflanzt und warum Bienen für viele Pflanzen wichtig sind.
+$reading_b1$,
+    4,
+    $questions_b1$[
+      {"id":"q1","promptDe":"Warum durfte die Gruppe das Grundstück nutzen?","supportZhTw":"城市同意的條件是什麼？","explanationZhTw":"市政府同意使用，但要求團體自己負責秩序與安全。"},
+      {"id":"q2","promptDe":"Wie wird das Gießen organisiert?","supportZhTw":"誰負責澆水？","explanationZhTw":"入口的計畫讓每週負責澆水的人登記姓名。"},
+      {"id":"q3","promptDe":"Wofür wird das Geld vom Markt verwendet?","supportZhTw":"市集所得的用途是什麼？","explanationZhTw":"收入用於購買工具和支付用水，不是為了個人獲利。"},
+      {"id":"q4","promptDe":"Was plant die Gruppe für den nächsten Monat?","supportZhTw":"接下來的活動是什麼？","explanationZhTw":"團體要辦開放下午活動，讓孩子認識播種與蜜蜂的重要性。"}
+    ]$questions_b1$::jsonb,
+    $options_b1$[
+      {"questionId":"q1","key":"a","textDe":"Weil die Stadt die Pflege der Ordnung und Sicherheit verlangte.","textZhTw":"因為城市要求自行維護秩序與安全。","isCorrect":true},
+      {"questionId":"q1","key":"b","textDe":"Weil eine Gärtnerei das Grundstück gekauft hatte.","textZhTw":"因為園藝店買下了土地。","isCorrect":false},
+      {"questionId":"q1","key":"c","textDe":"Weil die Gruppe dort Wohnungen bauen wollte.","textZhTw":"因為團體想在那裡蓋住宅。","isCorrect":false},
+      {"questionId":"q1","key":"d","textDe":"Weil das Rathaus die gesamte Ernte erhalten sollte.","textZhTw":"因為市政廳要得到全部收成。","isCorrect":false},
+      {"questionId":"q2","key":"a","textDe":"Durch einen Plan am Eingang, in den sich die Verantwortlichen eintragen.","textZhTw":"透過入口處讓負責者登記的計畫表。","isCorrect":true},
+      {"questionId":"q2","key":"b","textDe":"Eine einzelne Person gießt jeden Tag allein.","textZhTw":"由同一個人每天單獨澆水。","isCorrect":false},
+      {"questionId":"q2","key":"c","textDe":"Die Stadt schickt jeden Morgen Mitarbeitende.","textZhTw":"城市每天早上派工作人員。","isCorrect":false},
+      {"questionId":"q2","key":"d","textDe":"Nur Kinder dürfen die Pflanzen gießen.","textZhTw":"只有孩子可以澆水。","isCorrect":false},
+      {"questionId":"q3","key":"a","textDe":"Für Werkzeuge und Wasser im Garten.","textZhTw":"用於花園的工具和用水。","isCorrect":true},
+      {"questionId":"q3","key":"b","textDe":"Für private Löhne der Teilnehmenden.","textZhTw":"用於參與者的私人薪資。","isCorrect":false},
+      {"questionId":"q3","key":"c","textDe":"Für den Kauf eines neuen Grundstücks.","textZhTw":"用於購買另一塊土地。","isCorrect":false},
+      {"questionId":"q3","key":"d","textDe":"Für Werbung einer Gärtnerei.","textZhTw":"用於園藝店的廣告。","isCorrect":false},
+      {"questionId":"q4","key":"a","textDe":"Einen offenen Nachmittag für Kinder.","textZhTw":"為孩子舉辦開放下午活動。","isCorrect":true},
+      {"questionId":"q4","key":"b","textDe":"Einen Ausflug zu einem großen Markt.","textZhTw":"去大型市場參觀。","isCorrect":false},
+      {"questionId":"q4","key":"c","textDe":"Einen Wettbewerb für die teuerste Tomate.","textZhTw":"舉辦最貴番茄的競賽。","isCorrect":false},
+      {"questionId":"q4","key":"d","textDe":"Einen Kurs über den Bau von Wohnungen.","textZhTw":"舉辦住宅建造課程。","isCorrect":false}
+    ]$options_b1$::jsonb
+  ),
+  (
+    'b2-fahrradreparatur',
+    'b2-argumente',
+    'B2',
+    '共享單車維修站的提案',
+    'Eine Reparaturstation für Fahrräder',
+    $reading_b2$
+Der Verein Mobil im Alltag hat der Stadtverwaltung vorgeschlagen, an drei Bahnhöfen öffentlich zugängliche Reparaturstationen für Fahrräder einzurichten. Dort sollen Luftpumpen, einfache Werkzeuge und kurze Anleitungen bereitstehen. Die Idee entstand, nachdem viele Pendlerinnen und Pendler berichtet hatten, dass sie kleine Defekte oft nicht sofort beheben können. Ein platter Reifen oder eine lockere Schraube führt dann dazu, dass sie für den gesamten Weg das Auto benutzen oder ein Taxi nehmen.
+
+Die Verwaltung begrüßt das Ziel, den Radverkehr zu erleichtern. Sie fragt jedoch, wer die Stationen kontrolliert und wie Vandalismus verhindert werden kann. Der Verein schlägt vor, die Geräte nicht kostenlos zu verleihen, sondern fest zu montieren. Außerdem könnten lokale Fahrradgeschäfte die Stationen gegen eine kleine jährliche Pauschale warten. Im Gegenzug dürften sie auf einer unauffälligen Tafel ihren Namen nennen. Nach Ansicht des Vereins wäre diese Lösung günstiger als ein Vertrag mit einem großen externen Dienstleister.
+
+Kritische Stimmen weisen darauf hin, dass vor allem erfahrene Radfahrende von den Werkzeugen profitieren könnten. Deshalb soll jede Station einen QR-Code tragen, der zu leicht verständlichen Videos führt. Die Videos erklären zum Beispiel, wie man einen Schlauch prüft oder einen Sattel richtig einstellt. Für Menschen ohne Smartphone bleibt eine gedruckte Anleitung mit Bildern verfügbar.
+
+Bevor die Stadt über alle drei Standorte entscheidet, ist ein sechsmonatiger Test an einem Bahnhof geplant. Dabei werden nicht nur die Reparaturen gezählt. Die Verwaltung will auch erfassen, wie oft die Station wegen eines Defekts außer Betrieb ist und ob Nutzerinnen und Nutzer danach häufiger mit dem Fahrrad weiterfahren. Erst wenn diese Daten vorliegen, soll über eine dauerhafte Finanzierung entschieden werden.
+$reading_b2$,
+    5,
+    $questions_b2$[
+      {"id":"q1","promptDe":"Welches Problem soll die Reparaturstation vor allem lösen?","supportZhTw":"提案要解決什麼日常問題？","explanationZhTw":"小故障若不能立即處理，通勤者可能改開車或搭計程車。"},
+      {"id":"q2","promptDe":"Wie soll die Wartung der Stationen finanziert werden?","supportZhTw":"維護經費的來源是什麼？","explanationZhTw":"地方車店以小額年費維護，並可在不顯眼的牌子上署名。"},
+      {"id":"q3","promptDe":"Warum gibt es zusätzlich gedruckte Anleitungen?","supportZhTw":"為何不用只提供 QR code？","explanationZhTw":"紙本說明讓沒有智慧型手機的人也能使用維修站。"},
+      {"id":"q4","promptDe":"Welche Entscheidung wird nach der Testphase getroffen?","supportZhTw":"測試後才決定什麼？","explanationZhTw":"市政府會依使用與故障資料決定是否提供長期資金。"}
+    ]$questions_b2$::jsonb,
+    $options_b2$[
+      {"questionId":"q1","key":"a","textDe":"Kleine Defekte sollen direkt auf dem Weg behoben werden können.","textZhTw":"讓小故障可以在途中立刻處理。","isCorrect":true},
+      {"questionId":"q1","key":"b","textDe":"Alle Bahnhöfe sollen für Autos geschlossen werden.","textZhTw":"讓所有車站禁止汽車。","isCorrect":false},
+      {"questionId":"q1","key":"c","textDe":"Fahrräder sollen kostenlos verkauft werden.","textZhTw":"免費販售自行車。","isCorrect":false},
+      {"questionId":"q1","key":"d","textDe":"Pendler sollen nur noch zu Fuß gehen.","textZhTw":"讓通勤者只准步行。","isCorrect":false},
+      {"questionId":"q2","key":"a","textDe":"Lokale Fahrradgeschäfte warten die Geräte gegen eine kleine Pauschale.","textZhTw":"地方自行車店以小額費用維護設備。","isCorrect":true},
+      {"questionId":"q2","key":"b","textDe":"Jede Nutzerin zahlt bei jeder Reparatur bar.","textZhTw":"每位使用者每次維修都付現金。","isCorrect":false},
+      {"questionId":"q2","key":"c","textDe":"Ein großer externer Dienstleister übernimmt alles kostenlos.","textZhTw":"大型外部服務商免費承擔所有工作。","isCorrect":false},
+      {"questionId":"q2","key":"d","textDe":"Die Stadt verkauft die Werkzeuge nach einem Jahr.","textZhTw":"市府一年後出售工具。","isCorrect":false},
+      {"questionId":"q3","key":"a","textDe":"Auch Menschen ohne Smartphone sollen die Informationen nutzen können.","textZhTw":"沒有智慧型手機的人也能取得資訊。","isCorrect":true},
+      {"questionId":"q3","key":"b","textDe":"Die QR-Codes funktionieren nur nachts.","textZhTw":"QR code 只在晚上運作。","isCorrect":false},
+      {"questionId":"q3","key":"c","textDe":"Die gedruckten Anleitungen sind Werbung für Taxis.","textZhTw":"紙本說明是計程車廣告。","isCorrect":false},
+      {"questionId":"q3","key":"d","textDe":"Die Videos dürfen rechtlich nicht gezeigt werden.","textZhTw":"影片依法不得播放。","isCorrect":false},
+      {"questionId":"q4","key":"a","textDe":"Ob die Station dauerhaft finanziert wird.","textZhTw":"是否提供維修站的長期資金。","isCorrect":true},
+      {"questionId":"q4","key":"b","textDe":"Welche Fahrradmarke an allen Bahnhöfen verkauft wird.","textZhTw":"在各站販售哪個自行車品牌。","isCorrect":false},
+      {"questionId":"q4","key":"c","textDe":"Ob die Videos durch einen Roman ersetzt werden.","textZhTw":"是否以小說取代影片。","isCorrect":false},
+      {"questionId":"q4","key":"d","textDe":"Wie viele Autos in der Stadt erlaubt sind.","textZhTw":"城市允許多少汽車。","isCorrect":false}
+    ]$options_b2$::jsonb
+  ),
+  (
+    'c1-bibliothek-arbeitsplaetze',
+    'c1-zusammenfassung',
+    'C1',
+    '大學圖書館工作空間的使用研究',
+    'Arbeitsplätze in der Universitätsbibliothek',
+    $reading_c1$
+Eine Universitätsbibliothek hat im vergangenen Winter untersucht, wie ihre Arbeitsplätze genutzt werden. Anlass war die wiederkehrende Klage, dass Studierende in der Prüfungszeit keine freien Plätze finden, während einzelne Tische außerhalb dieser Zeit über Stunden unbesetzt wirken. Die Untersuchung sollte nicht entscheiden, welche Arbeitsform besser ist. Sie sollte vielmehr zeigen, welche räumlichen Angebote zu welchen Zeiten tatsächlich gebraucht werden.
+
+Für die Erhebung wurden die Sitzplätze an vier Wochen werktags morgens, mittags und abends gezählt. Zusätzlich konnten Studierende in einer anonymen Befragung angeben, ob sie allein lesen, in Gruppen arbeiten oder digitale Meetings führen wollten. Die Ergebnisse zeigen ein differenziertes Bild. Ruhige Einzelarbeitsplätze waren fast durchgehend stark nachgefragt. Gruppenräume wurden dagegen vor allem am Nachmittag genutzt; am Morgen blieben mehrere Räume frei. Plätze mit Bildschirmen waren nicht generell beliebter als andere. Sie wurden jedoch besonders häufig von Personen gewählt, die an längeren Texten oder Daten arbeiteten.
+
+Die Bibliothek hatte zunächst erwogen, für alle Gruppenräume ein verbindliches Reservierungssystem einzuführen. Die Befragung machte jedoch deutlich, dass viele Studierende spontane Treffen schätzen und feste Buchungsfenster als zusätzliche Hürde erleben. Deshalb empfiehlt der Bericht kein einheitliches Modell. Stattdessen sollen zwei Gruppenräume weiterhin ohne Reservierung zugänglich bleiben, während die größeren Räume in der Prüfungsphase vorab gebucht werden können. Ein digitales Display am Eingang soll anzeigen, welche Räume frei sind und wann eine Reservierung endet.
+
+Bemerkenswert ist auch ein Nebenbefund: Viele Befragte nannten nicht den Lärm als größtes Problem, sondern fehlende Transparenz. Sie wussten häufig nicht, ob ein scheinbar leerer Platz noch zu einer Gruppe gehörte oder nur kurz verlassen worden war. Die Autorinnen und Autoren schlagen daher vor, Regeln für kurzfristiges Freihalten sichtbarer zu machen. Diese Regelung soll zunächst als Versuch gelten und nach einem Semester anhand neuer Beobachtungen überprüft werden.
+
+Der Bericht betont ausdrücklich seine Grenzen. Die Zählungen fanden nur während eines Winters statt und erfassen weder die Nutzung in der vorlesungsfreien Zeit noch die Perspektive von Personen, die ausschließlich von zu Hause arbeiten. Aus den Daten lässt sich deshalb keine allgemeine Aussage über alle Studierenden ableiten. Sie liefern aber eine Grundlage, um die Raumplanung schrittweise zu verändern und ihre Wirkung erneut zu prüfen.
+$reading_c1$,
+    6,
+    $questions_c1$[
+      {"id":"q1","promptDe":"Welches Ziel hatte die Untersuchung?","supportZhTw":"研究的目的不是什麼？","explanationZhTw":"研究要了解不同時間與需求下的空間使用，而非判斷哪種學習方式較好。"},
+      {"id":"q2","promptDe":"Welche Nutzung der Plätze mit Bildschirmen wurde festgestellt?","supportZhTw":"螢幕座位的使用有何特徵？","explanationZhTw":"它們不是普遍較受歡迎，而是較常被處理長文或資料的人選用。"},
+      {"id":"q3","promptDe":"Warum empfiehlt der Bericht kein einheitliches Reservierungssystem?","supportZhTw":"為何不全面採單一預約制度？","explanationZhTw":"許多學生重視臨時會面，固定時段會增加門檻，因此建議混合安排。"},
+      {"id":"q4","promptDe":"Welche Aussage lässt sich aus den Daten nicht ableiten?","supportZhTw":"研究限制造成什麼不能推論？","explanationZhTw":"資料只涵蓋冬季部分時段，不能推論所有學生或全年使用情形。"}
+    ]$questions_c1$::jsonb,
+    $options_c1$[
+      {"questionId":"q1","key":"a","textDe":"Den tatsächlichen Bedarf an verschiedenen Raumangeboten zu beschreiben.","textZhTw":"描述不同空間服務的實際需求。","isCorrect":true},
+      {"questionId":"q1","key":"b","textDe":"Einzelarbeit als beste Lernform zu beweisen.","textZhTw":"證明個人學習是最佳方式。","isCorrect":false},
+      {"questionId":"q1","key":"c","textDe":"Alle Arbeitsplätze kostenpflichtig zu machen.","textZhTw":"讓所有座位收費。","isCorrect":false},
+      {"questionId":"q1","key":"d","textDe":"Die Bibliothek im Winter zu schließen.","textZhTw":"冬季關閉圖書館。","isCorrect":false},
+      {"questionId":"q2","key":"a","textDe":"Sie waren besonders bei längerer Text- oder Datenarbeit gefragt.","textZhTw":"特別受長文或資料工作者使用。","isCorrect":true},
+      {"questionId":"q2","key":"b","textDe":"Sie blieben zu jeder Zeit vollständig leer.","textZhTw":"在所有時間都完全閒置。","isCorrect":false},
+      {"questionId":"q2","key":"c","textDe":"Sie durften nur für digitale Meetings genutzt werden.","textZhTw":"只准用於線上會議。","isCorrect":false},
+      {"questionId":"q2","key":"d","textDe":"Sie waren für Gruppen grundsätzlich verboten.","textZhTw":"原則上禁止團體使用。","isCorrect":false},
+      {"questionId":"q3","key":"a","textDe":"Weil spontane Treffen für viele Studierende wichtig sind.","textZhTw":"因為臨時會面對許多學生很重要。","isCorrect":true},
+      {"questionId":"q3","key":"b","textDe":"Weil es in der Bibliothek keine Gruppenräume gibt.","textZhTw":"因為圖書館沒有團體室。","isCorrect":false},
+      {"questionId":"q3","key":"c","textDe":"Weil Reservierungen technisch unmöglich sind.","textZhTw":"因為技術上無法預約。","isCorrect":false},
+      {"questionId":"q3","key":"d","textDe":"Weil alle Räume nur morgens geöffnet sind.","textZhTw":"因為所有房間只在早上開放。","isCorrect":false},
+      {"questionId":"q4","key":"a","textDe":"Eine allgemeine Aussage über alle Studierenden und das ganze Jahr.","textZhTw":"對所有學生與全年使用做普遍結論。","isCorrect":true},
+      {"questionId":"q4","key":"b","textDe":"Dass Einzelarbeitsplätze stark nachgefragt waren.","textZhTw":"個人自習座位需求高。","isCorrect":false},
+      {"questionId":"q4","key":"c","textDe":"Dass Gruppenräume morgens öfter frei waren.","textZhTw":"團體室早上較常空著。","isCorrect":false},
+      {"questionId":"q4","key":"d","textDe":"Dass Transparenz für Befragte ein Problem war.","textZhTw":"受訪者認為資訊透明是問題。","isCorrect":false}
+    ]$options_c1$::jsonb
+  ),
+  (
+    'c2-oeffentliche-debatte',
+    'c2-ironie',
+    'C2',
+    '公共辯論中的透明與簡化',
+    'Transparenz ohne Scheingenauigkeit',
+    $reading_c2$
+Wenn Behörden neue Vorhaben erklären, greifen sie gern zu anschaulichen Zahlen. Die Zahl der gepflanzten Bäume, die Länge neuer Radwege oder die Menge eingesparter Energie lassen sich leicht in eine Überschrift setzen. Das ist nicht falsch. Problematisch wird es erst, wenn die Zahl den Eindruck erweckt, sie spreche für sich selbst. Dann verwandelt sich Transparenz in eine Art Schaufenster: Man sieht etwas, aber nicht unbedingt das, worauf es ankommt.
+
+Nehmen wir ein Programm zur energetischen Sanierung öffentlicher Gebäude. Eine Verwaltung kann mitteilen, wie viele Fenster ersetzt wurden. Diese Information ist überprüfbar und nützlich. Sie sagt jedoch wenig darüber aus, ob die Gebäude anschließend tatsächlich weniger Energie verbrauchen, ob die Arbeiten unterschiedlich teure Objekte betrafen oder ob die Einsparung in einem milden Winter gemessen wurde. Wer auf solche Fragen hinweist, wird gelegentlich verdächtigt, aus jeder Maßnahme ein unlesbares Gutachten machen zu wollen. Dabei geht es nicht darum, Verständlichkeit gegen Genauigkeit auszuspielen. Es geht darum, sichtbar zu machen, welche Schlussfolgerung eine Kennzahl erlaubt und welche nicht.
+
+Das Gegenteil einer irreführenden Vereinfachung ist deshalb nicht zwangsläufig eine Tabelle mit tausend Spalten. Gute öffentliche Kommunikation kann mit wenigen Indikatoren arbeiten, wenn sie deren Bedeutung erklärt. Sie könnte etwa neben der Zahl ersetzter Fenster den geschätzten Energieverbrauch vor und nach der Sanierung nennen, die Berechnungsmethode verlinken und auf Unsicherheiten hinweisen. Ein solcher Hinweis ist kein Eingeständnis des Scheiterns. Er zeigt vielmehr, dass die Verwaltung zwischen einem Ergebnis, einer Prognose und einer noch offenen Frage unterscheidet.
+
+Diese Unterscheidung ist besonders wichtig, wenn politische Debatten unter Zeitdruck stehen. Eine eingängige Zahl wird rasch zitiert, korrigierende Erläuterungen werden dagegen häufig übersehen. Daraus folgt aber nicht, dass Behörden auf klare Botschaften verzichten sollten. Sie sollten ihre Botschaften so formulieren, dass eine Verkürzung nicht zu einer anderen Aussage führt. Wer beispielsweise schreibt, ein Programm habe "zwanzig Prozent Energie gespart", obwohl nur ein Teil der Gebäude erfasst wurde, liefert die spätere Verkürzung gleich mit. Präziser wäre: "In den bisher ausgewerteten Gebäuden sank der gemessene Verbrauch gegenüber dem Vorjahr um etwa zwanzig Prozent." Die zweite Formulierung ist kaum länger, grenzt aber ihren Geltungsbereich ab.
+
+Auch Beteiligungsverfahren profitieren von dieser Haltung. Bürgerinnen und Bürger müssen nicht jede technische Einzelheit kennen, um nachvollziehen zu können, welche Annahmen eine Entscheidung tragen. Sie brauchen jedoch Zugang zu den relevanten Unterlagen und eine verständliche Erklärung dafür, warum Alternativen verworfen oder weiter geprüft wurden. Transparenz ist damit kein Zustand, der durch das Hochladen vieler Dateien erreicht wird. Sie ist eine Beziehung zwischen Information, Kontext und der Möglichkeit, begründet nachzufragen.
+
+Wer daraus eine Pflicht zur vollständigen Veröffentlichung jeder internen Notiz ableitet, verfehlt den Punkt ebenso wie jene, die eine bunte Grafik schon für Beteiligung halten. Öffentliche Kommunikation kann nie alle Fragen vorwegnehmen. Sie sollte aber so gestaltet sein, dass ihre Grenzen erkennbar bleiben. Gerade diese erkennbare Begrenzung schafft Vertrauen: nicht weil sie Unsicherheit verschwinden lässt, sondern weil sie den Umgang mit Unsicherheit nachvollziehbar macht.
+$reading_c2$,
+    7,
+    $questions_c2$[
+      {"id":"q1","promptDe":"Welche Kritik übt der Text an einzelnen Kennzahlen?","supportZhTw":"作者不是否定數字本身，而是批評什麼？","explanationZhTw":"數字有用，但若缺乏脈絡，會錯誤地讓人以為它足以自行支持結論。"},
+      {"id":"q2","promptDe":"Welche zusätzliche Information nennt der Text als sinnvolle Ergänzung zur Zahl ersetzter Fenster?","supportZhTw":"哪一種補充可讓資訊更有意義？","explanationZhTw":"文章建議補充整修前後的估計能源消耗、方法與不確定性。"},
+      {"id":"q3","promptDe":"Was bedeutet es, Botschaften so zu formulieren, dass eine Verkürzung nicht zu einer anderen Aussage führt?","supportZhTw":"這句話在例子中如何實現？","explanationZhTw":"要說明資料的範圍與條件，例如只針對已評估的建築，而不是泛稱全部建築。"},
+      {"id":"q4","promptDe":"Wie definiert der Text Transparenz im Schlussabschnitt?","supportZhTw":"透明不只是公開很多檔案，還需要什麼？","explanationZhTw":"透明是資訊、脈絡與可以提出有根據問題之間的關係。"}
+    ]$questions_c2$::jsonb,
+    $options_c2$[
+      {"questionId":"q1","key":"a","textDe":"Sie können ohne Kontext eine weitergehende Aussage vortäuschen.","textZhTw":"它們沒有脈絡時可能假裝支持更廣泛的主張。","isCorrect":true},
+      {"questionId":"q1","key":"b","textDe":"Sie sind grundsätzlich nie überprüfbar.","textZhTw":"它們原則上永遠不可驗證。","isCorrect":false},
+      {"questionId":"q1","key":"c","textDe":"Sie dürfen nur in wissenschaftlichen Zeitschriften stehen.","textZhTw":"它們只能出現在學術期刊。","isCorrect":false},
+      {"questionId":"q1","key":"d","textDe":"Sie machen jede öffentliche Erklärung zu lang.","textZhTw":"它們讓所有公開說明都太長。","isCorrect":false},
+      {"questionId":"q2","key":"a","textDe":"Den Energieverbrauch vor und nach der Sanierung samt Methode und Unsicherheit.","textZhTw":"整修前後的能源消耗以及方法與不確定性。","isCorrect":true},
+      {"questionId":"q2","key":"b","textDe":"Nur die Namen aller Handwerksbetriebe.","textZhTw":"只列出所有工班名稱。","isCorrect":false},
+      {"questionId":"q2","key":"c","textDe":"Eine Liste aller Fensterfarben.","textZhTw":"列出所有窗戶顏色。","isCorrect":false},
+      {"questionId":"q2","key":"d","textDe":"Eine Prognose ohne Angaben zur Berechnung.","textZhTw":"不說明計算方式的預測。","isCorrect":false},
+      {"questionId":"q3","key":"a","textDe":"Den Geltungsbereich und die Bedingungen der Aussage sichtbar zu machen.","textZhTw":"清楚標示主張的適用範圍與條件。","isCorrect":true},
+      {"questionId":"q3","key":"b","textDe":"Jede Zahl durch eine bunte Grafik zu ersetzen.","textZhTw":"用彩色圖取代每個數字。","isCorrect":false},
+      {"questionId":"q3","key":"c","textDe":"Kritische Rückfragen aus der Debatte auszuschließen.","textZhTw":"排除辯論中的批評提問。","isCorrect":false},
+      {"questionId":"q3","key":"d","textDe":"Nur Aussagen ohne jede Unsicherheit zu veröffentlichen.","textZhTw":"只發布完全沒有不確定性的主張。","isCorrect":false},
+      {"questionId":"q4","key":"a","textDe":"Als Verbindung von Information, Kontext und begründetem Nachfragen.","textZhTw":"資訊、脈絡與可提出有根據問題的結合。","isCorrect":true},
+      {"questionId":"q4","key":"b","textDe":"Als Veröffentlichung sämtlicher interner Notizen.","textZhTw":"公布所有內部筆記。","isCorrect":false},
+      {"questionId":"q4","key":"c","textDe":"Als möglichst kurze Schlagzeile ohne Erläuterung.","textZhTw":"沒有解釋的最短標題。","isCorrect":false},
+      {"questionId":"q4","key":"d","textDe":"Als Ersatz für öffentliche Beteiligung.","textZhTw":"作為公眾參與的替代品。","isCorrect":false}
+    ]$options_c2$::jsonb
+  );
+
+insert into public.activities (
+  id,
+  lesson_id,
+  type,
+  title_zh_tw,
+  order_index,
+  content_json,
+  status,
+  version
+)
+select
+  md5('deutschtrainer:reading-activity:' || seed.slug)::uuid,
+  md5('deutschtrainer:lesson:' || seed.lesson_slug)::uuid,
+  'practice',
+  '閱讀理解草稿（待人工審核）',
+  900,
+  jsonb_build_object('readingCenter', true, 'reviewRequired', true),
+  'draft',
+  1
+from public._reading_center_draft_seed seed
+on conflict (id) do update
+set
+  lesson_id = excluded.lesson_id,
+  type = excluded.type,
+  title_zh_tw = excluded.title_zh_tw,
+  order_index = excluded.order_index,
+  content_json = excluded.content_json,
+  status = excluded.status,
+  version = excluded.version,
+  updated_at = now(),
+  deleted_at = null;
+
+insert into public.exercises (
+  id,
+  activity_id,
+  level,
+  type,
+  title,
+  instruction_zh_tw,
+  prompt_de,
+  payload_json,
+  skill_ids,
+  grammar_topic_ids,
+  vocabulary_ids,
+  estimated_seconds,
+  difficulty,
+  source_type,
+  review_status,
+  status,
+  version,
+  order_index
+)
+select
+  md5('deutschtrainer:reading-exercise:' || seed.slug)::uuid,
+  md5('deutschtrainer:reading-activity:' || seed.slug)::uuid,
+  seed.level,
+  'reading_comprehension',
+  seed.title,
+  '閱讀德文文章後，完成四題理解題。所有內容仍待德語人工審核。',
+  'Lies den Text aufmerksam und beantworte anschließend alle vier Fragen.',
+  jsonb_build_object(
+    'articleTitleDe', seed.article_title_de,
+    'passageDe', seed.passage_de,
+    'estimatedReadingMinutes', seed.estimated_reading_minutes,
+    'questions', seed.questions_json
+  ),
+  case seed.level
+    when 'B1' then array['B1.interaction.opinion']
+    when 'B2' then array['B2.reading.news']
+    when 'C1' then array['C1.reading.author_stance']
+    else array['C2.pragmatics.irony']
+  end,
+  '{}'::text[],
+  '{}'::text[],
+  seed.estimated_reading_minutes * 60 + 240,
+  case seed.level when 'B1' then 2 when 'B2' then 3 when 'C1' then 4 else 5 end,
+  'ai_assisted',
+  'draft',
+  'draft',
+  1,
+  0
+from public._reading_center_draft_seed seed
+on conflict (id) do update
+set
+  activity_id = excluded.activity_id,
+  level = excluded.level,
+  type = excluded.type,
+  title = excluded.title,
+  instruction_zh_tw = excluded.instruction_zh_tw,
+  prompt_de = excluded.prompt_de,
+  payload_json = excluded.payload_json,
+  skill_ids = excluded.skill_ids,
+  grammar_topic_ids = excluded.grammar_topic_ids,
+  vocabulary_ids = excluded.vocabulary_ids,
+  estimated_seconds = excluded.estimated_seconds,
+  difficulty = excluded.difficulty,
+  source_type = excluded.source_type,
+  review_status = excluded.review_status,
+  status = excluded.status,
+  version = excluded.version,
+  order_index = excluded.order_index,
+  updated_at = now(),
+  deleted_at = null;
+
+delete from public.exercise_options
+where exercise_id in (
+  select md5('deutschtrainer:reading-exercise:' || slug)::uuid
+  from public._reading_center_draft_seed
+);
+
+insert into public.exercise_options (
+  id,
+  exercise_id,
+  label,
+  text_de,
+  text_zh_tw,
+  order_index,
+  is_correct,
+  metadata_json
+)
+select
+  md5(
+    'deutschtrainer:reading-option:' || seed.slug || ':' || (option_value ->> 'questionId') || ':' || (option_value ->> 'key')
+  )::uuid,
+  md5('deutschtrainer:reading-exercise:' || seed.slug)::uuid,
+  upper(option_value ->> 'key'),
+  option_value ->> 'textDe',
+  option_value ->> 'textZhTw',
+  option_order - 1,
+  coalesce((option_value ->> 'isCorrect')::boolean, false),
+  jsonb_build_object('questionId', option_value ->> 'questionId')
+from public._reading_center_draft_seed seed
+cross join lateral jsonb_array_elements(seed.options_json) with ordinality as options(option_value, option_order);
+
+insert into public.exercise_answers (
+  id,
+  exercise_id,
+  answer_json,
+  grading_policy_json,
+  explanation_zh_tw
+)
+select
+  md5('deutschtrainer:reading-answer:' || seed.slug)::uuid,
+  md5('deutschtrainer:reading-exercise:' || seed.slug)::uuid,
+  jsonb_build_object(
+    'optionIdsByQuestion',
+    (
+      select jsonb_object_agg(
+        option_value ->> 'questionId',
+        md5(
+          'deutschtrainer:reading-option:' || seed.slug || ':' || (option_value ->> 'questionId') || ':' || (option_value ->> 'key')
+        )::uuid::text
+      )
+      from jsonb_array_elements(seed.options_json) as options(option_value)
+      where coalesce((option_value ->> 'isCorrect')::boolean, false)
+    )
+  ),
+  jsonb_build_object(
+    'caseSensitive', false,
+    'ignorePunctuation', true,
+    'normalizeGermanCharacters', true,
+    'allowPartialCredit', true,
+    'acceptedAlternatives', '[]'::jsonb
+  ),
+  '每一題的繁體中文解析保存在閱讀題 payload；此草稿尚待合格德語審核者簽核。'
+from public._reading_center_draft_seed seed
+on conflict (exercise_id) do update
+set
+  answer_json = excluded.answer_json,
+  grading_policy_json = excluded.grading_policy_json,
+  explanation_zh_tw = excluded.explanation_zh_tw,
+  updated_at = now();
+
+drop table public._reading_center_draft_seed;
+
 insert into public.units (
   id,
   course_id,

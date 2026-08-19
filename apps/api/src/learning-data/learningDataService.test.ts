@@ -67,6 +67,30 @@ describe("LearningDataService", () => {
     expect(repository.lastRecorded?.gradingResult.score).toBe(0);
   });
 
+  it("regrades a reading submission from the stored exercise before persisting", async () => {
+    const repository = new FakeLearningDataRepository();
+    repository.fixedExercise = readingExercise;
+    const service = new LearningDataService({ repository });
+
+    const result = await service.submitAttempt("valid-token", {
+      exerciseId: readingExercise.id,
+      answer: {
+        q1: "41111111-1111-4111-8111-111111111111",
+        q2: "42222222-2222-4222-8222-222222222222",
+        q3: "43333333-3333-4333-8333-333333333333",
+        q4: "54444444-4444-4444-8444-444444444444",
+      },
+      durationMs: 1200,
+      usedHint: false,
+      mode: "lesson",
+      idempotencyKey: "reading-server-authoritative-grade",
+    });
+
+    expect(result.gradingResult.score).toBe(75);
+    expect(result.gradingResult.isCorrect).toBe(false);
+    expect(repository.lastRecorded?.gradingResult.score).toBe(75);
+  });
+
   it("preserves a valid offline submission timestamp", async () => {
     const repository = new FakeLearningDataRepository();
     const service = new LearningDataService({
@@ -304,6 +328,7 @@ describe("LearningDataService", () => {
 });
 
 class FakeLearningDataRepository implements LearningDataRepository {
+  fixedExercise: FixedExercise = exercise;
   lastRecorded?: RecordFixedAttemptInput;
   nextReviewAt?: string;
   review?: StoredReview;
@@ -331,7 +356,7 @@ class FakeLearningDataRepository implements LearningDataRepository {
   }
 
   async getFixedExercise(): Promise<FixedExercise | undefined> {
-    return exercise;
+    return this.fixedExercise;
   }
 
   async findAttemptByIdempotency(): Promise<StoredFixedAttempt | undefined> {
@@ -364,6 +389,58 @@ class FakeLearningDataRepository implements LearningDataRepository {
   async getNextScheduledReviewAt(): Promise<string | undefined> {
     return this.nextReviewAt;
   }
+}
+
+const readingExercise: FixedExercise = {
+  id: "40000000-0000-4000-8000-000000000001",
+  level: "B1",
+  type: "reading_comprehension",
+  title: "閱讀理解",
+  instructionZhTw: "閱讀文章後回答四題。",
+  promptDe: "Lies den Text.",
+  skillIds: ["B1.reading.main_idea"],
+  grammarTopicIds: [],
+  vocabularyIds: [],
+  estimatedSeconds: 600,
+  difficulty: 2,
+  sourceType: "human",
+  reviewStatus: "approved",
+  version: 1,
+  articleTitleDe: "Eine kurze Nachricht",
+  passageDe:
+    "Am Samstag organisiert der Verein einen kleinen Markt. Besucher können Bücher tauschen und Kaffee trinken.",
+  estimatedReadingMinutes: 3,
+  questions: [
+    readingQuestion("q1", "41111111-1111-4111-8111-111111111111"),
+    readingQuestion("q2", "42222222-2222-4222-8222-222222222222"),
+    readingQuestion("q3", "43333333-3333-4333-8333-333333333333"),
+    readingQuestion("q4", "44444444-4444-4444-8444-444444444444"),
+  ],
+  answer: {
+    optionIdsByQuestion: {
+      q1: "41111111-1111-4111-8111-111111111111",
+      q2: "42222222-2222-4222-8222-222222222222",
+      q3: "43333333-3333-4333-8333-333333333333",
+      q4: "44444444-4444-4444-8444-444444444444",
+    },
+  },
+};
+
+function readingQuestion(id: string, correctOptionId: string) {
+  return {
+    id,
+    promptDe: `Frage ${id}`,
+    explanationZhTw: "解析",
+    options: [
+      { id: correctOptionId, label: "A", textDe: "Richtig", orderIndex: 0 },
+      {
+        id: `5${correctOptionId.slice(1)}`,
+        label: "B",
+        textDe: "Falsch",
+        orderIndex: 1,
+      },
+    ],
+  };
 }
 
 function gradeResult(score: number, isCorrect: boolean, answer: string): GradingResult {

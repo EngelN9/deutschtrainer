@@ -55,26 +55,86 @@ export const adminExerciseOptionDraftSchema = z.object({
   metadataJson: z.record(z.string(), z.unknown()).default({}),
 });
 
-export const adminExerciseDraftSchema = z.object({
-  activityId: databaseUuidSchema,
-  level: cefrLevelSchema,
-  type: exerciseTypeSchema,
-  title: z.string().trim().min(1).max(120),
-  instructionZhTw: z.string().trim().min(1).max(300),
-  promptDe: z.string().trim().min(1).max(1000),
-  payloadJson: z.record(z.string(), z.unknown()),
-  skillIds: z.array(z.string().trim().min(1)).min(1).max(12),
-  grammarTopicIds: z.array(z.string().trim().min(1)).max(12),
-  vocabularyIds: z.array(z.string().trim().min(1)).max(20),
-  estimatedSeconds: z.number().int().min(1).max(3600),
-  difficulty: z.number().int().min(1).max(5),
-  sourceType: z.enum(["human", "ai_assisted"]),
-  orderIndex: z.number().int().nonnegative(),
-  options: z.array(adminExerciseOptionDraftSchema).max(12),
-  answerJson: z.record(z.string(), z.unknown()),
-  gradingPolicyJson: z.record(z.string(), z.unknown()),
-  explanationZhTw: z.string().trim().max(1000),
-});
+export const adminExerciseDraftSchema = z
+  .object({
+    activityId: databaseUuidSchema,
+    level: cefrLevelSchema,
+    type: exerciseTypeSchema,
+    title: z.string().trim().min(1).max(120),
+    instructionZhTw: z.string().trim().min(1).max(300),
+    promptDe: z.string().trim().min(1).max(1000),
+    payloadJson: z.record(z.string(), z.unknown()),
+    skillIds: z.array(z.string().trim().min(1)).min(1).max(12),
+    grammarTopicIds: z.array(z.string().trim().min(1)).max(12),
+    vocabularyIds: z.array(z.string().trim().min(1)).max(20),
+    estimatedSeconds: z.number().int().min(1).max(3600),
+    difficulty: z.number().int().min(1).max(5),
+    sourceType: z.enum(["human", "ai_assisted"]),
+    orderIndex: z.number().int().nonnegative(),
+    options: z.array(adminExerciseOptionDraftSchema).max(24),
+    answerJson: z.record(z.string(), z.unknown()),
+    gradingPolicyJson: z.record(z.string(), z.unknown()),
+    explanationZhTw: z.string().trim().max(1000),
+  })
+  .superRefine((draft, context) => {
+    if (draft.type !== "reading_comprehension") {
+      return;
+    }
+
+    const payload = readingComprehensionPayloadSchema.safeParse(draft.payloadJson);
+    if (!payload.success) {
+      context.addIssue({
+        code: "custom",
+        message: "閱讀題 payload 必須包含文章與四題題幹資料。",
+        path: ["payloadJson"],
+      });
+      return;
+    }
+
+    const answer = readingComprehensionAnswerSchema.safeParse(draft.answerJson);
+    if (!answer.success) {
+      context.addIssue({
+        code: "custom",
+        message: "閱讀題答案必須為 optionIdsByQuestion。",
+        path: ["answerJson"],
+      });
+      return;
+    }
+
+    const questionIds = new Set(payload.data.questions.map((question) => question.id));
+    const optionsByQuestion = new Map<string, string[]>();
+    for (const option of draft.options) {
+      const questionId = option.metadataJson.questionId;
+      if (typeof questionId !== "string" || !questionIds.has(questionId)) {
+        context.addIssue({
+          code: "custom",
+          message: "閱讀題的每個選項都必須以 metadataJson.questionId 指向一題。",
+          path: ["options"],
+        });
+        continue;
+      }
+      optionsByQuestion.set(questionId, [...(optionsByQuestion.get(questionId) ?? []), option.id]);
+    }
+
+    for (const question of payload.data.questions) {
+      const optionIds = optionsByQuestion.get(question.id) ?? [];
+      if (optionIds.length < 2 || optionIds.length > 6) {
+        context.addIssue({
+          code: "custom",
+          message: "每一題閱讀題必須有 2 至 6 個選項。",
+          path: ["options"],
+        });
+      }
+      const answerOptionId = answer.data.optionIdsByQuestion[question.id];
+      if (!answerOptionId || !optionIds.includes(answerOptionId)) {
+        context.addIssue({
+          code: "custom",
+          message: "每一題閱讀題必須指定同一題中的一個正確選項。",
+          path: ["answerJson"],
+        });
+      }
+    }
+  });
 export type AdminExerciseDraft = z.infer<typeof adminExerciseDraftSchema>;
 
 export const generateExerciseDraftRequestSchema = z.object({
@@ -347,6 +407,78 @@ export const errorCorrectionExerciseSchema = baseExerciseSchema.extend({
   explanationZhTw: z.string().min(1),
 });
 
+export const readingComprehensionQuestionPayloadSchema = z.object({
+  id: z.string().trim().min(1).max(80),
+  promptDe: z.string().trim().min(1).max(500),
+  supportZhTw: z.string().trim().min(1).max(500).optional(),
+  explanationZhTw: z.string().trim().min(1).max(1000),
+});
+
+export const readingComprehensionPayloadSchema = z
+  .object({
+    articleTitleDe: z.string().trim().min(1).max(240),
+    passageDe: z.string().trim().min(80).max(10_000),
+    estimatedReadingMinutes: z.number().int().min(1).max(30),
+    questions: z.array(readingComprehensionQuestionPayloadSchema).length(4),
+  })
+  .superRefine((payload, context) => {
+    const questionIds = payload.questions.map((question) => question.id);
+    if (new Set(questionIds).size !== questionIds.length) {
+      context.addIssue({
+        code: "custom",
+        message: "閱讀題的題目識別碼不可重複。",
+        path: ["questions"],
+      });
+    }
+  });
+
+export const readingComprehensionAnswerSchema = z.object({
+  optionIdsByQuestion: z.record(z.string().min(1), databaseUuidSchema),
+});
+
+export const readingComprehensionQuestionSchema = readingComprehensionQuestionPayloadSchema.extend({
+  options: z.array(exerciseOptionSchema).min(2).max(6),
+});
+
+export const readingComprehensionExerciseSchema = baseExerciseSchema
+  .extend({
+    type: z.literal("reading_comprehension"),
+    articleTitleDe: z.string().trim().min(1).max(240),
+    passageDe: z.string().trim().min(80).max(10_000),
+    estimatedReadingMinutes: z.number().int().min(1).max(30),
+    questions: z.array(readingComprehensionQuestionSchema).length(4),
+    answer: readingComprehensionAnswerSchema,
+  })
+  .superRefine((exercise, context) => {
+    const questionIds = exercise.questions.map((question) => question.id);
+    if (new Set(questionIds).size !== questionIds.length) {
+      context.addIssue({
+        code: "custom",
+        message: "閱讀題的題目識別碼不可重複。",
+        path: ["questions"],
+      });
+    }
+
+    for (const question of exercise.questions) {
+      const answerOptionId = exercise.answer.optionIdsByQuestion[question.id];
+      if (!answerOptionId || !question.options.some((option) => option.id === answerOptionId)) {
+        context.addIssue({
+          code: "custom",
+          message: "每一題閱讀題必須指定同一題中的一個正確選項。",
+          path: ["answer", "optionIdsByQuestion", question.id],
+        });
+      }
+    }
+
+    if (Object.keys(exercise.answer.optionIdsByQuestion).some((id) => !questionIds.includes(id))) {
+      context.addIssue({
+        code: "custom",
+        message: "閱讀題答案不得包含不存在的題目識別碼。",
+        path: ["answer", "optionIdsByQuestion"],
+      });
+    }
+  });
+
 export const fixedExerciseSchema = z.discriminatedUnion("type", [
   multipleChoiceExerciseSchema,
   multipleSelectExerciseSchema,
@@ -354,6 +486,7 @@ export const fixedExerciseSchema = z.discriminatedUnion("type", [
   sentenceOrderExerciseSchema,
   matchingExerciseSchema,
   errorCorrectionExerciseSchema,
+  readingComprehensionExerciseSchema,
 ]);
 
 export const aiEvaluatedExerciseSchema = baseExerciseSchema

@@ -103,8 +103,11 @@ interface MultipleChoiceExercise extends BaseExercise {
 
 ### reading_comprehension
 
-- 閱讀理解題。
-- 可包含主旨、細節、推論、態度、字義、結構、修辭、多來源比較。
+- 閱讀理解固定題，使用 `ReadingComprehensionExercise.v1`。
+- 目前版本包含德文標題、德文本文、預估閱讀分鐘數與恰好四題單選理解題；每題可有繁中閱讀支架與繁中解析。
+- 題目資料放在 `exercises.payload_json.questions`，選項放在 `exercise_options`，每個選項以 `metadata_json.questionId` 對應一題；正解放在 `exercise_answers.answer_json.optionIdsByQuestion`。
+- `packages/grading` 以四題選擇結果做 deterministic grading；提交到 `POST /attempts` 時，API 會重新讀取已發布題目並重新評分，沿用既有 attempt、mastery、review、error history 與 idempotency 流程。
+- 初始 seed 的 B1–C2 四篇文章為 `draft`、`ai_assisted` 內容，只供 Admin 審核工作流檢視，不得因 schema 或測試通過而發布。詳細發布與人工審核要求見 [`reading-center.md`](reading-center.md)。
 
 ### listening_comprehension
 

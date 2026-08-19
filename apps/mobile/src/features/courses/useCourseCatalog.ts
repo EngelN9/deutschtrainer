@@ -5,7 +5,7 @@ import { useConnectivityStore } from "../offline/connectivityStore";
 import { useOfflineStore } from "../offline/useOfflineStore";
 import { getCourseCatalog } from "./courseRepository";
 
-export function useCourseCatalog() {
+export function useCourseCatalog({ enabled = true }: { enabled?: boolean } = {}) {
   const profileId = useAuthStore((state) => state.profile?.id);
   const offlineHydrated = useOfflineStore((state) => state.hasHydrated);
   const connectivity = useConnectivityStore((state) => state.status);
@@ -15,7 +15,7 @@ export function useCourseCatalog() {
       connectivity === "offline" ? "offline" : "online",
     ],
     queryFn: () => getCourseCatalog(profileId),
-    enabled: mobileEnv.contentSource !== "api" || offlineHydrated,
+    enabled: enabled && (mobileEnv.contentSource !== "api" || offlineHydrated),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });

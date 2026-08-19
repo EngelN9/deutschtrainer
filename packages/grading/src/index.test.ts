@@ -3,6 +3,7 @@ import {
   gradeMatching,
   gradeMultipleChoice,
   gradeMultipleSelect,
+  gradeReadingComprehension,
   gradeSentenceOrder,
   gradeTextAnswer,
   normalizeAnswer,
@@ -10,6 +11,7 @@ import {
 import type {
   MatchingExercise,
   MultipleSelectExercise,
+  ReadingComprehensionExercise,
   SentenceOrderExercise,
 } from "@deutschtrainer/shared-types";
 
@@ -114,5 +116,56 @@ describe("grading", () => {
     const result = gradeMatching(exercise, { a: "one", b: "one" });
     expect(result.score).toBe(50);
     expect(result.isCorrect).toBe(false);
+  });
+
+  it("grades four reading questions deterministically with partial credit", () => {
+    const exercise: ReadingComprehensionExercise = {
+      ...baseExercise,
+      type: "reading_comprehension",
+      articleTitleDe: "Ein kurzer Text",
+      passageDe:
+        "Dieser erfundene Text enthält genügend Wörter für die Schema-Anforderung und vier Fragen.",
+      estimatedReadingMinutes: 1,
+      questions: ["q1", "q2", "q3", "q4"].map((id, index) => ({
+        id,
+        promptDe: `Frage ${index + 1}?`,
+        explanationZhTw: "解析。",
+        options: [
+          {
+            id: `00000000-0000-4000-8000-${String(index * 2 + 1).padStart(12, "0")}`,
+            label: "A",
+            textDe: "Richtig",
+            orderIndex: 0,
+          },
+          {
+            id: `00000000-0000-4000-8000-${String(index * 2 + 2).padStart(12, "0")}`,
+            label: "B",
+            textDe: "Falsch",
+            orderIndex: 1,
+          },
+        ],
+      })),
+      answer: {
+        optionIdsByQuestion: {
+          q1: "00000000-0000-4000-8000-000000000001",
+          q2: "00000000-0000-4000-8000-000000000003",
+          q3: "00000000-0000-4000-8000-000000000005",
+          q4: "00000000-0000-4000-8000-000000000007",
+        },
+      },
+    };
+
+    const result = gradeReadingComprehension(exercise, {
+      q1: "00000000-0000-4000-8000-000000000001",
+      q2: "00000000-0000-4000-8000-000000000003",
+      q3: "00000000-0000-4000-8000-000000000006",
+      q4: "00000000-0000-4000-8000-000000000007",
+    });
+
+    expect(result).toMatchObject({
+      score: 75,
+      isCorrect: false,
+      details: { correctQuestions: 3, totalQuestions: 4 },
+    });
   });
 });

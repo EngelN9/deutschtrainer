@@ -401,6 +401,23 @@ export interface ErrorCorrectionExercise extends BaseExercise {
   explanationZhTw: string;
 }
 
+export interface ReadingComprehensionQuestion {
+  id: string;
+  promptDe: string;
+  supportZhTw?: string;
+  explanationZhTw: string;
+  options: ExerciseOption[];
+}
+
+export interface ReadingComprehensionExercise extends BaseExercise {
+  type: "reading_comprehension";
+  articleTitleDe: string;
+  passageDe: string;
+  estimatedReadingMinutes: number;
+  questions: ReadingComprehensionQuestion[];
+  answer: { optionIdsByQuestion: Record<string, string> };
+}
+
 export const FIXED_EXERCISE_TYPES = [
   "multiple_choice",
   "multiple_select",
@@ -408,6 +425,7 @@ export const FIXED_EXERCISE_TYPES = [
   "sentence_order",
   "matching",
   "error_correction",
+  "reading_comprehension",
 ] as const;
 export type FixedExerciseType = (typeof FIXED_EXERCISE_TYPES)[number];
 
@@ -417,7 +435,8 @@ export type FixedExercise =
   | FillBlankExercise
   | SentenceOrderExercise
   | MatchingExercise
-  | ErrorCorrectionExercise;
+  | ErrorCorrectionExercise
+  | ReadingComprehensionExercise;
 
 export const AI_EVALUATED_EXERCISE_TYPES = ["translation", "free_response"] as const;
 export type AiEvaluatedExerciseType = (typeof AI_EVALUATED_EXERCISE_TYPES)[number];

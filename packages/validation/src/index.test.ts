@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
   ACCOUNT_DELETION_CONFIRMATION,
   accountDeletionRequestSchema,
+  adminExerciseDraftSchema,
   audioLearningWorkspaceResponseSchema,
   apiErrorResponseSchema,
   completeReviewRequestSchema,
@@ -318,6 +319,93 @@ describe("validation schemas", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("accepts a four-question reading exercise and its Admin draft contract", () => {
+    const questionIds = ["q1", "q2", "q3", "q4"];
+    const optionId = (index: number) =>
+      `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+    const questions = questionIds.map((id, index) => ({
+      id,
+      promptDe: `Was sagt Absatz ${index + 1}?`,
+      supportZhTw: "請回到相對應段落找線索。",
+      explanationZhTw: "這是繁體中文解析。",
+      options: [
+        { id: optionId(index * 2 + 1), label: "A", textDe: "Richtige Antwort", orderIndex: 0 },
+        { id: optionId(index * 2 + 2), label: "B", textDe: "Falsche Antwort", orderIndex: 1 },
+      ],
+    }));
+    const answer = {
+      optionIdsByQuestion: Object.fromEntries(
+        questionIds.map((questionId, index) => [questionId, optionId(index * 2 + 1)]),
+      ),
+    };
+    const payload = {
+      articleTitleDe: "Ein erfundener Lesetext",
+      passageDe:
+        "Dieser vollständig erfundene Text ist lang genug für die Validierung und enthält keine personenbezogenen Daten oder geschützten Inhalte.",
+      estimatedReadingMinutes: 2,
+      questions: questions.map(({ options: _options, ...question }) => question),
+    };
+
+    expect(
+      fixedExerciseSchema.safeParse({
+        id: "2d4ba9d8-1718-4e59-af67-10c3639ba0f1",
+        level: "B1",
+        type: "reading_comprehension",
+        title: "閱讀理解草稿",
+        instructionZhTw: "閱讀文章後完成四題。",
+        promptDe: "Lies den Text und beantworte die Fragen.",
+        skillIds: ["B1.reading.main_idea"],
+        grammarTopicIds: [],
+        vocabularyIds: [],
+        estimatedSeconds: 360,
+        difficulty: 2,
+        sourceType: "ai_assisted",
+        reviewStatus: "draft",
+        version: 1,
+        articleTitleDe: payload.articleTitleDe,
+        passageDe: payload.passageDe,
+        estimatedReadingMinutes: payload.estimatedReadingMinutes,
+        questions,
+        answer,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      adminExerciseDraftSchema.safeParse({
+        activityId: "1103f461-2efe-46c2-a238-00b310037494",
+        level: "B1",
+        type: "reading_comprehension",
+        title: "閱讀理解草稿",
+        instructionZhTw: "閱讀文章後完成四題。",
+        promptDe: "Lies den Text und beantworte die Fragen.",
+        payloadJson: payload,
+        skillIds: ["B1.reading.main_idea"],
+        grammarTopicIds: [],
+        vocabularyIds: [],
+        estimatedSeconds: 360,
+        difficulty: 2,
+        sourceType: "ai_assisted",
+        orderIndex: 0,
+        options: questions.flatMap((question) =>
+          question.options.map((option) => ({
+            ...option,
+            isCorrect: answer.optionIdsByQuestion[question.id] === option.id,
+            metadataJson: { questionId: question.id },
+          })),
+        ),
+        answerJson: answer,
+        gradingPolicyJson: {
+          acceptedAlternatives: [],
+          allowPartialCredit: true,
+          caseSensitive: false,
+          ignorePunctuation: true,
+          normalizeGermanCharacters: true,
+        },
+        explanationZhTw: "每題都有對應解析。",
+      }).success,
+    ).toBe(true);
   });
 
   it("accepts PostgreSQL UUIDs in a learning-record snapshot", () => {

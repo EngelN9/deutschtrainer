@@ -357,6 +357,13 @@ export function ExerciseManager(props: ExerciseManagerProps) {
             </div>
             <details className="json-section" open={form.type === "multiple_choice"}>
               <summary>題型資料與答案</summary>
+              {form.type === "reading_comprehension" ? (
+                <p>
+                  閱讀題必須在 payload 提供文章與恰好四題；每個選項的 metadataJson.questionId
+                  必須指向其中一題，答案使用
+                  optionIdsByQuestion。保存後仍須完成人工德語審核，核准前不可發布。
+                </p>
+              ) : null}
               <label>
                 Payload JSON
                 <textarea

@@ -19,6 +19,7 @@ import {
   fixedGradingResultSchema,
   gradingPolicySchema,
   learningRecordSnapshotSchema,
+  readingComprehensionExerciseSchema,
   reviewQueueResponseSchema,
   type CourseListResponse,
   type ReviewQueueRequest,
@@ -108,6 +109,7 @@ interface ExerciseOptionRow {
   text_de: string;
   text_zh_tw: string | null;
   order_index: number;
+  metadata_json: Json;
 }
 
 interface ExerciseAnswerRow {
@@ -282,7 +284,7 @@ export class SupabaseLearningDataRepository implements LearningDataRepository {
       ? await Promise.all([
           this.client
             .from("exercise_options")
-            .select("id, exercise_id, label, text_de, text_zh_tw, order_index")
+            .select("id, exercise_id, label, text_de, text_zh_tw, order_index, metadata_json")
             .in("exercise_id", exerciseIds)
             .order("order_index"),
           this.client
@@ -343,7 +345,7 @@ export class SupabaseLearningDataRepository implements LearningDataRepository {
     const [optionsResult, answerResult] = await Promise.all([
       this.client
         .from("exercise_options")
-        .select("id, exercise_id, label, text_de, text_zh_tw, order_index")
+        .select("id, exercise_id, label, text_de, text_zh_tw, order_index, metadata_json")
         .eq("exercise_id", exerciseId)
         .order("order_index"),
       this.client
@@ -642,15 +644,19 @@ function mapLessonExercise(
   answerRow?: ExerciseAnswerRow,
 ): { activityId: string; exercise: LessonExercise; orderIndex: number } {
   const payload = asObject(row.payload_json);
-  const options = [...optionRows]
+  const optionEntries = [...optionRows]
     .sort((left, right) => left.order_index - right.order_index)
     .map((option) => ({
-      id: option.id,
-      label: option.label,
-      textDe: option.text_de,
-      ...(option.text_zh_tw ? { textZhTw: option.text_zh_tw } : {}),
-      orderIndex: option.order_index,
+      option: {
+        id: option.id,
+        label: option.label,
+        textDe: option.text_de,
+        ...(option.text_zh_tw ? { textZhTw: option.text_zh_tw } : {}),
+        orderIndex: option.order_index,
+      },
+      questionId: readString(asObject(option.metadata_json).questionId),
     }));
+  const options = optionEntries.map((entry) => entry.option);
   const base = {
     id: row.id,
     level: row.level,
@@ -735,10 +741,40 @@ function mapLessonExercise(
         explanationZhTw: answerRow.explanation_zh_tw,
       };
       break;
+    case "reading_comprehension": {
+      const questions = Array.isArray(payload.questions)
+        ? payload.questions.map((value) => {
+            const question = asObject(value);
+            const questionId = readString(question.id);
+            const supportZhTw = readString(question.supportZhTw);
+            return {
+              id: questionId,
+              promptDe: readString(question.promptDe),
+              ...(supportZhTw ? { supportZhTw } : {}),
+              explanationZhTw: readString(question.explanationZhTw),
+              options: optionEntries
+                .filter((entry) => entry.questionId === questionId)
+                .map((entry) => entry.option),
+            };
+          })
+        : [];
+      candidate = {
+        ...base,
+        articleTitleDe: readString(payload.articleTitleDe),
+        passageDe: readString(payload.passageDe),
+        estimatedReadingMinutes: readInteger(payload.estimatedReadingMinutes, 1),
+        questions,
+        answer: { optionIdsByQuestion: answer.optionIdsByQuestion },
+      };
+      break;
+    }
   }
   return {
     activityId: row.activity_id,
-    exercise: fixedExerciseSchema.parse(candidate) as FixedExercise,
+    exercise:
+      row.type === "reading_comprehension"
+        ? (readingComprehensionExerciseSchema.parse(candidate) as FixedExercise)
+        : (fixedExerciseSchema.parse(candidate) as FixedExercise),
     orderIndex: row.order_index,
   };
 }
