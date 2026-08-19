@@ -255,7 +255,8 @@ navigation acceptance 仍為 `BLOCKED`。
 - 100 題均有 `exercise_answers` row，八種既有題型至少各兩題。
 - Mobile 同時具有 iOS bundle identifier、Android application ID、build version 與正式圖示資產。
 - EAS `preview` profile 產生 internal Android APK；`production` profile 保留 store distribution 預設。
-- Maestro guest smoke 不依賴帳密或 secrets，覆蓋歡迎、登入、忘記密碼與返回登入。
+- Maestro offline guest smoke 不依賴帳密或 secrets，覆蓋 Preview-only 歡迎頁、Demo 課程、
+  restart 與固定 Listening D1 導覽；connected `staging` smoke 另驗證註冊、登入與忘記密碼。
 - 本機可自動化檢查須通過；Android／iOS 權限、通知、錄音、離線與安裝式 smoke 保留為 device follow-up。
 
 目前結果：Repository config 與 guest flow 已版本化；2026-08-01 clean local reset 套用

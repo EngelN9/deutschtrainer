@@ -7,7 +7,7 @@ const DEMO_AUTH_STORAGE_KEY = "deutschtrainer:demo-auth:v1";
 export const DEMO_AUTH_USER_ID = "00000000-0000-4000-8000-000000000001";
 export const DEMO_PROFILE_ID = "00000000-0000-4000-8000-000000000002";
 
-export const demoAuthEnabled = mobileEnv.contentSource === "mock";
+export const demoAuthEnabled = mobileEnv.supportsOfflineDemo;
 
 export const demoUserSettings: UserSettingsResponse = userSettingsResponseSchema.parse({
   profile: {

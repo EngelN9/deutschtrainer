@@ -211,12 +211,18 @@ Phase 12 實作採用每位 profile 隔離的版本化 AsyncStorage snapshot。�
 輸出完整環境。
 EAS production profile 固定 API content source，並在 app config 拒絕缺值、placeholder、
 localhost 與非 HTTPS remote URL；Admin 缺少任一必要 public URL/key 時不啟用管理後台。
+EAS `preview` profile 固定為 `mock`，只提供本機 Demo，不建立 Supabase session、顯示帳號
+表單或訂閱 auth changes；登入 route 的 deep link 只顯示需要 Staging 連線版的說明。
+EAS `staging` profile 固定為 `api`，不提供 Demo，並使用 `preview` EAS environment 的遠端
+public API/Supabase 設定。兩個 internal APK 使用相同 package identifier，一次安裝其一。
+目前 Auth 是 Supabase email/password，不是 Google OAuth。
 API 在 staging／production 要求 `CORS_ALLOWED_ORIGINS` 為精確的 HTTPS origins；不接受
 wildcard、localhost 或 path，且只對被允許的 request origin 回傳 CORS header 與 `Vary: Origin`。
 
 Learner App 的共用 shell 以 viewport 寬度分類 compact（`<600`）、medium
-（`600–1023`）與 wide（`>=1024`）。compact 使用單欄與可水平捲動的七項底部導覽，wide
-使用 184 px 左側 rail；長篇 detail/form 保持約 760 px，主頁內容上限約 1120 px。
+（`600–1023`）與 wide（`>=1024`）。compact 使用單欄與可水平捲動的 capability-filtered
+底部導覽，wide 使用 184 px 左側 rail；connected account 顯示七項，Demo 只顯示首頁、
+課程、固定 D1 聽力與複習。長篇 detail/form 保持約 760 px，主頁內容上限約 1120 px。
 
 ## 9. 主要 TypeScript 模型
 

@@ -5,10 +5,15 @@ name: Offline demo learning smoke
 - extendedWaitUntil:
     visible: "德語 B1-C2 自學系統"
     timeout: 15000
+- assertNotVisible: "已有帳號，登入"
+- assertNotVisible: "建立帳號"
 - tapOn: "離線 Demo 試用"
 - extendedWaitUntil:
     visible: "你好，Demo 學習者"
     timeout: 15000
+- tapOn: "聽說"
+- assertVisible: "B1 固定聽力 D1"
+- assertVisible: "每天一歐元的公共交通票"
 - assertVisible: "離線 Demo：.*"
 - scrollUntilVisible:
     element:

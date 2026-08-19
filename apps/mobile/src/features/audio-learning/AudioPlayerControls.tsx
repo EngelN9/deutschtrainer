@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { useAudioPlayer, useAudioPlayerStatus, type AudioSource } from "expo-audio";
 import { Pause, Play, RotateCcw } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { formatAudioTime } from "./audioLabels";
 
 interface AudioPlayerControlsProps {
-  sourceUri?: string;
+  sourceUri?: AudioSource;
   onPlay?: (slow: boolean) => void;
 }
 

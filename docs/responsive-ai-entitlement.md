@@ -9,11 +9,14 @@ entitlement stage. It does not claim real-AI, native-device, operational, or pro
 
 The learner App uses `useWindowDimensions`; it does not branch on device name or user agent.
 
-| Size    | Width           | Learner layout                                                             |
-| ------- | --------------- | -------------------------------------------------------------------------- |
-| Compact | below 600 px    | 16 px gutter, single column, horizontally scrollable seven-item bottom nav |
-| Medium  | 600–1023 px     | 24 px gutter, flexible cards, complete horizontal nav                      |
-| Wide    | 1024 px or more | 184 px navigation rail and content grid up to approximately 1120 px        |
+| Size    | Width           | Learner layout                                                                          |
+| ------- | --------------- | --------------------------------------------------------------------------------------- |
+| Compact | below 600 px    | 16 px gutter, single column, horizontally scrollable capability-filtered bottom nav     |
+| Medium  | 600–1023 px     | 24 px gutter, flexible cards, complete capability-filtered horizontal nav               |
+| Wide    | 1024 px or more | 184 px capability-filtered navigation rail and content grid up to approximately 1120 px |
+
+Connected accounts receive all seven navigation items. Offline Demo receives only Home, Courses,
+fixed Listening D1, and Review; hidden connected features are not represented by fake screens.
 
 Detail reading and form screens remain approximately 760 px wide. Interactive targets are at
 least 44×44 px. The public site exposes a Web learner entry. Admin navigation becomes a compact

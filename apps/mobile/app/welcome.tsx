@@ -4,8 +4,8 @@ import { colorTokens } from "@deutschtrainer/ui";
 import { AppScreen } from "../src/components/AppScreen";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { AuthGate } from "../src/features/auth/AuthGate";
-import { demoAuthEnabled } from "../src/features/auth/demoAuth";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
+import { mobileEnv } from "../src/lib/env";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -18,26 +18,34 @@ export default function WelcomeScreen() {
         eyebrow="DeutschTrainer"
         title="德語 B1-C2 自學系統"
       >
-        {demoAuthEnabled ? (
+        {mobileEnv.supportsOfflineDemo ? (
           <PrimaryButton accessibilityLabel="開始離線 Demo" onPress={() => void startDemo()}>
             離線 Demo 試用
           </PrimaryButton>
         ) : null}
-        {demoAuthEnabled ? (
+        {mobileEnv.supportsOfflineDemo ? (
           <Text style={styles.demoNote}>
-            無需帳號；課程與進度保存在本機，雲端 AI 功能暫不開放。
+            此 Preview APK 僅提供離線 Demo；課程與進度保存在本機。正式帳號登入請使用 Staging
+            連線版。
           </Text>
         ) : null}
-        <PrimaryButton accessibilityLabel="前往註冊頁" onPress={() => router.push("/sign-up")}>
-          建立帳號
-        </PrimaryButton>
-        <PrimaryButton
-          accessibilityLabel="前往登入頁"
-          onPress={() => router.push("/sign-in")}
-          variant="secondary"
-        >
-          已有帳號，登入
-        </PrimaryButton>
+        {mobileEnv.supportsConnectedAuth ? (
+          <>
+            <PrimaryButton accessibilityLabel="前往註冊頁" onPress={() => router.push("/sign-up")}>
+              建立帳號
+            </PrimaryButton>
+            <PrimaryButton
+              accessibilityLabel="前往登入頁"
+              onPress={() => router.push("/sign-in")}
+              variant="secondary"
+            >
+              已有帳號，登入
+            </PrimaryButton>
+            <Text style={styles.demoNote}>
+              請使用為 DeutschTrainer 建立的電子郵件與密碼；目前未提供「使用 Google 登入」。
+            </Text>
+          </>
+        ) : null}
       </AppScreen>
     </AuthGate>
   );

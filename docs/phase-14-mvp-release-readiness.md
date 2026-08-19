@@ -66,9 +66,13 @@ build-time contract，不代表遠端服務已驗收。
 
 1. 清除 App state 並啟動。
 2. 顯示訪客歡迎頁。
-3. 進入登入頁。
-4. 開啟忘記密碼頁。
-5. 返回登入頁。
+3. 確認 Preview 沒有 connected 註冊／登入入口。
+4. 進入離線 Demo，走完一題固定課程。
+5. 重新啟動後確認 Demo session 保留。
+6. 從四項主要導覽進入「聽說」，確認固定 Listening D1 可達。
+
+註冊、登入與忘記密碼改由 `staging` connected smoke 驗證；Preview 的 auth route deep link
+只可顯示需要 Staging 連線版的說明，不得呼叫 Supabase。
 
 安裝 preview build 並連接 Android／iOS 裝置後執行：
 

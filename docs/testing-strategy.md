@@ -127,6 +127,7 @@ pnpm test
 - deterministic audio provider 產生有效 WAV 與固定 word timings，不依賴真實 OpenAI 呼叫。
 - 單元測試驗證德語 word diff、長停頓、發音限制聲明、cache hit 與 unavailable-provider fallback。
 - Web 瀏覽器需巡檢桌面與 390 px viewport 的入口、聽力、口說權限替代及分析頁，並檢查無水平溢出。
+- Listening D1 的 targeted unit test 必須驗證固定內容 schema、四個不重複的 B1 聽前詞彙、B1/B2 選擇、全對、部分得分、無效提交與重跑一致性。瀏覽器或裝置驗收須走完「入口 → 播放／暫停／重播／0.75× → 四題作答 → 提交 → deterministic result → 重新開啟 App」，並確認 Demo 沒有發出 authenticated audio API request。正式內容 PASS 另需德語 B2+ 人類審核者核對音檔、逐字稿、程度、題目與繁中解析。
 
 ## 12. Phase 8 可執行驗證
 
@@ -187,10 +188,14 @@ pnpm test
 ## 18. Phase 14 可執行驗證
 
 - `verify:content-readiness:local` 驗證 100 題 human／approved／published content、CEFR 分布、題型下限與答案完整性。
-- `expo config` 與 EAS CLI `config --non-interactive` 驗證原生 app config 及 preview／production profiles。
+- `expo config` 與 EAS CLI `config --non-interactive` 驗證原生 app config 及
+  preview／staging／production profiles。
 - Expo Doctor、Web export、Admin production build、lint、typecheck、Jest 與 manifests
   列出的 Supabase/API local verification suites 全數回歸。
-- Maestro guest smoke 使用 internal preview build 驗證歡迎、登入與忘記密碼導覽；不使用測試帳密。
+- Maestro offline guest smoke 使用 internal `preview` build 驗證歡迎頁只提供 Demo、登入 deep
+  link 顯示連線版說明、Demo 四項導覽與固定 Listening D1；不得發出 Supabase auth request。
+- Connected auth smoke 使用 internal `staging` build 驗證註冊、登入與忘記密碼導覽。只有經
+  核准的人工驗收才輸入帳密，且不得在 log、截圖或 evidence 記錄 credential/token。
 - Android/iOS device matrix 另驗證通知權限與送達、麥克風、錄音播放、process relaunch、飛航模式與 reconnect race。
 
 ## 19. Phase 15 artifact 與可觀測性驗證

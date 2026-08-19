@@ -69,7 +69,12 @@ source, and applies the same remote-HTTPS configuration checks as a production b
 values from `.env.example` in the matching EAS environment; never add an OpenAI or Supabase
 service-role key to a Mobile build.
 
-Preview builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. It creates no Supabase session, sends no authenticated API requests, and keeps fixed-exercise progress plus preferences in AsyncStorage on the device. AI writing evaluation, knowledge search, audio training, and cloud synchronization stay hidden in Demo mode. API builds do not expose this entrance.
+Preview builds use `EXPO_PUBLIC_CONTENT_SOURCE=mock` and expose an **Offline Demo** entrance. They
+create no Supabase session, hide registration/password-reset/sign-in controls, reject auth deep
+links before contacting Supabase, and keep supported progress plus preferences in AsyncStorage.
+Demo navigation contains Home, Courses, fixed Listening D1, and Review; connected audio/speaking,
+AI writing evaluation, knowledge search, analytics, and cloud synchronization stay hidden. API
+builds do not expose the Demo entrance and use Supabase email/password, not Google OAuth.
 
 After the APK passes the versioned device smoke flow, publish it as a GitHub pre-release asset with
 its SHA-256 checksum. The remote Supabase staging schema exists, but a staging APK remains blocked

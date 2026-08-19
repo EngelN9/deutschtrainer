@@ -42,6 +42,35 @@
 
 完整 rubric、全部行內標記與參考版本保留在次要展開控制中。固定題、聽說、知識與分析仍可透過主要導覽到達，但不與首次主要行動競爭。
 
+### 4.2 目前產品循環與後續方向
+
+**CURRENT — Writing**
+
+`第一稿 → 最多三個重點問題 → immutable 重寫 → 第一版與最新版比較`
+
+**NEW — Listening D1**
+
+`選擇固定任務 → 查看四個聽前詞彙 → 播放真人預錄音檔 → 回答四個固定理解題 → deterministic score 與基本解答`
+
+Listening D1 只有一份主要為 B1、亦供 B2 基礎複習的公開 sample。它使用 repository-local
+固定音檔，並以四個聽前詞彙降低新聞語域的理解門檻；不呼叫 AI、TTS 或 STT，也不保存
+正式 attempt、mastery、review 或 analytics。
+
+Android internal distribution 將離線與連線能力分開：Preview APK 只顯示首頁、課程、固定
+D1 聽力與複習，不顯示 connected auth；Staging APK 不提供 Demo，使用與 connected Web
+相同的遠端 API/Supabase。登入採 DeutschTrainer 的 email/password，沒有 Google OAuth。
+
+**NOT YET IMPLEMENTED**
+
+- Listening D2：前三個理解重點、再聽／重答、第一次與第二次比較。
+- Conversation E1：少量、有最大輪數與完成條件的文字任務。
+- Conversation E2：回饋、重試與改善比較。
+- Conversation E3：push-to-talk STT。
+- Conversation E4：TTS 回覆。
+- Conversation E5：只有真實需求證據成立後才評估 realtime voice。
+
+上述 roadmap 不代表已有 Conversation API、資料表、provider、voice 或 realtime 實作。
+
 ## 5. MVP 範圍
 
 MVP 必須支援 B1、B2、C1、C2 的資料模型與導覽，但內容量先限定：
@@ -92,7 +121,9 @@ MVP 暫不包含完整即時語音對話、C2 大量完整課程、付款與社�
 
 ## 7. 核心頁面
 
-未登入區包含歡迎頁、功能介紹頁、登入頁、註冊頁、忘記密碼頁。
+Connected Web/Staging 的未登入區包含歡迎頁、功能介紹頁、登入頁、註冊頁、忘記密碼頁。
+Offline Preview 的未登入區只提供 Demo 入口；直接開啟 auth route 時顯示需要 Staging
+連線版的說明，不送出 Supabase request。
 
 初次設定包含程度、目標、每日時間、學習目標、程度測驗入口、音訊與通知權限說明。
 

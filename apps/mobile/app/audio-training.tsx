@@ -12,13 +12,16 @@ import { LevelSelector } from "../src/components/LevelSelector";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { StatePanel } from "../src/components/StatePanel";
 import { listeningKindLabel } from "../src/features/audio-learning/audioLabels";
+import { getListeningD1ExercisesForLevel } from "../src/features/audio-learning/listeningD1";
 import {
   useAudioLearningWorkspace,
   useDeleteSpeakingSubmission,
 } from "../src/features/audio-learning/useAudioLearning";
+import { useAuthStore } from "../src/features/auth/useAuthStore";
 
 export default function AudioTrainingScreen() {
   const router = useRouter();
+  const authMode = useAuthStore((state) => state.authMode);
   const [level, setLevel] = useState<CefrLevel>("B1");
   const workspaceQuery = useAudioLearningWorkspace();
   const deleteMutation = useDeleteSpeakingSubmission();
@@ -31,6 +34,7 @@ export default function AudioTrainingScreen() {
     [level, workspaceQuery.data],
   );
   const submissions = workspaceQuery.data?.speakingSubmissions ?? [];
+  const d1Exercises = useMemo(() => getListeningD1ExercisesForLevel(level), [level]);
 
   const confirmDelete = (submissionId: string) => {
     Alert.alert("刪除錄音", "這會永久刪除私人錄音與轉錄回饋。", [
@@ -56,7 +60,60 @@ export default function AudioTrainingScreen() {
           message={deleteMutation.isError ? deleteMutation.error.message : null}
           tone="error"
         />
-        {workspaceQuery.isLoading ? (
+        {d1Exercises.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeading}>
+              <Headphones color={colorTokens.primary} size={20} />
+              <Text style={styles.sectionTitle}>{level} 固定聽力 D1</Text>
+            </View>
+            <Text style={styles.sectionDescription}>
+              真人預錄音檔與固定理解題；不需要 AI、TTS 或語音辨識。
+            </Text>
+            <View style={styles.list}>
+              {d1Exercises.map((exercise) => (
+                <Pressable
+                  accessibilityLabel={`開始 ${exercise.titleZhTw}`}
+                  accessibilityRole="button"
+                  key={exercise.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/listening/[assetId]",
+                      params: { assetId: exercise.id },
+                    } as unknown as Href)
+                  }
+                  style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
+                >
+                  <View style={styles.cardCopy}>
+                    <View style={styles.metaRow}>
+                      <Text style={styles.kind}>{exercise.level} 新聞理解</Text>
+                      <View style={styles.inlineMeta}>
+                        <Clock3 color={colorTokens.mutedText} size={14} />
+                        <Text style={styles.meta}>
+                          {exercise.estimatedSeconds} 秒 · {exercise.questions.length} 題
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.cardTitle}>{exercise.titleZhTw}</Text>
+                    <Text style={styles.description}>{exercise.descriptionZhTw}</Text>
+                  </View>
+                  <ChevronRight color={colorTokens.mutedText} size={21} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <MessageBanner
+            message="Listening D1 目前只支援 B1 與 B2；請選擇其中一個程度開始固定新聞練習。"
+            tone="info"
+          />
+        )}
+
+        {authMode === "demo" ? (
+          <MessageBanner
+            message="Demo 只提供上方固定聽力 D1；連線聽寫、受保護逐字稿與口說功能需要正式登入。"
+            tone="info"
+          />
+        ) : workspaceQuery.isLoading ? (
           <StatePanel
             message="正在同步聽力素材與口說紀錄..."
             state="loading"
@@ -242,5 +299,6 @@ const styles = StyleSheet.create({
     paddingTop: spacingTokens.lg,
   },
   sectionHeading: { alignItems: "center", flexDirection: "row", gap: spacingTokens.sm },
+  sectionDescription: { color: colorTokens.mutedText, fontSize: 14, lineHeight: 22 },
   sectionTitle: { color: colorTokens.text, fontSize: 17, fontWeight: "800" },
 });

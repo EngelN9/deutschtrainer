@@ -17,6 +17,7 @@ import {
   subscribeToAuthChanges,
 } from "./authService";
 import { toUserFacingError } from "../../lib/userFacingErrors";
+import { mobileEnv } from "../../lib/env";
 import { useLearningSetupStore } from "../../state/useLearningSetupStore";
 import { requestNotificationPermission } from "../notifications/notificationRuntime";
 import { completeOnboarding as persistOnboarding } from "../onboarding/onboardingRepository";
@@ -79,6 +80,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: demoUserSettings.profile,
           session: null,
           status: "authenticated",
+        });
+        return;
+      }
+
+      if (!mobileEnv.supportsConnectedAuth) {
+        set({
+          authMode: null,
+          bootstrapped: true,
+          profile: null,
+          session: null,
+          status: "unauthenticated",
         });
         return;
       }
@@ -299,7 +311,7 @@ function ensureAuthSubscription(
   set: (partial: Partial<AuthState>) => void,
   get: () => AuthState,
 ): void {
-  if (unsubscribeFromAuth) {
+  if (!mobileEnv.supportsConnectedAuth || unsubscribeFromAuth) {
     return;
   }
 

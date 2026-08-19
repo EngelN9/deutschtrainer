@@ -13,12 +13,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useAuthStore } from "../features/auth/useAuthStore";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
+import { getVisibleMainNavigationPaths, type MainNavigationPath } from "./navigationPolicy";
 
 const items: Array<{
   href: Href;
   icon: typeof Home;
   label: string;
-  path: string;
+  path: MainNavigationPath;
 }> = [
   { href: "/home", icon: Home, label: "首頁", path: "/home" },
   { href: "/courses", icon: BookOpen, label: "課程", path: "/courses" },
@@ -34,10 +35,8 @@ export function MainNavigation({ layout = "bar" }: { layout?: "bar" | "rail" }) 
   const router = useRouter();
   const authMode = useAuthStore((state) => state.authMode);
   const { isCompact } = useResponsiveLayout();
-  const visibleItems =
-    authMode === "demo"
-      ? items.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
-      : items;
+  const visiblePaths = getVisibleMainNavigationPaths(authMode);
+  const visibleItems = items.filter((item) => visiblePaths.includes(item.path));
 
   const navigation = (
     <View

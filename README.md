@@ -27,6 +27,7 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - [`docs/security.md`](docs/security.md): security, privacy, authorization, and data-protection requirements.
 - [`docs/testing-strategy.md`](docs/testing-strategy.md): automated, local integration, connected, and device testing strategy.
 - [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md): measurable product and phase acceptance criteria.
+- [`docs/listening-d1.md`](docs/listening-d1.md): fixed-audio deterministic Listening D1 scope, attribution, validation boundary, and later roadmap.
 
 `SPECIFICATION.md` and `DELIVERY_PLAN.md` are reference documents. Do not submit either file to Codex as one monolithic implementation prompt; assign one small, independently reviewable task or Gate.
 
@@ -116,6 +117,21 @@ The learner App uses width-based responsive breakpoints rather than device names
 600 px, medium from 600–1023 px, and wide from 1024 px. The public site and Admin console provide
 their corresponding mobile/tablet/desktop layouts. The quota and viewport contracts are documented
 in `docs/responsive-ai-entitlement.md`.
+
+The learner App also contains one public Listening D1 sample: a 66-second human-spoken,
+repository-local CC BY 2.5 recording with four B1 pre-listening vocabulary supports, four fixed
+questions, and deterministic scoring. It works without AI/TTS/STT in Demo and connected sessions,
+but does not persist an official attempt or update mastery. The older authenticated
+listening/dictation flow remains a separate protected, provider-backed path. See
+`docs/listening-d1.md` for the exact boundary and attribution.
+
+Android internal distribution intentionally separates two modes. The `preview` EAS profile is an
+offline-only mock build: it exposes Demo journeys, including fixed Listening D1, and does not offer
+registration, password reset, or connected sign-in. The `staging` EAS profile is the connected
+build: it disables Demo and requires the remote HTTPS API plus the same Supabase project used by the
+connected Web preview. Authentication is Supabase email/password for a DeutschTrainer account;
+Google OAuth is not implemented. The two profiles use the same Android package identifier and are
+installed one at a time.
 
 ## Current Scope
 

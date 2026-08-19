@@ -10,12 +10,14 @@ import {
   signUpRequestSchema,
 } from "@deutschtrainer/validation";
 import { supabase } from "../../lib/supabase";
+import { assertConnectedAuthEnabled } from "./authCapabilities";
 
 export interface AuthResult {
   session: Session | null;
 }
 
 export async function getCurrentSession(): Promise<Session | null> {
+  assertConnectedAuthEnabled();
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -26,6 +28,7 @@ export async function getCurrentSession(): Promise<Session | null> {
 }
 
 export async function signInWithPassword(input: SignInRequest): Promise<AuthResult> {
+  assertConnectedAuthEnabled();
   const parsed = signInRequestSchema.parse(input);
   const { data, error } = await supabase.auth.signInWithPassword(parsed);
 
@@ -37,6 +40,7 @@ export async function signInWithPassword(input: SignInRequest): Promise<AuthResu
 }
 
 export async function signUpWithPassword(input: SignUpRequest): Promise<AuthResult> {
+  assertConnectedAuthEnabled();
   const parsed = signUpRequestSchema.parse(input);
   const { data, error } = await supabase.auth.signUp({
     email: parsed.email,
@@ -57,6 +61,7 @@ export async function signUpWithPassword(input: SignUpRequest): Promise<AuthResu
 }
 
 export async function sendPasswordReset(input: ForgotPasswordRequest): Promise<void> {
+  assertConnectedAuthEnabled();
   const parsed = forgotPasswordRequestSchema.parse(input);
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.email);
 
@@ -66,6 +71,7 @@ export async function sendPasswordReset(input: ForgotPasswordRequest): Promise<v
 }
 
 export async function signOutCurrentUser(): Promise<void> {
+  assertConnectedAuthEnabled();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
@@ -74,6 +80,7 @@ export async function signOutCurrentUser(): Promise<void> {
 }
 
 export async function clearLocalSession(): Promise<void> {
+  assertConnectedAuthEnabled();
   const { error } = await supabase.auth.signOut({ scope: "local" });
   if (error) {
     throw new Error(error.message);
@@ -81,6 +88,7 @@ export async function clearLocalSession(): Promise<void> {
 }
 
 export function subscribeToAuthChanges(callback: (session: Session | null) => void): () => void {
+  assertConnectedAuthEnabled();
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((_event, session) => {

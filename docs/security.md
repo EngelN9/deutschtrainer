@@ -53,6 +53,9 @@
 - `OPENAI_API_KEY` 只存在 backend runtime。
 - `SUPABASE_SERVICE_ROLE_KEY` 只存在 backend runtime。
 - Mobile 只允許 `EXPO_PUBLIC_SUPABASE_URL`、`EXPO_PUBLIC_SUPABASE_ANON_KEY` 與 `EXPO_PUBLIC_API_BASE_URL`。
+- Offline Preview 只使用 mock content，隱藏並在 route/service boundary 拒絕 connected auth，
+  不得以 localhost 或 placeholder Supabase 設定嘗試登入；Staging 才可使用遠端 public
+  Supabase 設定。Email/password 是 DeutschTrainer 帳號驗證，不代表 Google OAuth。
 - CI secrets 不輸出到 logs。
 - `AI_PUBLIC_ENABLED` 是 server-only emergency switch；staging/production 啟用時若缺少
   `OPENAI_API_KEY`，API 必須在啟動時 fail fast。健康檢查只回傳 boolean 狀態，不回傳 key。

@@ -8,6 +8,7 @@ import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
 import { TextField } from "../src/components/TextField";
 import { AuthGate } from "../src/features/auth/AuthGate";
+import { ConnectedAuthScreenGuard } from "../src/features/auth/ConnectedAuthScreenGuard";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 
 export default function SignInScreen() {
@@ -28,56 +29,61 @@ export default function SignInScreen() {
   });
 
   return (
-    <AuthGate mode="guest">
-      <AppScreen description="登入後會保留你的初次設定與後續學習進度。" title="登入">
-        <MessageBanner message={errorMessage} tone="error" />
-        <MessageBanner message={noticeMessage} tone="info" />
-        <Controller
-          control={control}
-          name="email"
-          render={({ field }) => (
-            <TextField
-              accessibilityLabel="電子郵件"
-              autoCapitalize="none"
-              error={errors.email?.message}
-              keyboardType="email-address"
-              label="電子郵件"
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="you@example.com"
-              value={field.value}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="password"
-          render={({ field }) => (
-            <TextField
-              accessibilityLabel="密碼"
-              autoCapitalize="none"
-              error={errors.password?.message}
-              label="密碼"
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="至少 8 個字元"
-              secureTextEntry
-              value={field.value}
-            />
-          )}
-        />
-        <PrimaryButton
-          accessibilityLabel="登入帳號"
-          loading={isSubmitting || status === "loading"}
-          onPress={handleSubmit((values) => {
-            void signIn(values);
-          })}
+    <ConnectedAuthScreenGuard>
+      <AuthGate mode="guest">
+        <AppScreen
+          description="使用為 DeutschTrainer 建立的電子郵件與密碼；目前未提供 Google 登入。"
+          title="登入"
         >
-          登入
-        </PrimaryButton>
-        <AuthLink href="/forgot-password">忘記密碼</AuthLink>
-        <AuthLink href="/sign-up">還沒有帳號？建立帳號</AuthLink>
-      </AppScreen>
-    </AuthGate>
+          <MessageBanner message={errorMessage} tone="error" />
+          <MessageBanner message={noticeMessage} tone="info" />
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <TextField
+                accessibilityLabel="電子郵件"
+                autoCapitalize="none"
+                error={errors.email?.message}
+                keyboardType="email-address"
+                label="電子郵件"
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="you@example.com"
+                value={field.value}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <TextField
+                accessibilityLabel="密碼"
+                autoCapitalize="none"
+                error={errors.password?.message}
+                label="密碼"
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="至少 8 個字元"
+                secureTextEntry
+                value={field.value}
+              />
+            )}
+          />
+          <PrimaryButton
+            accessibilityLabel="登入帳號"
+            loading={isSubmitting || status === "loading"}
+            onPress={handleSubmit((values) => {
+              void signIn(values);
+            })}
+          >
+            登入
+          </PrimaryButton>
+          <AuthLink href="/forgot-password">忘記密碼</AuthLink>
+          <AuthLink href="/sign-up">還沒有帳號？建立帳號</AuthLink>
+        </AppScreen>
+      </AuthGate>
+    </ConnectedAuthScreenGuard>
   );
 }

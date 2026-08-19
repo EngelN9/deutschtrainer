@@ -145,7 +145,7 @@ export default function HomeScreen() {
         <MessageBanner
           message={
             authMode === "demo"
-              ? "離線 Demo：課程、固定題與學習進度可用，資料只保存在這台裝置；AI 寫作、聽說與雲端同步尚未開放。"
+              ? "離線 Demo：課程、固定題、真人固定 D1 聽力與學習進度可用，資料只保存在這台裝置；連線聽說、AI 與雲端同步尚未開放。"
               : null
           }
           tone="info"
