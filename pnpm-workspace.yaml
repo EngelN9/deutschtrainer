@@ -4,3 +4,23 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+overrides:
+  expo-constants: 57.0.12
+minimumReleaseAgeExclude:
+  - "@expo/cli@57.0.16"
+  - "@expo/fingerprint@0.20.8"
+  - "@expo/inline-modules@0.1.6"
+  - "@expo/local-build-cache-provider@57.0.6"
+  - "@expo/metro-config@57.0.8"
+  - "@expo/metro-runtime@57.0.11"
+  - "@expo/prebuild-config@57.0.12"
+  - "@expo/ui@57.0.11"
+  - expo-asset@57.0.12
+  - expo-constants@57.0.12
+  - expo-file-system@57.0.4
+  - expo-linking@57.0.6
+  - expo-notifications@57.0.12
+  - expo-router@57.0.14
+  - expo-server@57.0.3
+  - expo-splash-screen@57.0.7
+  - expo@57.0.14
