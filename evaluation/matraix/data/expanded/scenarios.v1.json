@@ -1,0 +1,2508 @@
+[
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "word_order",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "weil ich krank bin",
+          "end_offset": 45,
+          "explanation_zh_tw": "從屬連接詞引導的子句中，變位動詞通常放在子句末尾。",
+          "grammar_topic_id": "B1.word_order",
+          "original": "weil ich bin krank",
+          "related_skill_id": "B1.grammar.word_order",
+          "severity": "moderate",
+          "start_offset": 27,
+          "type": "word_order",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "找出從屬子句，將變位動詞移到該子句末尾後重寫整句。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Er kommt später, weil er arbeiten muss."
+      ],
+      "identified_error_category": "word_order",
+      "required_correction_de": "weil ich krank bin",
+      "rule_facet_groups_zh_tw": [
+        [
+          "從屬子句",
+          "從句"
+        ],
+        [
+          "句末",
+          "末尾"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich bleibe heute zu Hause, weil ich bin krank.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-word-order-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Er kommt später, weil er muss arbeiten."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "word_order",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "Obwohl das Wetter schlecht war",
+          "end_offset": 30,
+          "explanation_zh_tw": "從屬連接詞引導的子句中，變位動詞通常放在子句末尾。",
+          "grammar_topic_id": "B2.word_order",
+          "original": "Obwohl das Wetter war schlecht",
+          "related_skill_id": "B2.grammar.word_order",
+          "severity": "moderate",
+          "start_offset": 0,
+          "type": "word_order",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "找出從屬子句，將變位動詞移到該子句末尾後重寫整句。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Obwohl sie wenig Zeit hatte, half sie uns."
+      ],
+      "identified_error_category": "word_order",
+      "required_correction_de": "Obwohl das Wetter schlecht war",
+      "rule_facet_groups_zh_tw": [
+        [
+          "從屬子句",
+          "從句"
+        ],
+        [
+          "句末",
+          "末尾"
+        ]
+      ]
+    },
+    "learner_text_de": "Obwohl das Wetter war schlecht, fand die Veranstaltung statt.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-word-order-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Obwohl sie hatte wenig Zeit, half sie uns."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "word_order",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "dass die Maßnahmen langfristig wirken können",
+          "end_offset": 62,
+          "explanation_zh_tw": "從屬連接詞引導的子句中，變位動詞通常放在子句末尾。",
+          "grammar_topic_id": "C1.word_order",
+          "original": "dass die Maßnahmen können langfristig wirken",
+          "related_skill_id": "C1.grammar.word_order",
+          "severity": "moderate",
+          "start_offset": 18,
+          "type": "word_order",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "找出從屬子句，將變位動詞移到該子句末尾後重寫整句。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Es ist möglich, dass die Ergebnisse neu bewertet werden müssen."
+      ],
+      "identified_error_category": "word_order",
+      "required_correction_de": "dass die Maßnahmen langfristig wirken können",
+      "rule_facet_groups_zh_tw": [
+        [
+          "從屬子句",
+          "從句"
+        ],
+        [
+          "句末",
+          "末尾"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Studie zeigt, dass die Maßnahmen können langfristig wirken.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-word-order-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Es ist möglich, dass die Ergebnisse müssen neu bewertet werden."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "word_order",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "inwiefern sich diese Annahme empirisch belegen lässt",
+          "end_offset": 72,
+          "explanation_zh_tw": "從屬連接詞引導的子句中，變位動詞通常放在子句末尾。",
+          "grammar_topic_id": "C2.word_order",
+          "original": "inwiefern lässt sich diese Annahme empirisch belegen",
+          "related_skill_id": "C2.grammar.word_order",
+          "severity": "moderate",
+          "start_offset": 20,
+          "type": "word_order",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "找出從屬子句，將變位動詞移到該子句末尾後重寫整句。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Unklar ist, weshalb dieser Einwand nicht berücksichtigt wurde."
+      ],
+      "identified_error_category": "word_order",
+      "required_correction_de": "inwiefern sich diese Annahme empirisch belegen lässt",
+      "rule_facet_groups_zh_tw": [
+        [
+          "從屬子句",
+          "從句"
+        ],
+        [
+          "句末",
+          "末尾"
+        ]
+      ]
+    },
+    "learner_text_de": "Es bleibt fraglich, inwiefern lässt sich diese Annahme empirisch belegen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-word-order-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Unklar ist, weshalb wurde dieser Einwand nicht berücksichtigt."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "case",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "meinem Bruder",
+          "end_offset": 21,
+          "explanation_zh_tw": "名詞片語的格由動詞或介系詞支配；應依支配關係調整冠詞與詞尾。",
+          "grammar_topic_id": "B1.case",
+          "original": "mein Bruder",
+          "related_skill_id": "B1.grammar.case",
+          "severity": "moderate",
+          "start_offset": 10,
+          "type": "case",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先標出支配格的動詞或介系詞，再調整受支配名詞片語。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Sie dankt ihrem Lehrer."
+      ],
+      "identified_error_category": "case",
+      "required_correction_de": "meinem Bruder",
+      "rule_facet_groups_zh_tw": [
+        [
+          "支配",
+          "要求"
+        ],
+        [
+          "格",
+          "詞尾",
+          "冠詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich helfe mein Bruder bei den Hausaufgaben.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-case-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Sie dankt ihr Lehrer."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "case",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "Trotz des starken Regens",
+          "end_offset": 23,
+          "explanation_zh_tw": "名詞片語的格由動詞或介系詞支配；應依支配關係調整冠詞與詞尾。",
+          "grammar_topic_id": "B2.case",
+          "original": "Trotz dem starken Regen",
+          "related_skill_id": "B2.grammar.case",
+          "severity": "moderate",
+          "start_offset": 0,
+          "type": "case",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先標出支配格的動詞或介系詞，再調整受支配名詞片語。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Wegen des Unwetters blieb die Schule geschlossen."
+      ],
+      "identified_error_category": "case",
+      "required_correction_de": "Trotz des starken Regens",
+      "rule_facet_groups_zh_tw": [
+        [
+          "支配",
+          "要求"
+        ],
+        [
+          "格",
+          "詞尾",
+          "冠詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Trotz dem starken Regen gingen wir spazieren.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-case-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Wegen dem Unwetter blieb die Schule geschlossen."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "case",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "einer sorgfältigen Prüfung",
+          "end_offset": 42,
+          "explanation_zh_tw": "名詞片語的格由動詞或介系詞支配；應依支配關係調整冠詞與詞尾。",
+          "grammar_topic_id": "C1.case",
+          "original": "eine sorgfältige Prüfung",
+          "related_skill_id": "C1.grammar.case",
+          "severity": "moderate",
+          "start_offset": 18,
+          "type": "case",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先標出支配格的動詞或介系詞，再調整受支配名詞片語。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Der Vorwurf entbehrt jeder sachlichen Grundlage."
+      ],
+      "identified_error_category": "case",
+      "required_correction_de": "einer sorgfältigen Prüfung",
+      "rule_facet_groups_zh_tw": [
+        [
+          "支配",
+          "要求"
+        ],
+        [
+          "格",
+          "詞尾",
+          "冠詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Reform bedarf eine sorgfältige Prüfung.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-case-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Der Vorwurf entbehrt jede sachliche Grundlage."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "case",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "einer belastbaren empirischen Grundlage",
+          "end_offset": 56,
+          "explanation_zh_tw": "名詞片語的格由動詞或介系詞支配；應依支配關係調整冠詞與詞尾。",
+          "grammar_topic_id": "C2.case",
+          "original": "eine belastbare empirische Grundlage",
+          "related_skill_id": "C2.grammar.case",
+          "severity": "moderate",
+          "start_offset": 20,
+          "type": "case",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先標出支配格的動詞或介系詞，再調整受支配名詞片語。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Diese Behauptung bedarf einer genaueren Begründung."
+      ],
+      "identified_error_category": "case",
+      "required_correction_de": "einer belastbaren empirischen Grundlage",
+      "rule_facet_groups_zh_tw": [
+        [
+          "支配",
+          "要求"
+        ],
+        [
+          "格",
+          "詞尾",
+          "冠詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Der Ansatz entbehrt eine belastbare empirische Grundlage.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-case-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Diese Behauptung bedarf eine genauere Begründung."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "article",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "ein neues Fahrrad",
+          "end_offset": 24,
+          "explanation_zh_tw": "可數單數名詞通常需要冠詞；若是身分或職業等固定用法，則可能使用零冠詞。",
+          "grammar_topic_id": "B1.article",
+          "original": "neues Fahrrad",
+          "related_skill_id": "B1.grammar.article",
+          "severity": "moderate",
+          "start_offset": 11,
+          "type": "article",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "判斷名詞是特指、非特指或零冠詞用法，再補上或移除冠詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Wir suchen eine günstige Wohnung."
+      ],
+      "identified_error_category": "article",
+      "required_correction_de": "ein neues Fahrrad",
+      "rule_facet_groups_zh_tw": [
+        [
+          "冠詞"
+        ],
+        [
+          "單數",
+          "職業",
+          "固定用法"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich möchte neues Fahrrad kaufen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-article-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Wir suchen günstige Wohnung."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "article",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "als Ärztin",
+          "end_offset": 27,
+          "explanation_zh_tw": "可數單數名詞通常需要冠詞；若是身分或職業等固定用法，則可能使用零冠詞。",
+          "grammar_topic_id": "B2.article",
+          "original": "als die Ärztin",
+          "related_skill_id": "B2.grammar.article",
+          "severity": "moderate",
+          "start_offset": 13,
+          "type": "article",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "判斷名詞是特指、非特指或零冠詞用法，再補上或移除冠詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Er arbeitet als Lehrer in Köln."
+      ],
+      "identified_error_category": "article",
+      "required_correction_de": "als Ärztin",
+      "rule_facet_groups_zh_tw": [
+        [
+          "冠詞"
+        ],
+        [
+          "單數",
+          "職業",
+          "固定用法"
+        ]
+      ]
+    },
+    "learner_text_de": "Sie arbeitet als die Ärztin in einer kleinen Klinik.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-article-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Er arbeitet als ein Lehrer in Köln."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "article",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "ist das Ergebnis",
+          "end_offset": 17,
+          "explanation_zh_tw": "可數單數名詞通常需要冠詞；若是身分或職業等固定用法，則可能使用零冠詞。",
+          "grammar_topic_id": "C1.article",
+          "original": "ist Ergebnis",
+          "related_skill_id": "C1.grammar.article",
+          "severity": "moderate",
+          "start_offset": 5,
+          "type": "article",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "判斷名詞是特指、非特指或零冠詞用法，再補上或移除冠詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Das war die Folge einer unklaren Regelung."
+      ],
+      "identified_error_category": "article",
+      "required_correction_de": "ist das Ergebnis",
+      "rule_facet_groups_zh_tw": [
+        [
+          "冠詞"
+        ],
+        [
+          "單數",
+          "職業",
+          "固定用法"
+        ]
+      ]
+    },
+    "learner_text_de": "Dies ist Ergebnis einer langfristigen Entwicklung.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-article-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Das war Folge einer unklaren Regelung."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "article",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "Unter der Voraussetzung",
+          "end_offset": 19,
+          "explanation_zh_tw": "可數單數名詞通常需要冠詞；若是身分或職業等固定用法，則可能使用零冠詞。",
+          "grammar_topic_id": "C2.article",
+          "original": "Unter Voraussetzung",
+          "related_skill_id": "C2.grammar.article",
+          "severity": "moderate",
+          "start_offset": 0,
+          "type": "article",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "判斷名詞是特指、非特指或零冠詞用法，再補上或移除冠詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Unter der Annahme, dass die Daten stimmen, bleibt das Modell plausibel."
+      ],
+      "identified_error_category": "article",
+      "required_correction_de": "Unter der Voraussetzung",
+      "rule_facet_groups_zh_tw": [
+        [
+          "冠詞"
+        ],
+        [
+          "單數",
+          "職業",
+          "固定用法"
+        ]
+      ]
+    },
+    "learner_text_de": "Unter Voraussetzung, dass alle Beteiligten zustimmen, ist eine Einigung möglich.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-article-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Unter Annahme, dass die Daten stimmen, bleibt das Modell plausibel."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "preposition",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "auf den Bus",
+          "end_offset": 42,
+          "explanation_zh_tw": "許多動詞、形容詞與名詞有固定介系詞搭配，不能直接依中文逐字選擇。",
+          "grammar_topic_id": "B1.preposition",
+          "original": "für den Bus",
+          "related_skill_id": "B1.grammar.preposition",
+          "severity": "moderate",
+          "start_offset": 31,
+          "type": "preposition",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把目標詞與其固定介系詞一起記錄，並用同一搭配重寫句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Wir warten auf eine Antwort."
+      ],
+      "identified_error_category": "preposition",
+      "required_correction_de": "auf den Bus",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "搭配"
+        ],
+        [
+          "介系詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich warte seit zwanzig Minuten für den Bus.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-preposition-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Wir warten für eine Antwort."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "preposition",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "für moderne Architektur",
+          "end_offset": 56,
+          "explanation_zh_tw": "許多動詞、形容詞與名詞有固定介系詞搭配，不能直接依中文逐字選擇。",
+          "grammar_topic_id": "B2.preposition",
+          "original": "an moderner Architektur",
+          "related_skill_id": "B2.grammar.preposition",
+          "severity": "moderate",
+          "start_offset": 33,
+          "type": "preposition",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把目標詞與其固定介系詞一起記錄，並用同一搭配重寫句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Sie interessiert sich für nachhaltige Mode."
+      ],
+      "identified_error_category": "preposition",
+      "required_correction_de": "für moderne Architektur",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "搭配"
+        ],
+        [
+          "介系詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Er interessiert sich seit Jahren an moderner Architektur.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-preposition-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Sie interessiert sich an nachhaltige Mode."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "preposition",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "von den verfügbaren Daten ab",
+          "end_offset": 51,
+          "explanation_zh_tw": "許多動詞、形容詞與名詞有固定介系詞搭配，不能直接依中文逐字選擇。",
+          "grammar_topic_id": "C1.preposition",
+          "original": "auf den verfügbaren Daten ab",
+          "related_skill_id": "C1.grammar.preposition",
+          "severity": "moderate",
+          "start_offset": 23,
+          "type": "preposition",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把目標詞與其固定介系詞一起記錄，並用同一搭配重寫句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Der Erfolg hängt von einer guten Planung ab."
+      ],
+      "identified_error_category": "preposition",
+      "required_correction_de": "von den verfügbaren Daten ab",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "搭配"
+        ],
+        [
+          "介系詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Entscheidung hängt auf den verfügbaren Daten ab.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-preposition-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Der Erfolg hängt auf einer guten Planung ab."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "preposition",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "im Widerspruch zu den jüngsten Befunden",
+          "end_offset": 58,
+          "explanation_zh_tw": "許多動詞、形容詞與名詞有固定介系詞搭配，不能直接依中文逐字選擇。",
+          "grammar_topic_id": "C2.preposition",
+          "original": "im Widerspruch mit den jüngsten Befunden",
+          "related_skill_id": "C2.grammar.preposition",
+          "severity": "moderate",
+          "start_offset": 18,
+          "type": "preposition",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把目標詞與其固定介系詞一起記錄，並用同一搭配重寫句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Seine Aussage steht im Einklang mit den Daten."
+      ],
+      "identified_error_category": "preposition",
+      "required_correction_de": "im Widerspruch zu den jüngsten Befunden",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "搭配"
+        ],
+        [
+          "介系詞"
+        ]
+      ]
+    },
+    "learner_text_de": "Diese These steht im Widerspruch mit den jüngsten Befunden.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-preposition-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Seine Aussage steht im Einklang zu den Daten."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "tense",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "bin ich gegangen",
+          "end_offset": 16,
+          "explanation_zh_tw": "時態要和時間標記及敘事時間一致；先確定事件發生的時間，再選擇動詞形式。",
+          "grammar_topic_id": "B1.tense",
+          "original": "gehe ich",
+          "related_skill_id": "B1.grammar.tense",
+          "severity": "moderate",
+          "start_offset": 8,
+          "type": "tense",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "圈出時間標記，確認事件順序，再統一主要敘事時態。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Letzte Woche habe ich meine Großeltern besucht.",
+        "Letzte Woche besuchte ich meine Großeltern."
+      ],
+      "identified_error_category": "tense",
+      "required_correction_de": "bin ich gegangen",
+      "rule_facet_groups_zh_tw": [
+        [
+          "時間",
+          "時間標記"
+        ],
+        [
+          "時態",
+          "動詞形式"
+        ]
+      ]
+    },
+    "learner_text_de": "Gestern gehe ich mit meiner Schwester ins Kino.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-tense-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Letzte Woche besuche ich meine Großeltern."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "tense",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "lerne ich",
+          "end_offset": 27,
+          "explanation_zh_tw": "時態要和時間標記及敘事時間一致；先確定事件發生的時間，再選擇動詞形式。",
+          "grammar_topic_id": "B2.tense",
+          "original": "lernte ich",
+          "related_skill_id": "B2.grammar.tense",
+          "severity": "moderate",
+          "start_offset": 17,
+          "type": "tense",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "圈出時間標記，確認事件順序，再統一主要敘事時態。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Seit Januar arbeitet sie in Berlin."
+      ],
+      "identified_error_category": "tense",
+      "required_correction_de": "lerne ich",
+      "rule_facet_groups_zh_tw": [
+        [
+          "時間",
+          "時間標記"
+        ],
+        [
+          "時態",
+          "動詞形式"
+        ]
+      ]
+    },
+    "learner_text_de": "Seit drei Jahren lernte ich jeden Abend Deutsch.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-tense-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Seit Januar arbeitete sie in Berlin."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "tense",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "den Bericht gelesen hatte",
+          "end_offset": 29,
+          "explanation_zh_tw": "時態要和時間標記及敘事時間一致；先確定事件發生的時間，再選擇動詞形式。",
+          "grammar_topic_id": "C1.tense",
+          "original": "den Bericht liest",
+          "related_skill_id": "C1.grammar.tense",
+          "severity": "moderate",
+          "start_offset": 12,
+          "type": "tense",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "圈出時間標記，確認事件順序，再統一主要敘事時態。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Nachdem er die Daten geprüft hatte, änderte er seine Einschätzung."
+      ],
+      "identified_error_category": "tense",
+      "required_correction_de": "den Bericht gelesen hatte",
+      "rule_facet_groups_zh_tw": [
+        [
+          "時間",
+          "時間標記"
+        ],
+        [
+          "時態",
+          "動詞形式"
+        ]
+      ]
+    },
+    "learner_text_de": "Nachdem sie den Bericht liest, stellte sie mehrere Fragen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-tense-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Nachdem er die Daten prüft, änderte er seine Einschätzung."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "overly_complex_explanation",
+    "error_category": "tense",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "zog die Regierung den Entwurf zurück",
+          "end_offset": 77,
+          "explanation_zh_tw": "時態要和時間標記及敘事時間一致；先確定事件發生的時間，再選擇動詞形式。",
+          "grammar_topic_id": "C2.tense",
+          "original": "zieht die Regierung den Entwurf zurück",
+          "related_skill_id": "C2.grammar.tense",
+          "severity": "moderate",
+          "start_offset": 39,
+          "type": "tense",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "圈出時間標記，確認事件順序，再統一主要敘事時態。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Als die Kritik zunahm, überarbeitete das Gremium seinen Vorschlag."
+      ],
+      "identified_error_category": "tense",
+      "required_correction_de": "zog die Regierung den Entwurf zurück",
+      "rule_facet_groups_zh_tw": [
+        [
+          "時間",
+          "時間標記"
+        ],
+        [
+          "時態",
+          "動詞形式"
+        ]
+      ]
+    },
+    "learner_text_de": "Nachdem die Verhandlungen scheiterten, zieht die Regierung den Entwurf zurück.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-tense-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Als die Kritik zunahm, überarbeitet das Gremium seinen Vorschlag."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "collocation",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "eine wichtige Entscheidung treffen",
+          "end_offset": 50,
+          "explanation_zh_tw": "德文常以固定詞語搭配表達意思；個別單字雖可理解，仍需使用慣用搭配。",
+          "grammar_topic_id": null,
+          "original": "eine wichtige Entscheidung machen",
+          "related_skill_id": "B1.vocabulary.collocation",
+          "severity": "moderate",
+          "start_offset": 17,
+          "type": "collocation",
+          "vocabulary_id": "B1.collocation"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把名詞和慣用動詞一起記錄，並以完整搭配改寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Sie traf eine schnelle Entscheidung."
+      ],
+      "identified_error_category": "collocation",
+      "required_correction_de": "eine wichtige Entscheidung treffen",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "慣用搭配"
+        ],
+        [
+          "動詞",
+          "詞語"
+        ]
+      ]
+    },
+    "learner_text_de": "Wir müssen heute eine wichtige Entscheidung machen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-collocation-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Sie machte eine schnelle Entscheidung."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "collocation",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "Fortschritte machen",
+          "end_offset": 59,
+          "explanation_zh_tw": "德文常以固定詞語搭配表達意思；個別單字雖可理解，仍需使用慣用搭配。",
+          "grammar_topic_id": null,
+          "original": "Fortschritte tun",
+          "related_skill_id": "B2.vocabulary.collocation",
+          "severity": "moderate",
+          "start_offset": 43,
+          "type": "collocation",
+          "vocabulary_id": "B2.collocation"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把名詞和慣用動詞一起記錄，並以完整搭配改寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Das Team machte große Fortschritte."
+      ],
+      "identified_error_category": "collocation",
+      "required_correction_de": "Fortschritte machen",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "慣用搭配"
+        ],
+        [
+          "動詞",
+          "詞語"
+        ]
+      ]
+    },
+    "learner_text_de": "Mit regelmäßigem Training kann man schnell Fortschritte tun.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-collocation-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Das Team tat große Fortschritte."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "collocation",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "spielt eine zentrale Rolle im Veränderungsprozess",
+          "end_offset": 81,
+          "explanation_zh_tw": "德文常以固定詞語搭配表達意思；個別單字雖可理解，仍需使用慣用搭配。",
+          "grammar_topic_id": null,
+          "original": "führt eine zentrale Rolle im Veränderungsprozess durch",
+          "related_skill_id": "C1.vocabulary.collocation",
+          "severity": "moderate",
+          "start_offset": 27,
+          "type": "collocation",
+          "vocabulary_id": "C1.collocation"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把名詞和慣用動詞一起記錄，並以完整搭配改寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Vertrauen spielt eine wichtige Rolle."
+      ],
+      "identified_error_category": "collocation",
+      "required_correction_de": "spielt eine zentrale Rolle im Veränderungsprozess",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "慣用搭配"
+        ],
+        [
+          "動詞",
+          "詞語"
+        ]
+      ]
+    },
+    "learner_text_de": "Transparente Kommunikation führt eine zentrale Rolle im Veränderungsprozess durch.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-collocation-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Vertrauen führt eine wichtige Rolle durch."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "collocation",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "eine eindeutige Schlussfolgerung ziehen",
+          "end_offset": 76,
+          "explanation_zh_tw": "德文常以固定詞語搭配表達意思；個別單字雖可理解，仍需使用慣用搭配。",
+          "grammar_topic_id": null,
+          "original": "eine eindeutige Schlussfolgerung stellen",
+          "related_skill_id": "C2.vocabulary.collocation",
+          "severity": "moderate",
+          "start_offset": 36,
+          "type": "collocation",
+          "vocabulary_id": "C2.collocation"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "把名詞和慣用動詞一起記錄，並以完整搭配改寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Die Autoren ziehen daraus voreilige Schlüsse."
+      ],
+      "identified_error_category": "collocation",
+      "required_correction_de": "eine eindeutige Schlussfolgerung ziehen",
+      "rule_facet_groups_zh_tw": [
+        [
+          "固定搭配",
+          "慣用搭配"
+        ],
+        [
+          "動詞",
+          "詞語"
+        ]
+      ]
+    },
+    "learner_text_de": "Aus diesen Beobachtungen lässt sich eine eindeutige Schlussfolgerung stellen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-collocation-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正：Die Autoren stellen daraus voreilige Schlüsse."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "register",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "Sehr geehrte Frau Müller, schicken Sie mir bitte die Unterlagen.",
+          "end_offset": 51,
+          "explanation_zh_tw": "用語需符合情境與對象；正式書面語應避免命令式、口語或過度隨便的表達。",
+          "grammar_topic_id": null,
+          "original": "Hallo Frau Müller, schick mir bitte die Unterlagen.",
+          "related_skill_id": "B1.writing.register",
+          "severity": "moderate",
+          "start_offset": 0,
+          "type": "register",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先確認收件者與文本類型，再改成符合該語域的完整句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Bitte geben Sie mir bald eine Antwort.",
+        "Könnten Sie mir bitte bald antworten?"
+      ],
+      "identified_error_category": "register",
+      "required_correction_de": "Sehr geehrte Frau Müller, schicken Sie mir bitte die Unterlagen.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "情境",
+          "對象"
+        ],
+        [
+          "正式",
+          "禮貌",
+          "書面語"
+        ]
+      ]
+    },
+    "learner_text_de": "Hallo Frau Müller, schick mir bitte die Unterlagen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-register-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請將正式信件中的句子改得合宜：Gib mir bitte schnell eine Antwort."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "register",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "Ich möchte Sie bitten, mir die zusätzlichen Kosten zu erklären.",
+          "end_offset": 56,
+          "explanation_zh_tw": "用語需符合情境與對象；正式書面語應避免命令式、口語或過度隨便的表達。",
+          "grammar_topic_id": null,
+          "original": "Ich will, dass Sie mir die zusätzlichen Kosten erklären.",
+          "related_skill_id": "B2.writing.register",
+          "severity": "moderate",
+          "start_offset": 0,
+          "type": "register",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先確認收件者與文本類型，再改成符合該語域的完整句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Ich möchte Sie um eine Rückerstattung bitten."
+      ],
+      "identified_error_category": "register",
+      "required_correction_de": "Ich möchte Sie bitten, mir die zusätzlichen Kosten zu erklären.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "情境",
+          "對象"
+        ],
+        [
+          "正式",
+          "禮貌",
+          "書面語"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich will, dass Sie mir die zusätzlichen Kosten erklären.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-register-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請將申訴信中的句子改得較正式：Ich will mein Geld zurück."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "register",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "äußerst unbefriedigend",
+          "end_offset": 56,
+          "explanation_zh_tw": "用語需符合情境與對象；正式書面語應避免命令式、口語或過度隨便的表達。",
+          "grammar_topic_id": null,
+          "original": "echt mies",
+          "related_skill_id": "C1.writing.register",
+          "severity": "moderate",
+          "start_offset": 47,
+          "type": "register",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先確認收件者與文本類型，再改成符合該語域的完整句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Die Planung war äußerst mangelhaft.",
+        "Die Planung wies erhebliche Mängel auf."
+      ],
+      "identified_error_category": "register",
+      "required_correction_de": "äußerst unbefriedigend",
+      "rule_facet_groups_zh_tw": [
+        [
+          "情境",
+          "對象"
+        ],
+        [
+          "正式",
+          "禮貌",
+          "書面語"
+        ]
+      ]
+    },
+    "learner_text_de": "Die gesamte Organisation der Veranstaltung war echt mies.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-register-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改成正式報告語氣：Die Planung war total chaotisch."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "feedback_level_mismatch",
+    "error_category": "register",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "weichen erheblich von den Erwartungen ab",
+          "end_offset": 67,
+          "explanation_zh_tw": "用語需符合情境與對象；正式書面語應避免命令式、口語或過度隨便的表達。",
+          "grammar_topic_id": null,
+          "original": "total daneben",
+          "related_skill_id": "C2.writing.register",
+          "severity": "moderate",
+          "start_offset": 54,
+          "type": "register",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先確認收件者與文本類型，再改成符合該語域的完整句子。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Die Ergebnisse sind in erheblichem Maße unerwartet.",
+        "Die Ergebnisse weichen erheblich von den Erwartungen ab."
+      ],
+      "identified_error_category": "register",
+      "required_correction_de": "weichen erheblich von den Erwartungen ab",
+      "rule_facet_groups_zh_tw": [
+        [
+          "情境",
+          "對象"
+        ],
+        [
+          "正式",
+          "禮貌",
+          "書面語"
+        ]
+      ]
+    },
+    "learner_text_de": "Die vorgelegten Zahlen sind im Vergleich zur Prognose total daneben.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-register-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改成專業分析語氣：Die Ergebnisse sind ziemlich komisch."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "cohesion",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "Deshalb besuche ich jetzt einen Deutschkurs.",
+          "end_offset": 72,
+          "explanation_zh_tw": "連接詞必須正確表達前後句的邏輯關係，例如原因、結果、轉折或補充。",
+          "grammar_topic_id": null,
+          "original": "Aber besuche ich jetzt einen Deutschkurs.",
+          "related_skill_id": "B1.writing.cohesion",
+          "severity": "moderate",
+          "start_offset": 31,
+          "type": "cohesion",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先說明兩句之間的邏輯，再選擇對應的連接詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Ich bin krank. Deshalb bleibe ich heute zu Hause."
+      ],
+      "identified_error_category": "cohesion",
+      "required_correction_de": "Deshalb besuche ich jetzt einen Deutschkurs.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "連接詞"
+        ],
+        [
+          "邏輯",
+          "原因",
+          "結果",
+          "轉折",
+          "補充"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich möchte in Berlin arbeiten. Aber besuche ich jetzt einen Deutschkurs.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-cohesion-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正連接詞：Ich bin krank. Aber bleibe ich heute zu Hause."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "cohesion",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "Allerdings spart sie langfristig viel Geld.",
+          "end_offset": 73,
+          "explanation_zh_tw": "連接詞必須正確表達前後句的邏輯關係，例如原因、結果、轉折或補充。",
+          "grammar_topic_id": null,
+          "original": "Deshalb spart sie langfristig viel Geld.",
+          "related_skill_id": "B2.writing.cohesion",
+          "severity": "moderate",
+          "start_offset": 33,
+          "type": "cohesion",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先說明兩句之間的邏輯，再選擇對應的連接詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Die Reise dauert lange. Allerdings ist sie sehr abwechslungsreich."
+      ],
+      "identified_error_category": "cohesion",
+      "required_correction_de": "Allerdings spart sie langfristig viel Geld.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "連接詞"
+        ],
+        [
+          "邏輯",
+          "原因",
+          "結果",
+          "轉折",
+          "補充"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Maßnahme ist zunächst teuer. Deshalb spart sie langfristig viel Geld.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-cohesion-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正連接詞：Die Reise dauert lange. Deshalb ist sie sehr abwechslungsreich."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "cohesion",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "Allerdings ist die Stichprobe relativ klein.",
+          "end_offset": 81,
+          "explanation_zh_tw": "連接詞必須正確表達前後句的邏輯關係，例如原因、結果、轉折或補充。",
+          "grammar_topic_id": null,
+          "original": "Infolgedessen ist die Stichprobe relativ klein.",
+          "related_skill_id": "C1.writing.cohesion",
+          "severity": "moderate",
+          "start_offset": 34,
+          "type": "cohesion",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先說明兩句之間的邏輯，再選擇對應的連接詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Der Ansatz ist innovativ. Allerdings fehlen noch belastbare Daten."
+      ],
+      "identified_error_category": "cohesion",
+      "required_correction_de": "Allerdings ist die Stichprobe relativ klein.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "連接詞"
+        ],
+        [
+          "邏輯",
+          "原因",
+          "結果",
+          "轉折",
+          "補充"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Studie ist methodisch solide. Infolgedessen ist die Stichprobe relativ klein.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-cohesion-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正連接詞：Der Ansatz ist innovativ. Daher fehlen noch belastbare Daten."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "missing_actionable_guidance",
+    "error_category": "cohesion",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "Allerdings fehlen empirische Belege.",
+          "end_offset": 80,
+          "explanation_zh_tw": "連接詞必須正確表達前後句的邏輯關係，例如原因、結果、轉折或補充。",
+          "grammar_topic_id": null,
+          "original": "Infolgedessen fehlen empirische Belege.",
+          "related_skill_id": "C2.writing.cohesion",
+          "severity": "moderate",
+          "start_offset": 41,
+          "type": "cohesion",
+          "vocabulary_id": null
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "先說明兩句之間的邏輯，再選擇對應的連接詞。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Das Modell ist theoretisch überzeugend. Allerdings bleibt seine empirische Basis schwach."
+      ],
+      "identified_error_category": "cohesion",
+      "required_correction_de": "Allerdings fehlen empirische Belege.",
+      "rule_facet_groups_zh_tw": [
+        [
+          "連接詞"
+        ],
+        [
+          "邏輯",
+          "原因",
+          "結果",
+          "轉折",
+          "補充"
+        ]
+      ]
+    },
+    "learner_text_de": "Die Argumentation ist in sich schlüssig. Infolgedessen fehlen empirische Belege.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-cohesion-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改正連接詞：Das Modell ist theoretisch überzeugend. Folglich bleibt seine empirische Basis schwach."
+  },
+  {
+    "cefr_level": "B1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "literal_zh_de_transfer",
+    "feedback": {
+      "cefr_level_estimate": "B1",
+      "inline_errors": [
+        {
+          "correction": "dusche ich zuerst",
+          "end_offset": 43,
+          "explanation_zh_tw": "這是受中文表達影響的逐字翻譯；德文通常使用另一個慣用結構表達相同意思。",
+          "grammar_topic_id": null,
+          "original": "mache ich zuerst eine Dusche",
+          "related_skill_id": "B1.writing.idiomaticity",
+          "severity": "moderate",
+          "start_offset": 15,
+          "type": "idiomaticity",
+          "vocabulary_id": "B1.literal_zh_de_transfer"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "保留原意，但改用德文慣用動詞或固定結構重寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 66,
+        "argumentation": 70,
+        "coherence": 74,
+        "cohesion": 72,
+        "grammar": 64,
+        "idiomaticity": 68,
+        "register_score": 72,
+        "style": 72,
+        "task_completion": 76,
+        "vocabulary": 72
+      },
+      "score": 72,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Am Abend mache ich zehn Minuten Pause.",
+        "Am Abend lege ich eine zehnminütige Pause ein."
+      ],
+      "identified_error_category": "literal_zh_de_transfer",
+      "required_correction_de": "dusche ich zuerst",
+      "rule_facet_groups_zh_tw": [
+        [
+          "逐字翻譯",
+          "直譯",
+          "中文"
+        ],
+        [
+          "慣用",
+          "自然"
+        ]
+      ]
+    },
+    "learner_text_de": "Nach dem Sport mache ich zuerst eine Dusche.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B1-literal-zh-de-transfer-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改得自然：Am Abend mache ich eine Pause von zehn Minuten."
+  },
+  {
+    "cefr_level": "B2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "literal_zh_de_transfer",
+    "feedback": {
+      "cefr_level_estimate": "B2",
+      "inline_errors": [
+        {
+          "correction": "einen Vorschlag für dich",
+          "end_offset": 31,
+          "explanation_zh_tw": "這是受中文表達影響的逐字翻譯；德文通常使用另一個慣用結構表達相同意思。",
+          "grammar_topic_id": null,
+          "original": "einen Vorschlag zu dir",
+          "related_skill_id": "B2.writing.idiomaticity",
+          "severity": "moderate",
+          "start_offset": 9,
+          "type": "idiomaticity",
+          "vocabulary_id": "B2.literal_zh_de_transfer"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "保留原意，但改用德文慣用動詞或固定結構重寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 70,
+        "argumentation": 74,
+        "coherence": 78,
+        "cohesion": 76,
+        "grammar": 68,
+        "idiomaticity": 72,
+        "register_score": 76,
+        "style": 76,
+        "task_completion": 80,
+        "vocabulary": 76
+      },
+      "score": 76,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Ich habe eine Frage an dich."
+      ],
+      "identified_error_category": "literal_zh_de_transfer",
+      "required_correction_de": "einen Vorschlag für dich",
+      "rule_facet_groups_zh_tw": [
+        [
+          "逐字翻譯",
+          "直譯",
+          "中文"
+        ],
+        [
+          "慣用",
+          "自然"
+        ]
+      ]
+    },
+    "learner_text_de": "Ich habe einen Vorschlag zu dir: Wir könnten früher anfangen.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-B2-literal-zh-de-transfer-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改得自然：Ich habe eine Frage zu dich."
+  },
+  {
+    "cefr_level": "C1",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "literal_zh_de_transfer",
+    "feedback": {
+      "cefr_level_estimate": "C1",
+      "inline_errors": [
+        {
+          "correction": "setzt die Beschäftigten erheblich unter Druck",
+          "end_offset": 58,
+          "explanation_zh_tw": "這是受中文表達影響的逐字翻譯；德文通常使用另一個慣用結構表達相同意思。",
+          "grammar_topic_id": null,
+          "original": "gibt den Beschäftigten erheblichen Druck",
+          "related_skill_id": "C1.writing.idiomaticity",
+          "severity": "moderate",
+          "start_offset": 18,
+          "type": "idiomaticity",
+          "vocabulary_id": "C1.literal_zh_de_transfer"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "保留原意，但改用德文慣用動詞或固定結構重寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 74,
+        "argumentation": 78,
+        "coherence": 82,
+        "cohesion": 80,
+        "grammar": 72,
+        "idiomaticity": 76,
+        "register_score": 80,
+        "style": 80,
+        "task_completion": 84,
+        "vocabulary": 80
+      },
+      "score": 80,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Die Frist setzt das Team stark unter Druck."
+      ],
+      "identified_error_category": "literal_zh_de_transfer",
+      "required_correction_de": "setzt die Beschäftigten erheblich unter Druck",
+      "rule_facet_groups_zh_tw": [
+        [
+          "逐字翻譯",
+          "直譯",
+          "中文"
+        ],
+        [
+          "慣用",
+          "自然"
+        ]
+      ]
+    },
+    "learner_text_de": "Die neue Regelung gibt den Beschäftigten erheblichen Druck.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C1-literal-zh-de-transfer-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改得自然：Die Frist gibt dem Team großen Druck."
+  },
+  {
+    "cefr_level": "C2",
+    "diagnostic_issue": "unclear_feedback_detected",
+    "error_category": "literal_zh_de_transfer",
+    "feedback": {
+      "cefr_level_estimate": "C2",
+      "inline_errors": [
+        {
+          "correction": "regt uns zu vertieftem Nachdenken über institutionelle Verantwortung an",
+          "end_offset": 91,
+          "explanation_zh_tw": "這是受中文表達影響的逐字翻譯；德文通常使用另一個慣用結構表達相同意思。",
+          "grammar_topic_id": null,
+          "original": "bringt uns eine tiefe Nachdenklichkeit über institutionelle Verantwortung",
+          "related_skill_id": "C2.writing.idiomaticity",
+          "severity": "moderate",
+          "start_offset": 18,
+          "type": "idiomaticity",
+          "vocabulary_id": "C2.literal_zh_de_transfer"
+        }
+      ],
+      "reference_version": null,
+      "repeated_error_types": [],
+      "requires_human_review": true,
+      "revision_tasks": [
+        "保留原意，但改用德文慣用動詞或固定結構重寫。"
+      ],
+      "rubric_scores": {
+        "accuracy": 78,
+        "argumentation": 82,
+        "coherence": 86,
+        "cohesion": 84,
+        "grammar": 76,
+        "idiomaticity": 80,
+        "register_score": 84,
+        "style": 84,
+        "task_completion": 88,
+        "vocabulary": 84
+      },
+      "score": 84,
+      "strengths": [
+        "內容主旨可辨識；本 fixture 僅用於回饋理解度評估。"
+      ]
+    },
+    "feedback_schema_id": "WritingFeedback.v1",
+    "gold": {
+      "accepted_transfer_answers_de": [
+        "Der Befund gibt der Öffentlichkeit großen Anlass zur Sorge.",
+        "Der Befund löst in der Öffentlichkeit große Sorge aus."
+      ],
+      "identified_error_category": "literal_zh_de_transfer",
+      "required_correction_de": "regt uns zu vertieftem Nachdenken über institutionelle Verantwortung an",
+      "rule_facet_groups_zh_tw": [
+        [
+          "逐字翻譯",
+          "直譯",
+          "中文"
+        ],
+        [
+          "慣用",
+          "自然"
+        ]
+      ]
+    },
+    "learner_text_de": "Diese Entwicklung bringt uns eine tiefe Nachdenklichkeit über institutionelle Verantwortung.",
+    "prompt_id": "evaluate-writing",
+    "prompt_version": "1.0.0",
+    "scenario_id": "dt-C2-literal-zh-de-transfer-v1",
+    "scenario_version": "scenario.v1",
+    "status": "pending_human_review",
+    "transfer_prompt_zh_tw": "請改得自然：Der Befund bringt die Öffentlichkeit zu einer starken Sorge."
+  }
+]

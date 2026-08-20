@@ -7,6 +7,48 @@ on:
       - main
 
 jobs:
+  matraix-evaluation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: 0.12.3
+          enable-cache: true
+      - name: Sync deterministic evaluation environment
+        working-directory: evaluation/matraix
+        run: uv sync --frozen --no-extra live
+      - name: Ruff
+        working-directory: evaluation/matraix
+        run: uv run --frozen ruff check .
+      - name: Python tests
+        working-directory: evaluation/matraix
+        run: uv run --frozen pytest -q
+      - name: Validate frozen matrix
+        working-directory: evaluation/matraix
+        run: uv run --frozen dt-matraix validate
+      - name: Verify production WritingFeedback contract
+        run: pnpm --filter @deutschtrainer/api exec tsx ../../evaluation/matraix/scripts/verify-writing-fixtures.ts
+      - name: Plan deterministic run
+        working-directory: evaluation/matraix
+        run: uv run --frozen dt-matraix plan --run-id ci-preflight
+      - name: Materialize survey tasks
+        working-directory: evaluation/matraix
+        run: uv run --frozen dt-matraix materialize --run-id ci-preflight
+      - name: Verify production isolation
+        working-directory: evaluation/matraix
+        run: uv run --frozen dt-matraix verify-isolation
+
   quality:
     runs-on: ubuntu-latest
     steps:
