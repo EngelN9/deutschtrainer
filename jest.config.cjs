@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   clearMocks: true,
+  modulePathIgnorePatterns: ["<rootDir>/work/"],
   moduleNameMapper: {
     "^@deutschtrainer/ai-prompts$": "<rootDir>/packages/ai-prompts/src/index.ts",
     "^@deutschtrainer/ai-schemas$": "<rootDir>/packages/ai-schemas/src/index.ts",
