@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "export:android": "expo export --platform android",
-    "export:web": "expo export --platform web",
+    "export:web": "expo export --platform web && node scripts/inject-web-head.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
