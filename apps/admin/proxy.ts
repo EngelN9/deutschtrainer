@@ -2,7 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { readAdminPublicConfig } from "./src/lib/adminPublicConfig";
 
+function withSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
+  // Public pages need the security headers but must stay cacheable, and they have no session to
+  // refresh, so they skip the Supabase round trip and the private no-store policy below.
+  if (!request.nextUrl.pathname.startsWith("/admin")) {
+    return withSecurityHeaders(NextResponse.next({ request }));
+  }
+
   const config = readAdminPublicConfig();
   let response = NextResponse.next({ request });
 
@@ -36,5 +48,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  // Public pages were previously excluded entirely, so they shipped without security headers.
+  // Static assets and image optimisation are left out; they need no session and no headers here.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
