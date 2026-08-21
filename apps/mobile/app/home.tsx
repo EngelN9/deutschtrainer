@@ -10,7 +10,7 @@ import {
   Target,
 } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { calculateLearningAnalytics } from "@deutschtrainer/learning-engine";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
@@ -29,6 +29,7 @@ import { PrimaryButton } from "../src/components/PrimaryButton";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
+import { WritingJourneyStepper } from "../src/components/WritingJourneyStepper";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -197,6 +198,7 @@ export default function HomeScreen() {
                 ? "回到上一稿的三個優先問題，完成重寫後直接比較第一版與最新版。"
                 : "不必先逛完所有功能。寫出第一稿後，系統只先呈現最重要的三個修改重點。"}
             </Text>
+            <WritingJourneyStepper current={pendingWriting ? "rewrite" : "draft"} />
             <PrimaryButton
               accessibilityLabel={pendingWriting ? "繼續德文輸出訓練" : "開始一次德文輸出訓練"}
               loading={writingQuery.isLoading}
@@ -275,7 +277,7 @@ export default function HomeScreen() {
           />
           <Text style={styles.overviewNote}>
             {weakestSkill
-              ? `目前優先加強：${learningRecords?.skillNames[weakestSkill.skillId] ?? "相關技能"}（${Math.round(weakestSkill.masteryScore)} 分）。`
+              ? `目前優先加強：${learningRecords?.skillNames[weakestSkill.skillId] ?? "相關技能"}。完成複習後再觀察趨勢。`
               : "完成第一題後，系統會開始辨識弱項技能。"}
           </Text>
         </View>
@@ -329,15 +331,15 @@ const styles = StyleSheet.create({
   continueSection: {
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.lg,
   },
   goalBand: {
     alignItems: "center",
-    backgroundColor: "#113B36",
-    borderRadius: 8,
+    backgroundColor: "#173E7C",
+    borderRadius: radiusTokens.lg,
     flexDirection: "row",
     gap: spacingTokens.md,
     padding: spacingTokens.md,
@@ -348,19 +350,19 @@ const styles = StyleSheet.create({
   },
   goalIcon: {
     alignItems: "center",
-    backgroundColor: colorTokens.teal,
-    borderRadius: 8,
+    backgroundColor: colorTokens.accent,
+    borderRadius: radiusTokens.md,
     height: 46,
     justifyContent: "center",
     width: 46,
   },
   goalLabel: {
-    color: "#BFE3DC",
+    color: "#D7E6FF",
     fontSize: 13,
     fontWeight: "700",
   },
   goalMeta: {
-    color: "#D7ECE8",
+    color: "#E8F0FF",
     fontSize: 13,
   },
   goalValue: {
@@ -398,7 +400,7 @@ const styles = StyleSheet.create({
   levelBadge: {
     alignItems: "center",
     backgroundColor: colorTokens.primary,
-    borderRadius: 6,
+    borderRadius: radiusTokens.sm,
     height: 34,
     justifyContent: "center",
     width: 42,
@@ -409,12 +411,12 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   overview: {
-    borderBottomColor: colorTokens.border,
-    borderBottomWidth: 1,
-    borderTopColor: colorTokens.border,
-    borderTopWidth: 1,
+    backgroundColor: colorTokens.surfaceMuted,
+    borderColor: colorTokens.border,
+    borderRadius: radiusTokens.lg,
+    borderWidth: 1,
     gap: spacingTokens.md,
-    paddingVertical: spacingTokens.lg,
+    padding: spacingTokens.lg,
   },
   overviewLabel: {
     color: colorTokens.mutedText,
@@ -442,9 +444,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   outputCard: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
-    borderRadius: 8,
+    backgroundColor: colorTokens.primarySoft,
+    borderColor: "#B8D0FF",
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.lg,
@@ -472,7 +474,7 @@ const styles = StyleSheet.create({
   outputIcon: {
     alignItems: "center",
     backgroundColor: colorTokens.primary,
-    borderRadius: 8,
+    borderRadius: radiusTokens.md,
     height: 48,
     justifyContent: "center",
     width: 48,

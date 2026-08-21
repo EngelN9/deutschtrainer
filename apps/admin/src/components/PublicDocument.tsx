@@ -17,7 +17,10 @@ export function PublicDocument({
           <span className="brand-mark small" aria-hidden="true">
             DT
           </span>
-          DeutschTrainer
+          <span>
+            DeutschTrainer
+            <small>Support & legal</small>
+          </span>
         </Link>
         <div>
           <Link href="/support">支援</Link>

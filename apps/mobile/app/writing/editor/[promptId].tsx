@@ -3,12 +3,13 @@ import type { Href } from "expo-router";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Check, Clock3 } from "lucide-react-native";
 import { StyleSheet, Text, TextInput, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../../../src/features/auth/AuthGate";
 import { ContentScreen } from "../../../src/components/ContentScreen";
 import { MessageBanner } from "../../../src/components/MessageBanner";
 import { PrimaryButton } from "../../../src/components/PrimaryButton";
 import { StatePanel } from "../../../src/components/StatePanel";
+import { WritingJourneyStepper } from "../../../src/components/WritingJourneyStepper";
 import {
   useSubmitWriting,
   useWritingWorkspace,
@@ -23,6 +24,7 @@ export default function WritingEditorScreen() {
   const [textDe, setTextDe] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [savedFallback, setSavedFallback] = useState(false);
+  const [editorFocused, setEditorFocused] = useState(false);
   const [idempotencyKey] = useState(createIdempotencyKey);
   const startedAt = useRef(Date.now());
   const prompt = workspaceQuery.data?.prompts.find((entry) => entry.id === params.promptId);
@@ -79,6 +81,18 @@ export default function WritingEditorScreen() {
             : undefined
         }
         eyebrow={submission ? `重寫第 ${(currentVersion?.versionNumber ?? 1) + 1} 版` : "第一稿"}
+        footer={
+          prompt && !workspaceQuery.isLoading ? (
+            <PrimaryButton
+              accessibilityLabel={savedFallback ? "重試作文批改" : "送出作文批改"}
+              disabled={!withinLimit}
+              loading={submitMutation.isPending}
+              onPress={() => void handleSubmit()}
+            >
+              {savedFallback ? "重試這一版" : submission ? "送出重寫版本" : "送出第一稿"}
+            </PrimaryButton>
+          ) : null
+        }
         showBack
         title={prompt?.titleZhTw ?? "作文編輯器"}
       >
@@ -93,6 +107,7 @@ export default function WritingEditorScreen() {
           />
         ) : (
           <>
+            <WritingJourneyStepper current={submission ? "rewrite" : "draft"} />
             <View style={styles.promptSection}>
               <Text selectable style={styles.promptDe}>
                 {prompt.promptDe}
@@ -128,9 +143,11 @@ export default function WritingEditorScreen() {
                 autoCapitalize="sentences"
                 editable={!savedFallback && !submitMutation.isPending}
                 multiline
+                onBlur={() => setEditorFocused(false)}
                 onChangeText={setTextDe}
+                onFocus={() => setEditorFocused(true)}
                 placeholder="Schreiben Sie hier Ihren Text ..."
-                style={styles.editor}
+                style={[styles.editor, editorFocused ? styles.editorFocused : null]}
                 textAlignVertical="top"
                 value={textDe}
               />
@@ -143,14 +160,6 @@ export default function WritingEditorScreen() {
               }
               tone="info"
             />
-            <PrimaryButton
-              accessibilityLabel={savedFallback ? "重試作文批改" : "送出作文批改"}
-              disabled={!withinLimit}
-              loading={submitMutation.isPending}
-              onPress={() => void handleSubmit()}
-            >
-              {savedFallback ? "重試這一版" : submission ? "送出重寫版本" : "送出第一稿"}
-            </PrimaryButton>
           </>
         )}
       </ContentScreen>
@@ -184,13 +193,17 @@ const styles = StyleSheet.create({
   editor: {
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     color: colorTokens.text,
     fontSize: 17,
     lineHeight: 27,
     minHeight: 330,
     padding: spacingTokens.md,
+  },
+  editorFocused: {
+    borderColor: colorTokens.primary,
+    borderWidth: 2,
   },
   editorHeading: {
     alignItems: "center",
@@ -216,7 +229,7 @@ const styles = StyleSheet.create({
   promptSection: {
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.md,
