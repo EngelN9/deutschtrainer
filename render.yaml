@@ -93,6 +93,8 @@ services:
         value: production
       - key: EXPO_PUBLIC_CONTENT_SOURCE
         value: api
+      - key: EXPO_PUBLIC_GUEST_TRIAL_ENABLED
+        value: "true"
       - key: EXPO_PUBLIC_API_BASE_URL
         sync: false
       - key: EXPO_PUBLIC_SUPABASE_URL

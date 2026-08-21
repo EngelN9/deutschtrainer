@@ -6,10 +6,12 @@ import { PrimaryButton } from "../src/components/PrimaryButton";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { demoAuthEnabled } from "../src/features/auth/demoAuth";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
+import { mobileEnv } from "../src/lib/env";
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const startDemo = useAuthStore((state) => state.startDemo);
+  const startGuestTrial = useAuthStore((state) => state.startGuestTrial);
 
   return (
     <AuthGate mode="guest">
@@ -18,6 +20,19 @@ export default function WelcomeScreen() {
         eyebrow="DeutschTrainer"
         title="德語 B1-C2 自學系統"
       >
+        {mobileEnv.guestTrialEnabled ? (
+          <PrimaryButton
+            accessibilityLabel="不用註冊，直接開始試用"
+            onPress={() => void startGuestTrial()}
+          >
+            先試用，不用註冊
+          </PrimaryButton>
+        ) : null}
+        {mobileEnv.guestTrialEnabled ? (
+          <Text style={styles.demoNote}>
+            直接開始練習真實課程；之後可以隨時建立帳號，學習紀錄會一併保留。
+          </Text>
+        ) : null}
         {demoAuthEnabled ? (
           <PrimaryButton accessibilityLabel="開始離線 Demo" onPress={() => void startDemo()}>
             離線 Demo 試用

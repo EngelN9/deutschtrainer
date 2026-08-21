@@ -11,6 +11,7 @@ import {
   getCurrentSession,
   clearLocalSession,
   sendPasswordReset,
+  signInAnonymousGuest,
   signInWithPassword,
   signOutCurrentUser,
   signUpWithPassword,
@@ -50,9 +51,23 @@ interface AuthState {
   signOut: () => Promise<void>;
   signUp: (input: SignUpRequest) => Promise<void>;
   startDemo: () => Promise<void>;
+  startGuestTrial: () => Promise<void>;
 }
 
 let unsubscribeFromAuth: (() => void) | null = null;
+
+/**
+ * A guest has not answered the onboarding questions, and sending them there first is the
+ * friction the trial exists to remove. These mirror `demoUserSettings` so both entry points
+ * present the same starting point.
+ */
+const guestOnboarding: OnboardingRequest = {
+  currentLevel: "B1",
+  dailyMinutes: 20,
+  learningGoals: ["daily_life"],
+  notificationsEnabled: false,
+  targetLevel: "C1",
+};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   authMode: null,
@@ -232,6 +247,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           noticeMessage: "註冊已建立。若專案啟用 email 確認，請先到信箱完成確認。",
           status: "unauthenticated",
         });
+      }
+    } catch (error) {
+      set({
+        authMode: null,
+        errorMessage: toUserFacingError(error),
+        profile: null,
+        session: null,
+        status: "unauthenticated",
+      });
+    }
+  },
+
+  startGuestTrial: async () => {
+    set({ errorMessage: null, noticeMessage: null, status: "loading" });
+
+    try {
+      const result = await signInAnonymousGuest();
+      await applySession(set, result.session);
+      ensureAuthSubscription(set, get);
+
+      if (!result.session) {
+        set({
+          authMode: null,
+          errorMessage: "無法開始試用，請稍後再試或建立帳號。",
+          status: "unauthenticated",
+        });
+        return;
+      }
+
+      if (!get().profile?.onboardingCompleted) {
+        const settings = await persistOnboarding(guestOnboarding, result.session.user.id);
+        applyLearningSettings(settings);
+        set({ profile: settings.profile, status: "authenticated" });
       }
     } catch (error) {
       set({
