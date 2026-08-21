@@ -42,8 +42,8 @@ export default async function StatusPage() {
           。可以直接試用，不需要註冊；之後若建立帳號，先前的學習紀錄會一併保留。
         </p>
         <p>
-          在 iPhone 或 Android 上，可以用瀏覽器的「加入主畫面」把它變成獨立圖示開啟。
-          Google Play 與 App Store 尚未上架。
+          在 iPhone 或 Android 上，可以用瀏覽器的「加入主畫面」把它變成獨立圖示開啟。 Google Play 與
+          App Store 尚未上架。
         </p>
       </section>
 
@@ -74,8 +74,7 @@ export default async function StatusPage() {
           ) : null}
         </ul>
         <p>
-          後端使用免費方案，閒置一段時間後會休眠。第一次連線較慢是正常現象，App
-          內會顯示喚醒提示。
+          後端使用免費方案，閒置一段時間後會休眠。第一次連線較慢是正常現象，App 內會顯示喚醒提示。
         </p>
       </section>
 

@@ -48,7 +48,9 @@ if (html.includes(MARKER)) {
 }
 
 if (!html.includes("</head>")) {
-  throw new Error(`inject-web-head: no </head> found in ${indexPath}; Expo's output shape changed.`);
+  throw new Error(
+    `inject-web-head: no </head> found in ${indexPath}; Expo's output shape changed.`,
+  );
 }
 
 // The app is Traditional Chinese; Expo hardcodes lang="en".
