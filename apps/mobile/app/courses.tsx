@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Download, HardDriveDownload, RefreshCw, Trash2 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { getLessonExercises } from "../src/features/courses/courseRepository";
@@ -236,10 +236,12 @@ function levelStyle(level: CefrLevel) {
 
 const styles = StyleSheet.create({
   courseBlock: {
-    borderBottomColor: colorTokens.border,
-    borderBottomWidth: 1,
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.border,
+    borderRadius: radiusTokens.lg,
+    borderWidth: 1,
     gap: spacingTokens.md,
-    paddingBottom: spacingTokens.xl,
+    padding: spacingTokens.lg,
   },
   courseCopy: {
     flex: 1,
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
   downloadButton: {
     alignItems: "center",
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.md,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.sm,
@@ -303,7 +305,7 @@ const styles = StyleSheet.create({
   levelC2: { backgroundColor: colorTokens.danger },
   levelMark: {
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: radiusTokens.md,
     height: 46,
     justifyContent: "center",
     width: 46,
@@ -342,7 +344,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.md,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.md,

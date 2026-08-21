@@ -1,6 +1,6 @@
 import { AlertCircle, Inbox } from "lucide-react-native";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { PrimaryButton } from "./PrimaryButton";
 
 interface StatePanelProps {
@@ -21,7 +21,9 @@ export function StatePanel({ message, onRetry, state, title }: StatePanelProps) 
         <Inbox color={colorTokens.mutedText} size={28} />
       )}
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text selectable style={styles.message}>
+        {message}
+      </Text>
       {state === "error" && onRetry ? (
         <View style={styles.retry}>
           <PrimaryButton accessibilityLabel="重新載入" onPress={onRetry} variant="secondary">
@@ -44,10 +46,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.sm,
-    minHeight: 220,
+    minHeight: 240,
     justifyContent: "center",
     padding: spacingTokens.lg,
   },

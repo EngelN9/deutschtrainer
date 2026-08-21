@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { getDueReviews } from "@deutschtrainer/learning-engine";
 import { CalendarClock, CheckCircle2, ChevronRight } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { findExerciseContext } from "../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
@@ -32,6 +32,7 @@ export default function ReviewsScreen() {
     ).length ?? 0;
   const isLoading = recordsQuery.isLoading || catalogQuery.isLoading;
   const error = recordsQuery.error ?? catalogQuery.error;
+  const estimatedMinutes = Math.max(1, Math.ceil(dueReviews.length * 1.5));
 
   return (
     <AuthGate mode="protected">
@@ -52,7 +53,8 @@ export default function ReviewsScreen() {
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryValue}>{dueReviews.length} 道題待複習</Text>
             <Text style={styles.summaryMeta}>
-              {rawDueReviews.length} 個技能到期 · 另有 {futureReviews} 項排入未來
+              約 {estimatedMinutes} 分鐘 · {rawDueReviews.length} 個技能到期 · 另有 {futureReviews}{" "}
+              項排入未來
             </Text>
           </View>
         </View>
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
   reviewIndex: {
     alignItems: "center",
     backgroundColor: "#FEF3C7",
-    borderRadius: 6,
+    borderRadius: radiusTokens.sm,
     height: 34,
     justifyContent: "center",
     width: 34,
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.md,
@@ -231,8 +233,8 @@ const styles = StyleSheet.create({
   },
   summaryBand: {
     alignItems: "center",
-    backgroundColor: "#113B36",
-    borderRadius: 8,
+    backgroundColor: "#173E7C",
+    borderRadius: radiusTokens.lg,
     flexDirection: "row",
     gap: spacingTokens.md,
     padding: spacingTokens.md,
@@ -243,14 +245,14 @@ const styles = StyleSheet.create({
   },
   summaryIcon: {
     alignItems: "center",
-    backgroundColor: colorTokens.teal,
-    borderRadius: 8,
+    backgroundColor: colorTokens.accent,
+    borderRadius: radiusTokens.md,
     height: 46,
     justifyContent: "center",
     width: 46,
   },
   summaryMeta: {
-    color: "#D7ECE8",
+    color: "#E8F0FF",
     fontSize: 13,
   },
   summaryValue: {

@@ -5,7 +5,7 @@ import type { CefrLevel, LearningGoal } from "@deutschtrainer/shared-types";
 import { SUPPORTED_LEVELS } from "@deutschtrainer/shared-types";
 import type { OnboardingRequest } from "@deutschtrainer/validation";
 import { onboardingRequestSchema } from "@deutschtrainer/validation";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AppScreen } from "../src/components/AppScreen";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
@@ -230,9 +230,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   journeyCard: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
-    borderRadius: 8,
+    backgroundColor: colorTokens.primarySoft,
+    borderColor: "#B8D0FF",
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.lg,
@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
   },
   journeyNumber: {
     alignItems: "center",
-    backgroundColor: colorTokens.primary,
-    borderRadius: 999,
+    backgroundColor: colorTokens.accent,
+    borderRadius: radiusTokens.pill,
     height: 28,
     justifyContent: "center",
     width: 28,
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CBD5E1",
-    borderRadius: 8,
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.borderStrong,
+    borderRadius: radiusTokens.md,
     borderWidth: 1,
     justifyContent: "center",
     minHeight: 44,
@@ -306,9 +306,9 @@ const styles = StyleSheet.create({
   },
   switchRow: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CBD5E1",
-    borderRadius: 8,
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.border,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
     minWidth: 44,
   },
   switchThumb: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 999,
+    backgroundColor: colorTokens.onStrong,
+    borderRadius: radiusTokens.pill,
     height: 20,
     width: 20,
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   switchTrack: {
     backgroundColor: "#94A3B8",
-    borderRadius: 999,
+    borderRadius: radiusTokens.pill,
     justifyContent: "center",
     padding: 2,
     width: 44,
@@ -345,18 +345,18 @@ const styles = StyleSheet.create({
     paddingRight: spacingTokens.md,
   },
   todayCard: {
-    backgroundColor: "#113B36",
-    borderRadius: 8,
+    backgroundColor: "#173E7C",
+    borderRadius: radiusTokens.lg,
     gap: spacingTokens.sm,
     padding: spacingTokens.lg,
   },
   todayLabel: {
-    color: "#BFE3DC",
+    color: "#D7E6FF",
     fontSize: 13,
     fontWeight: "800",
   },
   todayText: {
-    color: "#D7ECE8",
+    color: "#E8F0FF",
     fontSize: 14,
     lineHeight: 21,
   },
