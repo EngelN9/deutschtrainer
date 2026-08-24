@@ -37,6 +37,10 @@ export default function HomeScreen() {
   const noticeMessage = useAuthStore((state) => state.noticeMessage);
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
+  // A guest has no email or password, so signing out strands the account permanently and
+  // their progress becomes unreachable. Until the upgrade-to-an-account flow exists, don't
+  // offer an action whose only outcome is silent, irreversible data loss.
+  const isGuestSession = useAuthStore((state) => state.session?.user.is_anonymous === true);
   const currentLevel = useLearningSetupStore((state) => state.currentLevel);
   const targetLevel = useLearningSetupStore((state) => state.targetLevel);
   const catalogQuery = useCourseCatalog();
@@ -127,12 +131,14 @@ export default function HomeScreen() {
               icon={Settings}
               onPress={() => router.push("/settings" as Href)}
             />
-            <IconButton
-              accessibilityLabel="登出帳號"
-              icon={LogOut}
-              onPress={() => void handleSignOut()}
-              tone="danger"
-            />
+            {isGuestSession ? null : (
+              <IconButton
+                accessibilityLabel="登出帳號"
+                icon={LogOut}
+                onPress={() => void handleSignOut()}
+                tone="danger"
+              />
+            )}
           </View>
         }
         description="寫一段、看見最值得修的三個問題，再重寫確認自己真的進步。"
