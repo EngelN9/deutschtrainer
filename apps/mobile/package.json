@@ -53,5 +53,18 @@
     "@types/react": "19.2.17",
     "babel-preset-expo": "57.0.3",
     "typescript": "~6.0.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@expo/metro-runtime",
+        "expo",
+        "expo-asset",
+        "expo-constants",
+        "expo-notifications",
+        "expo-router",
+        "expo-splash-screen"
+      ]
+    }
   }
 }
