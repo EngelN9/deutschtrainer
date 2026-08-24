@@ -35,15 +35,9 @@ jobs:
         run: pnpm --filter @deutschtrainer/api verify:bundle
       - name: Build API container
         run: docker build --file apps/api/Dockerfile --tag deutschtrainer-api:ci .
-      # Reported, not enforced. This compares against the versions Expo has published right
-      # now, so it starts failing whenever the SDK ships patches, with no change to this repo:
-      # ten packages were aligned on 2026-08-23 and seven were already behind a day later,
-      # blocking a pull request that only edited render.yaml. The signal that actually matters
-      # — whether the app still builds — is covered by Expo Doctor and the export steps below.
       - name: Expo dependency compatibility
         working-directory: apps/mobile
         run: pnpm exec expo install --check
-        continue-on-error: true
       - name: Expo Doctor
         working-directory: apps/mobile
         run: pnpm dlx expo-doctor@1.20.1
