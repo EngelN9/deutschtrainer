@@ -4,6 +4,7 @@ services:
     runtime: docker
     plan: free
     region: singapore
+    branch: main
     dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /health
     autoDeployTrigger: checksPass
@@ -14,8 +15,11 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: 10000
+      # Public origins, not secrets, so they belong in the Blueprint rather than behind
+      # sync: false. assertRemoteCorsOrigins in apps/api/src/config.ts rejects "*", non-HTTPS
+      # and localhost, and the API refuses to boot when this is unset.
       - key: CORS_ALLOWED_ORIGINS
-        sync: false
+        value: https://deutschtrainer-engeln9-web.onrender.com,https://deutschtrainer-engeln9-site.onrender.com
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
@@ -60,6 +64,7 @@ services:
     runtime: node
     plan: free
     region: singapore
+    branch: main
     buildCommand: >-
       corepack pnpm install --frozen-lockfile &&
       corepack pnpm --filter @deutschtrainer/admin build
@@ -83,6 +88,7 @@ services:
   - type: web
     name: deutschtrainer-engeln9-web
     runtime: static
+    branch: main
     buildCommand: >-
       corepack pnpm install --frozen-lockfile &&
       corepack pnpm --filter @deutschtrainer/mobile export:web
