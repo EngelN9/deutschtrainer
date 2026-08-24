@@ -27,6 +27,7 @@ import { MessageBanner } from "../../src/components/MessageBanner";
 import { StatePanel } from "../../src/components/StatePanel";
 import { AudioPlayerControls } from "../../src/features/audio-learning/AudioPlayerControls";
 import { formatAudioTime } from "../../src/features/audio-learning/audioLabels";
+import { resolveRecordingMimeType } from "../../src/features/audio-learning/recordingMimeType";
 import {
   deleteUploadedRecording,
   uploadSpeakingRecording,
@@ -147,7 +148,7 @@ export default function SpeakingPracticeScreen() {
     if (!prompt || !recorded) return;
     setLocalError(null);
     const idempotencyKey = createKey("speaking-submit");
-    const mimeType = Platform.OS === "web" ? "audio/webm" : "audio/mp4";
+    const mimeType = await resolveRecordingMimeType(recorded.uri);
     let storagePath: string | undefined;
     try {
       storagePath = await uploadSpeakingRecording({

@@ -20,6 +20,7 @@ export function PublicDocument({
           DeutschTrainer
         </Link>
         <div>
+          <Link href="/status">狀態</Link>
           <Link href="/support">支援</Link>
           <Link href="/privacy">隱私</Link>
           <Link href="/terms">服務條款</Link>

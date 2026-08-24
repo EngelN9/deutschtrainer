@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
-import { CloudUpload, RefreshCw, WifiOff } from "lucide-react-native";
+import { CloudUpload, RefreshCw, Timer, WifiOff } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useAuthStore } from "../auth/useAuthStore";
@@ -11,10 +11,24 @@ export function OfflineStatusBand() {
   const router = useRouter();
   const profileId = useAuthStore((state) => state.profile?.id);
   const connectivity = useConnectivityStore((state) => state.status);
+  const waking = useConnectivityStore((state) => state.waking);
   const syncStatus = useOfflineStore((state) => state.syncStatus);
   const pendingCount = useOfflineStore((state) =>
     profileId ? Object.keys(state.profiles[profileId]?.pendingAttempts ?? {}).length : 0,
   );
+
+  // Nothing to manage while the service wakes, so this state is reported rather than tappable.
+  if (waking && connectivity !== "offline") {
+    return (
+      <View accessibilityRole="alert" style={styles.band}>
+        <Timer color={colorTokens.primary} size={21} />
+        <View style={styles.copy}>
+          <Text style={styles.title}>伺服器喚醒中…</Text>
+          <Text style={styles.detail}>免費方案閒置後會休眠，首次連線約需 30 秒。</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (connectivity !== "offline" && pendingCount === 0 && syncStatus !== "syncing") {
     return null;
