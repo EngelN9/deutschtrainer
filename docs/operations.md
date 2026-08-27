@@ -56,19 +56,32 @@ ephemeral filesystem, and does not prove production availability or operations. 
 `BLOCKED` until paid-capacity behavior, monitoring, distributed rate limiting, backup/restore and
 rollback drills are verified.
 
-## Merging is not deploying
+## Auto-deploy, and how it failed silently
 
-All three services are configured `autoDeploy: yes`, `autoDeployTrigger: checksPass`,
-`branch: main`, but as of 2026-08-27 a merge to `main` has never produced a deploy. Four pull
-requests merged with every check run on the head commit reporting `completed/success`, and no
-deploy was created; all three services had to be triggered by hand. The same happened to the #26
-merge on 2026-08-24, whose code then sat undeployed for three days.
+All three services deploy from `main` on `autoDeployTrigger: checksPass`: Render waits for the
+commit's GitHub checks and deploys when they pass. Confirmed working on 2026-08-27 — the `quality`
+check completed at 04:44:07Z and all three deploys were created at 04:44:11Z with
+`trigger: new_commit`.
 
-This fails silently. The merge succeeds, CI is green, the pull request shows as merged, and the
-preview keeps serving the previous build. Nothing reports the gap.
+It was broken from at least 2026-08-24 until 2026-08-27. The cause was the **Render GitHub App's
+repository access not covering this repository**. Restoring it at
+<https://github.com/apps/render/installations/new> under **Repository access** fixed it with no
+change to `render.yaml`.
 
-**Until this is fixed, treat deployment as a separate manual step**, and confirm it rather than
-assuming it. Service ids for a manual trigger:
+The failure mode is worth recognising because nothing reports it:
+
+- The merge succeeds, CI is green, the pull request shows as merged.
+- No deploy is created at all — not a failed one, so no notification fires.
+- The preview keeps serving the previous build indefinitely. The #26 merge sat undeployed for
+  three days.
+- Render can still clone the repository, so a manual trigger builds the correct commit. Read
+  access and event handling fail independently, and only the second one was broken.
+
+Render does not deploy when it detects zero checks for a commit. Without access to the repository
+it cannot see the checks, so this is the documented behaviour rather than an error — which is why
+it is silent.
+
+If it recurs, check repository access first. Service ids for a manual trigger in the meantime:
 
 | Service                       | Id                         |
 | ----------------------------- | -------------------------- |
@@ -76,12 +89,8 @@ assuming it. Service ids for a manual trigger:
 | `deutschtrainer-engeln9-site` | `srv-d9m51k3m8hqs739tsa7g` |
 | `deutschtrainer-engeln9-api`  | `srv-d9m51k3m8hqs739tsa70` |
 
-Diagnosis so far rules out the wrong branch, a `buildFilter` (there is none), zero checks, failed
-checks, and latency. Render can still clone the repository — a manual trigger builds the correct
-HEAD — so repository read access works while the reaction to commits does not. Render's documented
-rule is that it does not deploy when zero checks are detected, which points at Render being unable
-to read the checks: a GitHub App installation that does not cover this repository. Verify at
-<https://github.com/apps/render/installations/new> under **Repository access**.
+Because a deploy can be absent rather than failed, confirm what the preview actually serves after
+a merge that matters, using the check below.
 
 ## Confirming what is actually deployed
 
