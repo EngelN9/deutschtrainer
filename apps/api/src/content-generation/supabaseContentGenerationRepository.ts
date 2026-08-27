@@ -6,7 +6,7 @@ import {
   type ContentTeamRole,
 } from "@deutschtrainer/shared-types";
 import type { GenerateExerciseDraftRequest } from "@deutschtrainer/validation";
-import { ApiError } from "../errors";
+import { ApiError, databaseError } from "../errors";
 import type {
   AuthenticatedContentUser,
   ContentGenerationRepository,
@@ -236,7 +236,7 @@ function isCefrLevel(value: string): value is CefrLevel {
 
 function assertDatabaseResult(error: { message: string } | null, message: string): void {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 

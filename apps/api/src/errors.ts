@@ -21,10 +21,25 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly retryable: boolean,
+    options?: ErrorOptions,
   ) {
-    super(message);
+    super(message, options);
     this.name = "ApiError";
   }
+}
+
+/**
+ * Database failures must never carry the provider's own exception text into `message`:
+ * `errorResponse` copies `message` straight into the response body, and `GET /courses` is
+ * public, so interpolating `error.message` published internal fetch failures and the provider
+ * host to unauthenticated callers.
+ *
+ * The provider error is attached as the standard `cause` instead. It stays reachable for
+ * server-side diagnostics without being serialized — the response is built from `code`,
+ * `message`, and `retryable` only.
+ */
+export function databaseError(message: string, cause: unknown): ApiError {
+  return new ApiError("DATABASE_ERROR", message, 500, true, { cause });
 }
 
 export function toApiError(error: unknown): ApiError {
