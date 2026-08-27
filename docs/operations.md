@@ -56,6 +56,56 @@ ephemeral filesystem, and does not prove production availability or operations. 
 `BLOCKED` until paid-capacity behavior, monitoring, distributed rate limiting, backup/restore and
 rollback drills are verified.
 
+## Merging is not deploying
+
+All three services are configured `autoDeploy: yes`, `autoDeployTrigger: checksPass`,
+`branch: main`, but as of 2026-08-27 a merge to `main` has never produced a deploy. Four pull
+requests merged with every check run on the head commit reporting `completed/success`, and no
+deploy was created; all three services had to be triggered by hand. The same happened to the #26
+merge on 2026-08-24, whose code then sat undeployed for three days.
+
+This fails silently. The merge succeeds, CI is green, the pull request shows as merged, and the
+preview keeps serving the previous build. Nothing reports the gap.
+
+**Until this is fixed, treat deployment as a separate manual step**, and confirm it rather than
+assuming it. Service ids for a manual trigger:
+
+| Service                       | Id                         |
+| ----------------------------- | -------------------------- |
+| `deutschtrainer-engeln9-web`  | `srv-d9m51k3m8hqs739tsa60` |
+| `deutschtrainer-engeln9-site` | `srv-d9m51k3m8hqs739tsa7g` |
+| `deutschtrainer-engeln9-api`  | `srv-d9m51k3m8hqs739tsa70` |
+
+Diagnosis so far rules out the wrong branch, a `buildFilter` (there is none), zero checks, failed
+checks, and latency. Render can still clone the repository — a manual trigger builds the correct
+HEAD — so repository read access works while the reaction to commits does not. Render's documented
+rule is that it does not deploy when zero checks are detected, which points at Render being unable
+to read the checks: a GitHub App installation that does not cover this repository. Verify at
+<https://github.com/apps/render/installations/new> under **Repository access**.
+
+## Confirming what is actually deployed
+
+A merged pull request and a green pipeline say nothing about what the preview serves. Check the
+build itself.
+
+For the learner web service, read the current bundle name from the document, then search that
+bundle for a marker only the new build contains:
+
+```bash
+js=$(curl -s https://deutschtrainer-engeln9-web.onrender.com/ | grep -oE '_expo/static/js/web/entry-[a-f0-9]+\.js' | head -1)
+curl -s "https://deutschtrainer-engeln9-web.onrender.com/$js" | grep -c '<marker>'
+```
+
+**Use an ASCII marker** — an id, an asset filename, a licence or attribution string. Traditional
+Chinese UI strings did not match reliably through the shell during this check: grepping the live
+bundle for a zh-TW heading returned zero on a build that did contain it, while `7bdc1dd6-…`,
+`365-euro-ticket` and `Emil Linus Albrecht` all matched. A CJK marker can report a correct
+deployment as a failed one.
+
+A changed `entry-<hash>.js` filename alone shows that something was rebuilt, not that the intended
+change is present, so check a marker as well. For a bundled binary asset, request it directly and
+compare `Content-Length` against the file in the repository.
+
 ## Backup, restore and rollback
 
 - Configure provider-managed database backups and document retention outside source control.
