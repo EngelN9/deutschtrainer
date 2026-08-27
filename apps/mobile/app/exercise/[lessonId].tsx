@@ -25,6 +25,7 @@ import {
   formatAcceptedAnswer,
   isExerciseAnswered,
 } from "../../src/features/exercises/FixedExerciseInput";
+import { MotionReveal } from "../../src/features/motion/MotionReveal";
 import { useProgressStore } from "../../src/features/progress/useProgressStore";
 import {
   learningRecordsQueryKey,
@@ -377,39 +378,48 @@ export default function ExerciseScreen() {
               </View>
             ) : null}
             {aiEvaluation ? (
-              <AiFeedbackPanel
-                cached={aiEvaluation.cached}
-                fallback={aiEvaluation.status === "fallback"}
-                feedback={aiEvaluation.feedback}
-              />
+              <MotionReveal
+                replayKey={exercise.id}
+                tone={aiEvaluation.feedback.isCorrect ? "pop" : "shake"}
+              >
+                <AiFeedbackPanel
+                  cached={aiEvaluation.cached}
+                  fallback={aiEvaluation.status === "fallback"}
+                  feedback={aiEvaluation.feedback}
+                />
+              </MotionReveal>
             ) : result && isFixedExercise(exercise) ? (
-              <View style={[styles.feedback, result.isCorrect ? styles.correct : styles.incorrect]}>
-                <View style={styles.feedbackHeading}>
-                  {result.isCorrect ? (
-                    <CheckCircle2 color={colorTokens.success} size={24} />
-                  ) : (
-                    <XCircle color={colorTokens.danger} size={24} />
-                  )}
-                  <Text style={styles.feedbackTitle}>
-                    {result.isCorrect
-                      ? "答對了"
-                      : result.score > 0
-                        ? `部分正確 · ${result.score} 分`
-                        : "再看一次"}
-                  </Text>
-                </View>
-                {!result.isCorrect ? (
-                  <>
-                    <Text style={styles.feedbackLabel}>參考答案</Text>
-                    <Text selectable style={styles.acceptedAnswer}>
-                      {formatAcceptedAnswer(exercise)}
+              <MotionReveal replayKey={exercise.id} tone={result.isCorrect ? "pop" : "shake"}>
+                <View
+                  style={[styles.feedback, result.isCorrect ? styles.correct : styles.incorrect]}
+                >
+                  <View style={styles.feedbackHeading}>
+                    {result.isCorrect ? (
+                      <CheckCircle2 color={colorTokens.success} size={24} />
+                    ) : (
+                      <XCircle color={colorTokens.danger} size={24} />
+                    )}
+                    <Text style={styles.feedbackTitle}>
+                      {result.isCorrect
+                        ? "答對了"
+                        : result.score > 0
+                          ? `部分正確 · ${result.score} 分`
+                          : "再看一次"}
                     </Text>
-                  </>
-                ) : null}
-                {exercise.type === "error_correction" ? (
-                  <Text style={styles.explanation}>{exercise.explanationZhTw}</Text>
-                ) : null}
-              </View>
+                  </View>
+                  {!result.isCorrect ? (
+                    <>
+                      <Text style={styles.feedbackLabel}>參考答案</Text>
+                      <Text selectable style={styles.acceptedAnswer}>
+                        {formatAcceptedAnswer(exercise)}
+                      </Text>
+                    </>
+                  ) : null}
+                  {exercise.type === "error_correction" ? (
+                    <Text style={styles.explanation}>{exercise.explanationZhTw}</Text>
+                  ) : null}
+                </View>
+              </MotionReveal>
             ) : null}
             <PrimaryButton
               accessibilityLabel={
