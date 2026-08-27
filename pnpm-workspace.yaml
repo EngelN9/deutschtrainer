@@ -4,3 +4,13 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+# expo@57.0.15 declares expo-file-system ~57.0.5, so bumping the direct dependency to the
+# version `expo install --check` expects left two copies installed and failed Expo Doctor.
+# 57.0.6 satisfies expo's own range, so pinning one version dedupes without breaking it.
+overrides:
+  expo-constants: 57.0.15
+  expo-file-system: 57.0.6
+minimumReleaseAgeExclude:
+  - expo-constants@57.0.15
+  - expo-file-system@57.0.6
+  - expo-linking@57.0.8
