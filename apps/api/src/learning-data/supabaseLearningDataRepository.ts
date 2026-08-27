@@ -25,7 +25,7 @@ import {
   type ReviewQueueResponse,
 } from "@deutschtrainer/validation";
 import { z } from "zod";
-import { ApiError } from "../errors";
+import { ApiError, databaseError } from "../errors";
 import type {
   AuthenticatedLearningUser,
   LearningDataRepository,
@@ -865,7 +865,7 @@ function assertDatabaseResult(
   message: string,
 ): asserts error is null {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 
@@ -875,6 +875,6 @@ function assertFirstDatabaseError(
 ): void {
   const error = errors.find(Boolean);
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }

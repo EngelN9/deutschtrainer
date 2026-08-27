@@ -10,7 +10,7 @@ import {
   type TranscribeRequest,
 } from "@deutschtrainer/validation";
 import type { AudioVoice, CefrLevel, ListeningKind } from "@deutschtrainer/shared-types";
-import { ApiError } from "../errors";
+import { ApiError, databaseError } from "../errors";
 import type { AuthenticatedLearner } from "../evaluation/types";
 import type {
   AudioRepository,
@@ -287,7 +287,7 @@ export class SupabaseAudioRepository implements AudioRepository {
         upsert: false,
       });
     if (upload.error && !isDuplicateError(upload.error)) {
-      throw new ApiError("DATABASE_ERROR", `無法保存合成語音。 ${upload.error.message}`, 500, true);
+      throw databaseError("無法保存合成語音。", upload.error);
     }
 
     const insert = await this.client
@@ -706,7 +706,7 @@ function assertDatabaseResult(
   message: string,
 ): void {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 
@@ -716,7 +716,7 @@ function assertFirstDatabaseError(
 ): void {
   const error = errors.find(Boolean);
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 
