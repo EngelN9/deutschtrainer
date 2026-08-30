@@ -82,7 +82,11 @@ export default function MoreScreen() {
                         <StatusBadge tone="neutral">本機</StatusBadge>
                       ) : null}
                     </View>
-                    <Text style={styles.description}>{descriptions[item.capability]}</Text>
+                    <Text style={styles.description}>
+                      {item.capability === "audio" && authMode === "demo"
+                        ? "使用內建真人音檔完成固定聽力理解題，不需要網路或 AI。"
+                        : descriptions[item.capability]}
+                    </Text>
                   </View>
                   <ChevronRight color={colorTokens.mutedText} size={21} />
                 </SurfaceCard>

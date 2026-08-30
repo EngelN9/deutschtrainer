@@ -30,7 +30,12 @@ const primaryItems: NavigationItem[] = [
 
 const moreItems: NavigationItem[] = [
   { capability: "knowledge", href: "/knowledge", label: "知識中心", modes: ["supabase"] },
-  { capability: "audio", href: "/audio-training", label: "聽說訓練", modes: ["supabase"] },
+  {
+    capability: "audio",
+    href: "/audio-training",
+    label: "聽力練習",
+    modes: ["demo", "supabase"],
+  },
   { capability: "analytics", href: "/analytics", label: "學習分析", modes: ["supabase"] },
   { capability: "offline", href: "/offline", label: "離線與同步", modes: ["demo", "supabase"] },
   { capability: "settings", href: "/settings", label: "個人設定", modes: ["demo", "supabase"] },

@@ -22,8 +22,16 @@ describe("mobile navigation policy", () => {
       ...getMoreCapabilities("demo"),
     ].map((item) => item.capability);
 
-    expect(capabilities).toEqual(["home", "courses", "reviews", "more", "offline", "settings"]);
-    expect(capabilities).not.toEqual(expect.arrayContaining(["writing", "knowledge", "audio"]));
+    expect(capabilities).toEqual([
+      "home",
+      "courses",
+      "reviews",
+      "more",
+      "audio",
+      "offline",
+      "settings",
+    ]);
+    expect(capabilities).not.toEqual(expect.arrayContaining(["writing", "knowledge"]));
   });
 
   it("expands connected-only destinations into the wide rail", () => {

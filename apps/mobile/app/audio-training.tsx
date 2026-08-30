@@ -6,6 +6,7 @@ import { ChevronRight, Clock3, Headphones, Mic2, RotateCcw, Trash2 } from "lucid
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
+import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { LevelSelector } from "../src/components/LevelSelector";
@@ -20,6 +21,7 @@ import {
 
 export default function AudioTrainingScreen() {
   const router = useRouter();
+  const authMode = useAuthStore((state) => state.authMode);
   const [level, setLevel] = useState<CefrLevel>("B1");
   const workspaceQuery = useAudioLearningWorkspace();
   const deleteMutation = useDeleteSpeakingSubmission();
@@ -48,10 +50,14 @@ export default function AudioTrainingScreen() {
   return (
     <AuthGate mode="protected">
       <ContentScreen
-        description="從聽懂、聽寫到朗讀重錄，逐步建立可實際使用的德語。"
-        eyebrow="聽力與口說"
+        description={
+          authMode === "demo"
+            ? "使用內建真人音檔與固定理解題，不需要帳號、網路或 AI。"
+            : "從聽懂、聽寫到朗讀重錄，逐步建立可實際使用的德語。"
+        }
+        eyebrow={authMode === "demo" ? "離線聽力" : "聽力與口說"}
         showMainNavigation
-        title="把輸入轉成輸出"
+        title={authMode === "demo" ? "固定聽力練習" : "把輸入轉成輸出"}
       >
         <LevelSelector onChange={setLevel} value={level} />
         <MessageBanner
@@ -100,7 +106,12 @@ export default function AudioTrainingScreen() {
             </View>
           </View>
         ) : null}
-        {workspaceQuery.isLoading ? (
+        {authMode === "demo" ? (
+          <MessageBanner
+            message="離線 Demo 只載入上方固定聽力；受保護的聽寫、錄音與轉錄功能需要連線帳號。"
+            tone="info"
+          />
+        ) : workspaceQuery.isLoading ? (
           <StatePanel
             message="正在同步聽力素材與口說紀錄..."
             state="loading"

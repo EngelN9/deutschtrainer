@@ -71,7 +71,8 @@ export default function WelcomeScreen() {
               <ArrowRight color={colorTokens.accent} size={18} />
             </View>
             <Text style={styles.demoNote}>
-              離線 Demo 無需帳號，固定題與進度只保存在本機；雲端同步與 AI 功能不會以假結果代替。
+              離線 Demo 無需帳號，固定題、真人固定聽力與進度只保存在本機；雲端同步與 AI
+              功能不會以假結果代替。
             </Text>
             <PrimaryButton
               accessibilityLabel="開始離線 Demo"
