@@ -23,6 +23,10 @@ export interface ApiConfig {
   globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
+  classroomEnabled: boolean;
+  classroomAllowedProfileIds: string[];
+  openAiRealtimeModel: string;
+  openAiSafetyIdentifierSalt: string;
 }
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -59,6 +63,10 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     ),
     learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
+    classroomEnabled: env.CLASSROOM_ENABLED === "true",
+    classroomAllowedProfileIds: readCommaSeparatedValues(env.CLASSROOM_ALLOWED_PROFILE_IDS),
+    openAiRealtimeModel: env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime-mini-2025-12-15",
+    openAiSafetyIdentifierSalt: cleanSecret(env.OPENAI_SAFETY_IDENTIFIER_SALT),
   };
 }
 
@@ -71,6 +79,18 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     (config.appEnv === "local" || config.appEnv === "test") && config.fakeEvaluationMode;
   if (config.publicAiEnabled && !config.openAiApiKey && !localFakeProvider) {
     throw new Error("OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true.");
+  }
+
+  if (config.classroomEnabled) {
+    if (!config.openAiApiKey) {
+      throw new Error("OPENAI_API_KEY is required when CLASSROOM_ENABLED=true.");
+    }
+    if (config.classroomAllowedProfileIds.length === 0) {
+      throw new Error("CLASSROOM_ALLOWED_PROFILE_IDS is required when CLASSROOM_ENABLED=true.");
+    }
+    if (!config.openAiSafetyIdentifierSalt) {
+      throw new Error("OPENAI_SAFETY_IDENTIFIER_SALT is required when CLASSROOM_ENABLED=true.");
+    }
   }
 
   if (config.appEnv === "local" || config.appEnv === "test") {
@@ -192,4 +212,15 @@ function readPositiveInteger(value: string | undefined, fallback: number): numbe
 function readNonNegativeNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function readCommaSeparatedValues(value: string | undefined): string[] {
+  return [
+    ...new Set(
+      (value ?? "")
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0),
+    ),
+  ];
 }
