@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "export:android": "expo export --platform android",
-    "export:web": "expo export --platform web",
+    "export:web": "expo export --platform web && node scripts/inject-web-head.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,28 +19,28 @@
     "@deutschtrainer/shared-types": "workspace:*",
     "@deutschtrainer/ui": "workspace:*",
     "@deutschtrainer/validation": "workspace:*",
-    "@expo/metro-runtime": "~57.0.8",
+    "@expo/metro-runtime": "~57.0.12",
     "@hookform/resolvers": "5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
     "@supabase/supabase-js": "2.110.5",
     "@tanstack/react-query": "5.101.2",
     "diff": "9.0.0",
-    "expo": "57.0.11",
-    "expo-asset": "~57.0.9",
-    "expo-audio": "~57.0.3",
-    "expo-constants": "~57.0.9",
-    "expo-file-system": "~57.0.2",
-    "expo-linking": "~57.0.5",
-    "expo-notifications": "~57.0.9",
-    "expo-router": "57.0.11",
-    "expo-splash-screen": "~57.0.5",
+    "expo": "57.0.15",
+    "expo-asset": "~57.0.13",
+    "expo-audio": "~57.0.4",
+    "expo-constants": "~57.0.13",
+    "expo-file-system": "~57.0.6",
+    "expo-linking": "~57.0.8",
+    "expo-notifications": "~57.0.13",
+    "expo-router": "57.0.15",
+    "expo-splash-screen": "~57.0.7",
     "expo-status-bar": "~57.0.1",
     "lucide-react-native": "1.24.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "7.69.0",
-    "react-native": "0.86.2",
+    "react-native": "0.86.3",
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "4.26.2",
     "react-native-svg": "15.15.4",
@@ -53,5 +53,18 @@
     "@types/react": "19.2.17",
     "babel-preset-expo": "57.0.3",
     "typescript": "~6.0.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@expo/metro-runtime",
+        "expo",
+        "expo-asset",
+        "expo-constants",
+        "expo-notifications",
+        "expo-router",
+        "expo-splash-screen"
+      ]
+    }
   }
 }

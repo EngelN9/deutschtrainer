@@ -12,7 +12,7 @@ import {
   writingWorkspaceResponseSchema,
   type WritingWorkspaceResponse,
 } from "@deutschtrainer/validation";
-import { ApiError } from "../errors";
+import { ApiError, databaseError } from "../errors";
 import type { AuthenticatedLearner } from "../evaluation/types";
 import type {
   PreparedWritingVersion,
@@ -538,7 +538,7 @@ function assertDatabaseResult(
       true,
     );
   }
-  throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+  throw databaseError(message, error);
 }
 
 function assertFirstDatabaseError(
@@ -547,7 +547,7 @@ function assertFirstDatabaseError(
 ): void {
   const error = errors.find(Boolean);
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 

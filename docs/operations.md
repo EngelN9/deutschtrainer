@@ -56,6 +56,65 @@ ephemeral filesystem, and does not prove production availability or operations. 
 `BLOCKED` until paid-capacity behavior, monitoring, distributed rate limiting, backup/restore and
 rollback drills are verified.
 
+## Auto-deploy, and how it failed silently
+
+All three services deploy from `main` on `autoDeployTrigger: checksPass`: Render waits for the
+commit's GitHub checks and deploys when they pass. Confirmed working on 2026-08-27 — the `quality`
+check completed at 04:44:07Z and all three deploys were created at 04:44:11Z with
+`trigger: new_commit`.
+
+It was broken from at least 2026-08-24 until 2026-08-27. The cause was the **Render GitHub App's
+repository access not covering this repository**. Restoring it at
+<https://github.com/apps/render/installations/new> under **Repository access** fixed it with no
+change to `render.yaml`.
+
+The failure mode is worth recognising because nothing reports it:
+
+- The merge succeeds, CI is green, the pull request shows as merged.
+- No deploy is created at all — not a failed one, so no notification fires.
+- The preview keeps serving the previous build indefinitely. The #26 merge sat undeployed for
+  three days.
+- Render can still clone the repository, so a manual trigger builds the correct commit. Read
+  access and event handling fail independently, and only the second one was broken.
+
+Render does not deploy when it detects zero checks for a commit. Without access to the repository
+it cannot see the checks, so this is the documented behaviour rather than an error — which is why
+it is silent.
+
+If it recurs, check repository access first. Service ids for a manual trigger in the meantime:
+
+| Service                       | Id                         |
+| ----------------------------- | -------------------------- |
+| `deutschtrainer-engeln9-web`  | `srv-d9m51k3m8hqs739tsa60` |
+| `deutschtrainer-engeln9-site` | `srv-d9m51k3m8hqs739tsa7g` |
+| `deutschtrainer-engeln9-api`  | `srv-d9m51k3m8hqs739tsa70` |
+
+Because a deploy can be absent rather than failed, confirm what the preview actually serves after
+a merge that matters, using the check below.
+
+## Confirming what is actually deployed
+
+A merged pull request and a green pipeline say nothing about what the preview serves. Check the
+build itself.
+
+For the learner web service, read the current bundle name from the document, then search that
+bundle for a marker only the new build contains:
+
+```bash
+js=$(curl -s https://deutschtrainer-engeln9-web.onrender.com/ | grep -oE '_expo/static/js/web/entry-[a-f0-9]+\.js' | head -1)
+curl -s "https://deutschtrainer-engeln9-web.onrender.com/$js" | grep -c '<marker>'
+```
+
+**Use an ASCII marker** — an id, an asset filename, a licence or attribution string. Traditional
+Chinese UI strings did not match reliably through the shell during this check: grepping the live
+bundle for a zh-TW heading returned zero on a build that did contain it, while `7bdc1dd6-…`,
+`365-euro-ticket` and `Emil Linus Albrecht` all matched. A CJK marker can report a correct
+deployment as a failed one.
+
+A changed `entry-<hash>.js` filename alone shows that something was rebuilt, not that the intended
+change is present, so check a marker as well. For a bundled binary asset, request it directly and
+compare `Content-Length` against the file in the repository.
+
 ## Backup, restore and rollback
 
 - Configure provider-managed database backups and document retention outside source control.
