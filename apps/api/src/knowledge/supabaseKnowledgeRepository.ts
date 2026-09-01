@@ -10,7 +10,7 @@ import {
   knowledgeExerciseLinkSchema,
   vocabularyItemSchema,
 } from "@deutschtrainer/validation";
-import { ApiError } from "../errors";
+import { databaseError } from "../errors";
 import type { KnowledgeRepository, RelatedKnowledgeAliases } from "./types";
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
@@ -260,6 +260,6 @@ function assertDatabaseResult(
   _status?: number,
 ): void {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }

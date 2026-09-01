@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { userRoleSchema } from "@deutschtrainer/validation";
 import { aiEvaluationFeedbackSchema } from "@deutschtrainer/ai-schemas";
 import { SUPPORTED_LEVELS, type CefrLevel } from "@deutschtrainer/shared-types";
-import { ApiError } from "../errors";
+import { ApiError, databaseError } from "../errors";
 import type {
   AuthenticatedLearner,
   CachedEvaluation,
@@ -248,7 +248,7 @@ export class SupabaseEvaluationRepository implements EvaluationRepository {
 
 function assertDatabaseResult(error: { message: string } | null, message: string): void {
   if (error) {
-    throw new ApiError("DATABASE_ERROR", `${message} ${error.message}`, 500, true);
+    throw databaseError(message, error);
   }
 }
 

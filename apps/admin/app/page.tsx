@@ -35,6 +35,9 @@ export default function HomePage() {
           <Link className="button button-secondary" href="/support">
             取得支援
           </Link>
+          <Link className="button button-secondary" href="/status">
+            目前狀態
+          </Link>
           <Link className="button button-secondary" href="/account-deletion">
             帳號與資料刪除
           </Link>

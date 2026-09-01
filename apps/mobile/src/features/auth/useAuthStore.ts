@@ -11,6 +11,7 @@ import {
   getCurrentSession,
   clearLocalSession,
   sendPasswordReset,
+  signInAnonymousGuest,
   signInWithPassword,
   signOutCurrentUser,
   signUpWithPassword,
@@ -50,9 +51,23 @@ interface AuthState {
   signOut: () => Promise<void>;
   signUp: (input: SignUpRequest) => Promise<void>;
   startDemo: () => Promise<void>;
+  startGuestTrial: () => Promise<void>;
 }
 
 let unsubscribeFromAuth: (() => void) | null = null;
+
+/**
+ * A guest has not answered the onboarding questions, and sending them there first is the
+ * friction the trial exists to remove. These mirror `demoUserSettings` so both entry points
+ * present the same starting point.
+ */
+const guestOnboarding: OnboardingRequest = {
+  currentLevel: "B1",
+  dailyMinutes: 20,
+  learningGoals: ["daily_life"],
+  notificationsEnabled: false,
+  targetLevel: "C1",
+};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   authMode: null,
@@ -241,6 +256,56 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session: null,
         status: "unauthenticated",
       });
+    }
+  },
+
+  startGuestTrial: async () => {
+    set({ errorMessage: null, noticeMessage: null, status: "loading" });
+
+    let session: Session | null;
+    try {
+      ({ session } = await signInAnonymousGuest());
+    } catch (error) {
+      set({
+        authMode: null,
+        errorMessage: toUserFacingError(error),
+        profile: null,
+        session: null,
+        status: "unauthenticated",
+      });
+      return;
+    }
+
+    if (!session) {
+      set({
+        authMode: null,
+        errorMessage: "無法開始試用，請稍後再試或建立帳號。",
+        profile: null,
+        session: null,
+        status: "unauthenticated",
+      });
+      return;
+    }
+
+    await applySession(set, session);
+    ensureAuthSubscription(set, get);
+
+    if (get().profile?.onboardingCompleted) {
+      return;
+    }
+
+    try {
+      const settings = await persistOnboarding(guestOnboarding, session.user.id);
+      applyLearningSettings(settings);
+      set({ profile: settings.profile, status: "authenticated" });
+    } catch (error) {
+      // Onboarding goes through the API, which sleeps on the free tier, so the day's first
+      // guest is the most likely to fail here. The anonymous account and session are already
+      // real: clearing them would leave the guest signed in on Supabase while the store said
+      // otherwise, and retrying would mint a second account. Keeping the session lets AuthGate
+      // route them to /onboarding to finish manually. This matches applySession, which also
+      // preserves the session when it cannot load settings.
+      set({ errorMessage: toUserFacingError(error) });
     }
   },
 

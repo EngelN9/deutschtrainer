@@ -12,6 +12,7 @@ import { LevelSelector } from "../src/components/LevelSelector";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { StatePanel } from "../src/components/StatePanel";
 import { listeningKindLabel } from "../src/features/audio-learning/audioLabels";
+import { getListeningD1ExercisesForLevel } from "../src/features/audio-learning/listeningD1";
 import {
   useAudioLearningWorkspace,
   useDeleteSpeakingSubmission,
@@ -31,6 +32,7 @@ export default function AudioTrainingScreen() {
     [level, workspaceQuery.data],
   );
   const submissions = workspaceQuery.data?.speakingSubmissions ?? [];
+  const d1Exercises = useMemo(() => getListeningD1ExercisesForLevel(level), [level]);
 
   const confirmDelete = (submissionId: string) => {
     Alert.alert("刪除錄音", "這會永久刪除私人錄音與轉錄回饋。", [
@@ -56,6 +58,48 @@ export default function AudioTrainingScreen() {
           message={deleteMutation.isError ? deleteMutation.error.message : null}
           tone="error"
         />
+        {d1Exercises.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeading}>
+              <Headphones color={colorTokens.primary} size={20} />
+              <Text style={styles.sectionTitle}>{level} 固定聽力 D1</Text>
+            </View>
+            <Text style={styles.sectionDescription}>
+              真人預錄音檔與固定理解題；不需要 AI、TTS 或語音辨識。
+            </Text>
+            <View style={styles.list}>
+              {d1Exercises.map((exercise) => (
+                <Pressable
+                  accessibilityLabel={`開始 ${exercise.titleZhTw}`}
+                  accessibilityRole="button"
+                  key={exercise.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/listening/[assetId]",
+                      params: { assetId: exercise.id },
+                    } as unknown as Href)
+                  }
+                  style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
+                >
+                  <View style={styles.cardCopy}>
+                    <View style={styles.metaRow}>
+                      <Text style={styles.kind}>{exercise.level} 新聞理解</Text>
+                      <View style={styles.inlineMeta}>
+                        <Clock3 color={colorTokens.mutedText} size={14} />
+                        <Text style={styles.meta}>
+                          {exercise.estimatedSeconds} 秒 · {exercise.questions.length} 題
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.cardTitle}>{exercise.titleZhTw}</Text>
+                    <Text style={styles.description}>{exercise.descriptionZhTw}</Text>
+                  </View>
+                  <ChevronRight color={colorTokens.mutedText} size={21} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
         {workspaceQuery.isLoading ? (
           <StatePanel
             message="正在同步聽力素材與口說紀錄..."
@@ -241,6 +285,7 @@ const styles = StyleSheet.create({
     gap: spacingTokens.md,
     paddingTop: spacingTokens.lg,
   },
+  sectionDescription: { color: colorTokens.mutedText, fontSize: 14, lineHeight: 22 },
   sectionHeading: { alignItems: "center", flexDirection: "row", gap: spacingTokens.sm },
   sectionTitle: { color: colorTokens.text, fontSize: 17, fontWeight: "800" },
 });

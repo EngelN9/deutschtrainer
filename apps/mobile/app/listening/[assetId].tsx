@@ -10,7 +10,9 @@ import { MessageBanner } from "../../src/components/MessageBanner";
 import { PrimaryButton } from "../../src/components/PrimaryButton";
 import { StatePanel } from "../../src/components/StatePanel";
 import { AudioPlayerControls } from "../../src/features/audio-learning/AudioPlayerControls";
+import { ListeningD1Practice } from "../../src/features/audio-learning/ListeningD1Practice";
 import { listeningKindLabel } from "../../src/features/audio-learning/audioLabels";
+import { getListeningD1Exercise } from "../../src/features/audio-learning/listeningD1";
 import {
   useAudioLearningWorkspace,
   useListeningAudio,
@@ -22,6 +24,24 @@ import { WordComparisonView } from "../../src/features/audio-learning/WordCompar
 
 export default function ListeningPracticeScreen() {
   const { assetId } = useLocalSearchParams<{ assetId?: string }>();
+  const d1Exercise = getListeningD1Exercise(assetId);
+
+  if (d1Exercise) {
+    return (
+      <AuthGate mode="protected">
+        <ListeningD1Practice exercise={d1Exercise} />
+      </AuthGate>
+    );
+  }
+
+  return <ConnectedListeningPracticeScreen assetId={assetId} />;
+}
+
+interface ConnectedListeningPracticeScreenProps {
+  assetId?: string;
+}
+
+function ConnectedListeningPracticeScreen({ assetId }: ConnectedListeningPracticeScreenProps) {
   const router = useRouter();
   const workspaceQuery = useAudioLearningWorkspace();
   const audioMutation = useListeningAudio();

@@ -2,6 +2,8 @@ import { apiErrorResponseSchema, type ApiErrorResponse } from "@deutschtrainer/v
 import { mobileEnv } from "./env";
 import { supabase } from "./supabase";
 import {
+  beginServiceRequest,
+  endServiceRequest,
   markConnectivityOffline,
   markConnectivityOnline,
 } from "../features/offline/connectivityStore";
@@ -69,7 +71,7 @@ export async function requestApi<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${mobileEnv.apiBaseUrl.replace(/\/$/, "")}${path}`, {
+    response = await fetchTrackingWakeUp(`${mobileEnv.apiBaseUrl.replace(/\/$/, "")}${path}`, {
       method: options.method ?? "GET",
       headers,
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
@@ -109,6 +111,19 @@ export async function requestApi<T>(
     });
   }
   return parsed.data;
+}
+
+/**
+ * Only the round trip is tracked; reading the body is fast once headers arrive, and a sleeping
+ * free-tier instance spends the whole delay before responding.
+ */
+async function fetchTrackingWakeUp(url: string, init: RequestInit): Promise<Response> {
+  beginServiceRequest();
+  try {
+    return await fetch(url, init);
+  } finally {
+    endServiceRequest();
+  }
 }
 
 async function readJson(response: Response): Promise<unknown> {
