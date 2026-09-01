@@ -7,6 +7,7 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - `apps/mobile`: Expo + React Native learner app.
 - `apps/admin`: role-gated Next.js course, exercise, review, version, AI draft, and publishing console.
 - `apps/api`: authenticated Node API for AI evaluation, audio, content generation, and protected database writes.
+- `apps/classroom`: isolated Vite + React Phase 0 virtual-classroom browser surface.
 - `packages/shared-types`: shared domain models and discriminated unions.
 - `packages/validation`: Zod request, response, catalog, and exercise schemas.
 - `packages/grading`: deterministic fixed-exercise grading.
@@ -27,15 +28,10 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - [`docs/security.md`](docs/security.md): security, privacy, authorization, and data-protection requirements.
 - [`docs/testing-strategy.md`](docs/testing-strategy.md): automated, local integration, connected, and device testing strategy.
 - [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md): measurable product and phase acceptance criteria.
-
-The virtual-classroom work (real-time AI German tutor, voice, collaborative whiteboard) is specified
-separately. These four documents cover that surface only; the documents above remain authoritative
-for the existing learner app, Admin console, and API.
-
-- [`CURRENT_STATE.md`](CURRENT_STATE.md): what the repository actually contains, assessed for classroom reuse.
-- [`ARCHITECTURE.md`](ARCHITECTURE.md): classroom architecture, tool protocol, learner memory, and cost control.
-- [`MVP_SPEC.md`](MVP_SPEC.md): the MVP, its acceptance criteria, session limits, and non-goals.
-- [`ROADMAP.md`](ROADMAP.md): phases, entry/exit criteria, and the ordered implementation backlog.
+- [`CURRENT_STATE.md`](CURRENT_STATE.md): evidence-bound inventory for the virtual-classroom work.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): Phase 0 Realtime, authorization, and whiteboard boundaries.
+- [`MVP_SPEC.md`](MVP_SPEC.md): the single-developer five-minute milestone and B1-B7 evidence.
+- [`ROADMAP.md`](ROADMAP.md): ordered classroom work and stop conditions after Phase 0.
 
 `SPECIFICATION.md` and `DELIVERY_PLAN.md` are reference documents. Do not submit either file to Codex as one monolithic implementation prompt; assign one small, independently reviewable task or Gate.
 
@@ -58,6 +54,7 @@ Copy-Item apps/admin/.env.example apps/admin/.env.local
 pnpm dev:api
 pnpm dev:mobile
 pnpm dev:admin
+pnpm --filter @deutschtrainer/classroom dev
 ```
 
 Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it without an API-only `OPENAI_API_KEY` fails fast. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, enable both flags only for that local API process; this remains test evidence, not real-AI acceptance.
@@ -83,6 +80,9 @@ pnpm --filter @deutschtrainer/api build
 pnpm --filter @deutschtrainer/api verify:bundle
 pnpm dev:mobile
 pnpm dev:admin
+pnpm --filter @deutschtrainer/classroom dev
+pnpm --filter @deutschtrainer/classroom typecheck
+pnpm --filter @deutschtrainer/classroom build
 pnpm supabase:status
 pnpm --filter @deutschtrainer/api verify:learning-api:local
 pnpm --filter @deutschtrainer/api verify:workspaces:local
@@ -102,16 +102,19 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 
 The public source repository is
 [EngelN9/deutschtrainer](https://github.com/EngelN9/deutschtrainer). The root `render.yaml`
-describes three free Render preview services that deploy only after GitHub checks pass:
+describes the three existing free Render preview services and a disabled-by-default Phase 0
+classroom static-site declaration. This uncommitted worktree does not create or deploy that fourth
+service:
 
 - [deutschtrainer-engeln9-api](https://deutschtrainer-engeln9-api.onrender.com/health): Docker API with `/health`;
 - [deutschtrainer-engeln9-site](https://deutschtrainer-engeln9-site.onrender.com): Next.js public information site and role-gated `/admin`;
 - [deutschtrainer-engeln9-web](https://deutschtrainer-engeln9-web.onrender.com): Expo Web learner preview with SPA route rewrites.
+- `deutschtrainer-engeln9-classroom`: undeployed Vite classroom declaration; no public URL or connected evidence yet.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
 
 Render must prompt for the API's server-only values, an exact HTTPS-only
-`CORS_ALLOWED_ORIGINS` list for the two browser surfaces, and the two frontends' approved public
+`CORS_ALLOWED_ORIGINS` list for the approved browser surfaces, and each frontend's approved public
 Supabase/API settings; their values never belong in this repository. Keep
 `AI_PUBLIC_ENABLED=false` for the responsive-preview rollout. The learner web surface is a
 connected preview, not evidence for native notifications, microphone permissions, installation,
@@ -120,6 +123,11 @@ evidence only, not production or operational readiness. No Google Play or Apple 
 publication is part of this deployment. `/health` exposes `aiConfigured` and `aiPublicEnabled`
 without exposing credentials; both provider configuration and the public switch must be true before
 real learner AI acceptance begins.
+
+The classroom uses the same Supabase account system but a different browser origin, so its
+`localStorage` session cannot be shared directly with the learner Web app. The first classroom visit
+requires an independent login. `CLASSROOM_ENABLED` defaults to `false`; repository-local simulator
+results do not count as real Realtime AI, latency, cost, or German-pedagogy evidence.
 
 The learner App uses width-based responsive breakpoints rather than device names: compact below
 600 px, medium from 600–1023 px, and wide from 1024 px. The public site and Admin console provide

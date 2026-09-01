@@ -1,144 +1,72 @@
-# MVP Specification
+# Virtual Classroom Phase 0 MVP Specification
 
-> The classroom MVP proves one claim: **a student can talk naturally with an AI German tutor while
-> both manipulate the same whiteboard in real time.** Everything not required by that sentence is
-> out of scope. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the design and
-> [`ROADMAP.md`](ROADMAP.md) for what comes after.
+## Claim under test
 
-## 1. First milestone — "One sentence, corrected on the board"
+A learner can say a German sentence, hear a German correction, and see the correction applied to a
+shared whiteboard in the same turn. Repository tests can verify the contract and reducer; only a
+real provider session observed by a qualified human can verify this product claim.
 
-Deliberately hard-coded wherever hard-coding is possible. One scenario, one developer account, a
-five-minute session cap, no persistence.
+## Fixed milestone
 
-The student says aloud:
+The learner says:
 
-> „Ich gehe gestern in die Schule."
+> Ich gehe gestern in die Schule.
 
-In one continuous exchange the tutor:
+The tutor should speak German first, then apply these board operations:
 
-1. Replies **by voice in German**, naming the mistake
-2. `write_line` — the sentence appears on the board
-3. `highlight_span` — `gehe` is marked
-4. `annotate` — `gestern → 過去式` appears beside it
-5. `replace_text` — the board now reads „Ich bin gestern in die Schule gegangen."
-6. `annotate` — `bin + gegangen → Perfekt`
+1. `write_line`: write the original sentence.
+2. `highlight_span`: highlight `gehe`.
+3. `annotate`: add the short Traditional Chinese note `gestern → 過去式`.
+4. `replace_text`: replace it with `Ich bin gestern in die Schule gegangen.`
+5. `annotate`: add `bin + gegangen → Perfekt`.
 
-### Acceptance
+The first four operation types are the protocol contract; the second annotation is another valid
+`annotate` operation. The prompt must not issue a CEFR certificate or an unvalidated pronunciation
+score.
 
-| Criterion               | Threshold                                                           |
-| ----------------------- | ------------------------------------------------------------------- |
-| Time to first audio     | Under 2 seconds                                                     |
-| Reply language          | German, spoken                                                      |
-| Pedagogical correctness | The tense error is identified correctly and the correction is right |
-| Board operations landed | All four, in order, visible while the tutor speaks                  |
-| Interruption            | Student can speak over the tutor and the tutor yields               |
+## Phase 0 boundaries
 
-The milestone passes when a person who speaks German does this once and it feels like being taught.
-It does not pass on a green test run.
+- One developer-controlled, email-verified learner profile in an explicit server allowlist.
+- Maximum five minutes in the browser UI.
+- No persistence, transcript, audio upload, mastery, review, attempt, migration, or public access.
+- No fake mode or deterministic simulator may be presented as a real conversation.
+- No external tester before an unbypassable server/provider-side session cutoff and budget control
+  are proven.
 
-### Explicitly out of scope for this milestone
+## Backlog and evidence
 
-Persistence, minute budgeting, authentication polish, the avatar, mastery updates, CEFR estimation,
-lesson planning, multi-user, homework integration, and every A–J gate.
+| ID  | Deliverable                                                         | Repository-local completion         | Live completion                                                                 |
+| --- | ------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------- |
+| B1  | Vite/React classroom shell, Supabase login, verified learner UI     | Build, typecheck, auth/config tests | Independent classroom-origin login works                                        |
+| B2  | Authenticated SDP API, allowlist, safe config/error/health boundary | API tests and bundle checks         | Deployed API establishes a provider call                                        |
+| B3  | Browser microphone, WebRTC, audio, timer, and resource shutdown     | Client tests and browser build      | Real bidirectional audio and safe stop                                          |
+| B4  | Excalidraw adapter and pure board reducer                           | Deterministic reducer tests         | Operations visibly land on the live board                                       |
+| B5  | Versioned tool schema, idempotency, superseded-turn handling        | Zod and reducer tests               | Barge-in cancels stale live operations                                          |
+| B6  | Versioned German tutor prompt and fixed tools                       | Prompt/config review and tests      | Human confirms correct German pedagogy                                          |
+| B7  | Complete milestone                                                  | Not satisfiable by tests            | Human run: German audio, board operations, barge-in, under-2-second first audio |
 
-## 2. MVP scope beyond the first milestone
+B1-B6 can be `PASS` only for repository implementation on the exact tested working tree. B7 remains
+`BLOCKED` without a safe provider configuration and human execution.
 
-The MVP is complete when the milestone runs inside a real session loop:
+## Live acceptance record
 
-- **Authenticated sessions.** Existing Supabase session, reused by the classroom app. Learner role
-  and verified email required, matching `assertEligible` on the existing quota gate.
-- **Minute budget enforced end to end.** All five layers in [`ARCHITECTURE.md`](ARCHITECTURE.md) §5,
-  including the maximum session duration on the ephemeral token.
-- **Transcript and board persistence.** `tutor_sessions`, `tutor_turns`, `whiteboard_snapshots`.
-- **Structured corrections stored.** `record_correction` writes `tutor_corrections` using the
-  existing `AiEvaluationFeedback["errors"]` shape.
-- **Session summary.** What was practised, what was corrected, board snapshot retained.
-- **Real cost visible.** Consumed minutes and `estimated_cost` per session, reconciled against the
-  provider dashboard.
+A future B7 record must include:
 
-## 3. Tool schema
+- exact Git commit and deployment/build identifiers;
+- provider/model snapshot and fake mode disabled, without recording credentials;
+- authenticated learner eligibility and classroom allowlist outcome;
+- microphone allowed/denied behavior and cleanup after stop;
+- time to first audio, measured from completed learner turn to first audible provider audio;
+- German response and pedagogical correctness assessed by a qualified reviewer;
+- all board operations in order and visible while the tutor speaks;
+- successful barge-in with no late operation from the superseded turn;
+- measured provider usage/cost metadata and proof of the hard termination/budget control.
 
-The whiteboard protocol. Names and payloads are the contract between the system prompt and the
-canvas adapter, and both sides must be versioned together.
+Automated success, the deterministic milestone simulator, a generated bundle, or a WebRTC object
+created in a test does not satisfy this record.
 
-```ts
-write_line     ({ textDe: string; textZhTw?: string })
-highlight_span ({ elementId: string; from: number; to: number;
-                  color: "warn" | "error" | "focus"; labelZhTw?: string })
-annotate       ({ targetElementId: string; textZhTw: string;
-                  position: "above" | "below" | "right" })
-replace_text   ({ elementId: string; newTextDe: string })
-add_card       ({ kind: "vocab" | "grammar" | "correction"; payload: unknown })
-record_correction ({ errors: AiEvaluationFeedback["errors"] })
-set_expression ({ state: "neutral" | "thinking" | "encouraging" | "concerned" })
-```
+## Explicit non-goals
 
-Constraints:
-
-- Every operation is **idempotent** and addressed by `elementId`, never by position or recency.
-- Operations belonging to a superseded turn are discarded, not applied late.
-- `record_correction` reuses the existing 32-value `error_type` enum. It must not introduce new
-  error categories; if a category is genuinely missing, add it to `ERROR_TYPES` and the PostgreSQL
-  enum together.
-
-## 4. Session limits
-
-| Limit                    | Value                                          | Enforced by                     |
-| ------------------------ | ---------------------------------------------- | ------------------------------- |
-| Maximum session duration | 25 minutes                                     | Ephemeral token (provider-side) |
-| Per-user weekly budget   | ~100 minutes                                   | `reserveSessionMinutes`         |
-| Global monthly ceiling   | Set from the $50 budget                        | Kill switch                     |
-| Provider daily call cap  | Existing `AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT` | Existing quota gate             |
-
-The token-level cap is the only one that holds when the client crashes or never calls `/end`. It is
-not optional and must land before any external tester uses the classroom.
-
-## 5. Non-goals
-
-Deliberately absent from the MVP, with the condition that would change each:
-
-| Not building                              | Revisit when                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------- |
-| VTuber avatar (rigged, VRM)               | The audio-reactive placeholder proves presence matters                        |
-| Multi-device or multi-user board sync     | A real need for two live clients exists — this is when Yjs enters             |
-| Lesson planning and curriculum sequencing | The single-session experience is proven good                                  |
-| Pronunciation scoring                     | Phase 3; the existing `whisper-1` word-timing path can serve this out-of-band |
-| Homework integration with the Expo app    | The classroom retains a user across two sessions                              |
-| Any monetization                          | Explicitly on hold                                                            |
-| Native mobile classroom                   | Web works and demand is proven                                                |
-| A conversation-specific error taxonomy    | The existing 32 values prove insufficient in practice                         |
-
-## 6. What the MVP does not prove
-
-Stated plainly so it is not overclaimed later:
-
-- **Pedagogical quality.** Whether the tutor teaches German _well_ is unevidenced until a qualified
-  German reviewer assesses real sessions. This is the same reviewer already blocking Gate C, and it
-  is now blocking twice.
-- **Retention or demand.** One person enjoying a demo is not a signal about learners.
-- **Cost at scale.** The budget arithmetic uses third-party per-minute measurements. Only real
-  `ai_usage_logs` rows settle it.
-- **Any A–J gate.** The classroom's gates start `BLOCKED` and move only on their own evidence. See
-  [`CURRENT_STATE.md`](CURRENT_STATE.md) §5.
-
-## 7. Verification
-
-The milestone is verified by conducting a German lesson, not by running a suite.
-
-1. `pnpm --filter @deutschtrainer/classroom dev`; open the app; grant microphone access.
-2. Speak the sentence. Confirm the audio reply is German and pedagogically correct, all four board
-   operations land, and time to first audio is under two seconds.
-3. Interrupt the tutor mid-sentence. Confirm it yields and no stale board operation is applied.
-4. Compare the provider dashboard against `ai_usage_logs`. **The recorded cost must match reality** —
-   every budget control depends on that number being true.
-5. Once persistence and budgeting land: run two sessions, confirm the second session's context
-   contains errors from the first, and confirm an exhausted budget refuses a new session.
-
-Automated coverage is intentionally thin at this stage and targets exactly two things:
-
-- The tool-call → Excalidraw operation mapping — a pure function, cheaply and usefully tested.
-- `reserveSessionMinutes` — it governs money, so it gets a test.
-
-The conversation itself is validated by a human who speaks German. There is no substitute, and
-asserting that a test suite covers it would repeat precisely the fake-mode error the repository
-already documents in [`docs/definition-of-done.md`](docs/definition-of-done.md).
+Persistence, migrations, learning-engine integration, public quotas, multi-user rooms, CRDT sync,
+native Android classroom, conversation history, avatar, pronunciation scoring, monetization, and
+public deployment are outside Phase 0.

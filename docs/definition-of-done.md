@@ -7,19 +7,21 @@
 - `BLOCKED`: a required check cannot currently be executed safely because an external environment,
   credential, service, device, or decision is unavailable.
 - `NOT APPLICABLE`: the criterion does not apply, with a recorded reason.
+- `NOT MEASURED`: a product or user outcome has not been measured and no numerical claim may be
+  inferred from its absence.
 
 Repository implementation, a mock/demo, local Supabase, fake AI, CI configuration, a generated
 bundle, and a versioned device flow are different evidence layers. None substitutes for the others.
 DeutschTrainer may be called complete, publicly available, production-ready, or released only when
-all required A–J gates are `PASS`.
+all required A-J gates are `PASS`.
 
-## A–J gates
+## A-J gates
 
 | Gate                    | PASS criteria                                                                                                                                                                                                | Minimum evidence                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| A. Product boundary     | Mobile is the learning product; the public site is informational; `/admin` is role-gated; demo and connected modes are explicit.                                                                             | Route/config review plus public, demo, connected, and unauthorized behavior checks.                           |
+| A. Product boundary     | Mobile is the learning product; the public site is informational; `/admin` is role-gated; demo, connected, and experimental classroom modes are explicit.                                                    | Route/config review plus public, demo, connected, experimental, and unauthorized behavior checks.             |
 | B. Core learning flow   | Authenticated learner can complete published fixed and supported AI exercises; server-authoritative attempt, progress, mastery, review and error state remain consistent across retry and offline reconnect. | Unit tests plus clean local integration, connected staging, and required device flows.                        |
-| C. Content quality      | Release content meets the documented B1–C2 count and schema; answers and explanations are coherent; every published AI-assisted item has recorded qualified human review.                                    | Content-readiness automation and signed human-language review evidence.                                       |
+| C. Content quality      | Release content meets the documented B1-C2 count and schema; answers and explanations are coherent; every published AI-assisted item has recorded qualified human review.                                    | Content-readiness automation and signed human-language review evidence.                                       |
 | D. Data rights          | Learner can export account data and permanently delete private database rows, Storage objects, Auth account and on-device state without affecting another user.                                              | Two-user local and remote deletion/export tests, old-token denial, and device cache verification.             |
 | E. Security             | Private tables and Storage use RLS/owner isolation; admin and service-role boundaries hold; no secret enters a public variable or client artifact.                                                           | Clean migration replay, anonymous/two-user/role matrix, remote RLS checks, bundle inspection and secret scan. |
 | F. Code quality         | Frozen install, format, lint, strict typecheck, tests, API build/bundle, Admin build and applicable exports pass without hiding failures.                                                                    | Commands, exit codes, suite/test counts and artifact results from the same revision.                          |
@@ -28,76 +30,35 @@ all required A–J gates are `PASS`.
 | I. Operability          | Monitoring/alerts, distributed abuse controls, backup/restore, rollback, incident response and privacy deletion operations are deployed and rehearsed.                                                       | Provider configuration plus dated alert, restore, rollback and incident/deletion drill records.               |
 | J. Public delivery      | Public support/privacy/terms/deletion URLs and release assets are deployed; identifiers/checksums and any store review are complete.                                                                         | Public URLs, release/build IDs, checksum, install evidence and store status when applicable.                  |
 
-## Scope: which product these gates describe
-
-The A-J gates above describe the **existing learner product**: the Expo learner app, the Admin
-console, and the API that serves them. They were written before the virtual-classroom work and are
-not widened by it.
-
-The AI-native virtual classroom (real-time voice tutor, collaborative whiteboard, tutor session
-memory) is a separate surface with its own evidence set. Its gates start `BLOCKED` and move only on
-their own evidence. In particular:
-
-- Gate C does not cover tutor output. Conversational pedagogical quality is unevidenced and requires
-  the same qualified human reviewer already blocking Gate C for seeded content.
-- Gate G requires real AI with fake mode disabled. Real AI has never executed in this project, so
-  the classroom's first real conversation is also this project's first real provider call.
-- Gate I acquires an obligation the existing product does not have: per-minute cost control for
-  real-time voice. See [`ARCHITECTURE.md`](../ARCHITECTURE.md) section 5.
-
-A classroom demonstration, a recorded session, or a working vertical slice does not move any gate in
-this document. See [`CURRENT_STATE.md`](../CURRENT_STATE.md), [`ARCHITECTURE.md`](../ARCHITECTURE.md),
-[`MVP_SPEC.md`](../MVP_SPEC.md), and [`ROADMAP.md`](../ROADMAP.md).
-
 ## Current release classification
 
-The repository contains substantial implementation and automated verification. The 2026-07-31
-local audit passed format, lint, strict typecheck, 25 Jest suites/142 tests, API build/bundle,
-Admin build, Android/Web exports, frozen install, peer dependency check, Expo dependency
-compatibility, and Expo Doctor 20/20. The compatibility repair aligned Expo 57.0.9,
-Expo Router 57.0.9, React Native 0.86.2, the required Expo modules, React Native Metro config, and
-Supabase JS 2.110.5. Gate F is therefore `PASS` for this working tree.
+The committed baseline `main@b271329` had successful GitHub CI and the existing public Render Web,
+`/health`, and `/courses` endpoints were reachable at the 2026-08-31 classroom handoff. Those facts
+do not validate later uncommitted worktrees. The repository contains 23 append-only migrations;
+any older 21-migration count is stale.
 
-Docker Desktop 29.6.2 is installed and its engine was verified. The same audit built the API image
-successfully and confirmed its non-root user, health check, plain-Node command, bundle-only runtime
-layout, and fail-fast behavior without the required service-role key. A credentialed
-`APP_ENV=local` container smoke then reached the host Supabase stack through
-`host.docker.internal`, returned `200` from `/health`, and reached Docker health `healthy`; the
-image's production default separately rejected local fake AI as required. A clean local Supabase
-reset replayed all 21 migrations and the release seed; security advisors reported no security
-findings, all 36 public tables had RLS, all 33 `SECURITY DEFINER` functions had fixed `search_path`,
-and none retained default `PUBLIC EXECUTE`. The seed contained 100 approved human published
-exercises with the required B1–C2 distribution, answer rows, and minimum type coverage.
+Listening D1 has limited recorded Android-device evidence, but the current release candidate has
+not completed installation, authentication, microphone/audio, restart, flight-mode, reconnect,
+background, and deletion/cache acceptance as one recorded build. Gate H therefore remains
+`BLOCKED`; it is also inaccurate to classify all Android behavior as never executed.
 
-The root `.env` now safely supplies the local Supabase runtime variables without copying their
-values into source, logs, or documentation. Against the same clean local database and production
-API bundle, the 2026-07-31 audit passed all ten credentialed verification scripts: account data,
-admin/content workflow, learning API, offline sync, settings, deterministic AI evaluation,
-writing, audio, knowledge library, and content readiness. The evidence includes anonymous denial,
-two-user isolation, role enforcement, server-authoritative grading, idempotent replay, original
-submission timestamps, owner deletion, old-token denial, and the 100-exercise release-seed checks.
-AI-dependent local suites used process-scoped `AI_EVALUATION_FAKE_MODE=true`; those results prove
-deterministic integration behavior only and do not establish real-AI quality, cost, or latency.
+Real-AI quality, cost, and latency remain `BLOCKED` while provider configuration/public access are
+disabled. Operations, backup/restore, rollback, hard distributed abuse controls, and complete
+public delivery also remain `BLOCKED`. Real-user adoption is `NOT MEASURED`; the absence of an
+analytics result is not evidence of zero users. Overall release readiness remains `BLOCKED`, not
+`READY`.
 
-Gate 3 applied the same 21 migrations to the linked remote Supabase project and verified 36/36
-public tables with RLS, zero protected-content client grants, zero `PUBLIC` function execute
-privileges, fixed `search_path` on all `SECURITY DEFINER` functions, service-role-only account
-deletion, zero anon/authenticated mutation or `MAINTAIN` grants on existing public tables and
-repository-owned future-table defaults, three active owner-scoped Storage policies, and the
-100-exercise release seed. Remote
-anonymous checks returned `200` for Auth health and published courses, and `401` for writing rules,
-listening content, an Admin RPC, and a direct table write. Supabase advisors still report the eight intentionally
-authenticated identity/Admin `SECURITY DEFINER` entry points plus two policy-free service-only
-tables; their remote role behavior still requires the two-user deployed-API suite. Supabase's
-platform-owned `supabase_admin` table defaults remain outside repository-migration authority, so
-application tables must continue to be created only by reviewed append-only migrations that
-explicitly verify effective client privileges.
+## Virtual classroom Phase 0 evidence
 
-The public GitHub repository and Render staging Blueprint now exist, but the HTTPS API has not been
-deployed or supplied its protected runtime values. The remote service-role runtime, real AI,
-two-user remote owner/role matrix, EAS staging
-environment/build, Android device, operations drills and public delivery remain `BLOCKED`. With no
-currently reproduced repository gate failure but required evidence unavailable, the overall
-classification is `BLOCKED`, not `READY`. A gate may move to `PASS` only when its own complete
-evidence is recorded; a Phase completion note, Doctor result, compatibility result, or successful
-export does not replace any external gate.
+The isolated `codex/classroom-phase0` worktree adds a repository-local, five-minute,
+single-developer virtual-classroom slice with no persistence or migration. B1-B6 may be marked
+`PASS` only for the exact locally tested worktree: browser shell/auth eligibility, safe SDP API,
+WebRTC lifecycle, whiteboard reducer, tool schemas, and versioned tutor prompt. The development
+simulator is deterministic synthetic evidence only.
+
+B7 remains `BLOCKED` until a real provider session with fake mode disabled demonstrates spoken
+German, all four whiteboard operations, barge-in, under-two-second time to first audio, and
+qualified human pedagogical review. Before any external tester, the project must also demonstrate
+an unbypassable server/provider-side hangup and budget control. A five-minute browser timer or a
+client-secret TTL cannot satisfy that security/operability requirement. Phase 0 does not lower or
+replace any A-J gate.
