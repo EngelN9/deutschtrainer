@@ -1,5 +1,13 @@
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { colorTokens } from "@deutschtrainer/ui";
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { colorTokens, resolveDuration, springTokens } from "@deutschtrainer/ui";
 
 interface ProgressBarProps {
   accessibilityLabel: string;
@@ -9,6 +17,16 @@ interface ProgressBarProps {
 
 export function ProgressBar({ accessibilityLabel, percent, tone = "primary" }: ProgressBarProps) {
   const safePercent = Math.min(100, Math.max(0, percent));
+  const reduceMotion = useReducedMotion();
+  const fill = useSharedValue(safePercent);
+
+  useEffect(() => {
+    fill.value = reduceMotion
+      ? withTiming(safePercent, { duration: resolveDuration("instant", true) })
+      : withSpring(safePercent, springTokens.progress);
+  }, [fill, reduceMotion, safePercent]);
+
+  const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
 
   return (
     <View
@@ -17,12 +35,8 @@ export function ProgressBar({ accessibilityLabel, percent, tone = "primary" }: P
       accessibilityValue={{ max: 100, min: 0, now: safePercent }}
       style={styles.track}
     >
-      <View
-        style={[
-          styles.fill,
-          tone === "success" ? styles.success : styles.primary,
-          { width: `${safePercent}%` },
-        ]}
+      <Animated.View
+        style={[styles.fill, tone === "success" ? styles.success : styles.primary, fillStyle]}
       />
     </View>
   );
