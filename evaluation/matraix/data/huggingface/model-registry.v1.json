@@ -1,0 +1,34 @@
+[
+  {
+    "license": "Apache-2.0",
+    "model_id": "utter-project/EuroLLM-9B-Instruct-2512",
+    "parameters": "9.15B",
+    "recommendation": "Primary quality comparison candidate for German and European languages.",
+    "role": "quality_candidate",
+    "status": "NOT_EVALUATED"
+  },
+  {
+    "license": "Apache-2.0",
+    "model_id": "utter-project/EuroLLM-1.7B-Instruct",
+    "parameters": "1.66B",
+    "recommendation": "Pipeline, schema, and prompt smoke baseline only.",
+    "role": "smoke_baseline",
+    "status": "NOT_EVALUATED"
+  },
+  {
+    "license": "Apache-2.0",
+    "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+    "parameters": "4.02B",
+    "recommendation": "Control for Traditional Chinese output, JSON adherence, and German ability.",
+    "role": "general_control",
+    "status": "NOT_EVALUATED"
+  },
+  {
+    "license": "Proprietary API",
+    "model_id": "gpt-5.6-luna",
+    "parameters": "API-only",
+    "recommendation": "Retain existing OpenAI results for comparison; do not change production provider.",
+    "role": "current_api_baseline",
+    "status": "NOT_EVALUATED"
+  }
+]

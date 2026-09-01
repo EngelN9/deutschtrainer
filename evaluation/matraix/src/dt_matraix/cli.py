@@ -14,6 +14,7 @@ from .catalog import (
     load_expanded_scenarios,
     load_scenario_sources,
 )
+from .hf_export import export_huggingface_dataset
 from .isolation import verify_isolation as collect_isolation_problems
 from .live import run_live as execute_live_run
 from .materialize import materialize_suite
@@ -192,6 +193,12 @@ def verify_isolation_command() -> None:
             typer.echo(problem, err=True)
         raise typer.Exit(code=1)
     typer.echo("PASS: production workspaces do not depend on MatrAIx evaluation code.")
+
+
+@app.command("export-huggingface")
+def export_huggingface_command() -> None:
+    """Generate the deterministic private synthetic benchmark artifacts without inference."""
+    typer.echo(json.dumps(export_huggingface_dataset(), ensure_ascii=False, sort_keys=True))
 
 
 @app.command("generate-checked-artifacts", hidden=True)

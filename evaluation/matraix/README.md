@@ -18,7 +18,12 @@ uv run --frozen dt-matraix validate
 uv run --frozen dt-matraix plan --run-id preflight-v1
 uv run --frozen dt-matraix materialize --run-id preflight-v1
 uv run --frozen dt-matraix verify-isolation
+uv run --frozen dt-matraix export-huggingface
 ```
+
+The Hugging Face export is a private, synthetic-only registry layer. It performs no model inference
+and does not change DeutschTrainer's production provider, API contracts, quotas, Mobile app,
+Supabase schema, or deployment configuration.
 
 `generate-checked-artifacts` is a maintainer command. Run it only after intentional cohort or
 scenario edits, then review the complete generated diff and rerun the TypeScript writing-feedback
