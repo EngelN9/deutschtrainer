@@ -28,6 +28,15 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - [`docs/testing-strategy.md`](docs/testing-strategy.md): automated, local integration, connected, and device testing strategy.
 - [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md): measurable product and phase acceptance criteria.
 
+The virtual-classroom work (real-time AI German tutor, voice, collaborative whiteboard) is specified
+separately. These four documents cover that surface only; the documents above remain authoritative
+for the existing learner app, Admin console, and API.
+
+- [`CURRENT_STATE.md`](CURRENT_STATE.md): what the repository actually contains, assessed for classroom reuse.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): classroom architecture, tool protocol, learner memory, and cost control.
+- [`MVP_SPEC.md`](MVP_SPEC.md): the MVP, its acceptance criteria, session limits, and non-goals.
+- [`ROADMAP.md`](ROADMAP.md): phases, entry/exit criteria, and the ordered implementation backlog.
+
 `SPECIFICATION.md` and `DELIVERY_PLAN.md` are reference documents. Do not submit either file to Codex as one monolithic implementation prompt; assign one small, independently reviewable task or Gate.
 
 ## Requirements
