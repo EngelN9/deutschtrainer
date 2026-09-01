@@ -36,11 +36,7 @@ export function ProgressBar({ accessibilityLabel, percent, tone = "primary" }: P
       style={styles.track}
     >
       <Animated.View
-        style={[
-          styles.fill,
-          tone === "success" ? styles.success : styles.primary,
-          fillStyle,
-        ]}
+        style={[styles.fill, tone === "success" ? styles.success : styles.primary, fillStyle]}
       />
     </View>
   );
