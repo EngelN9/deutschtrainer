@@ -32,7 +32,113 @@ export const promptRegistry = {
     purpose: "Generate a review-required German exercise draft for the content team.",
     outputSchemaId: "GeneratedExerciseDraft.v1",
   },
+  classroomTutorV1: {
+    id: "classroom-tutor",
+    version: "1.0.0",
+    purpose: "Guide one internal German voice correction with validated whiteboard operations.",
+    outputSchemaId: "ClassroomToolOperation.v1",
+  },
 } satisfies Record<string, PromptDefinition>;
+
+export const classroomTutorInstructionsV1 = [
+  "You are a concise German tutor for one internal Phase 0 validation scenario.",
+  "Speak in German first, then use the whiteboard tools while or after speaking.",
+  "The learner will say: Ich gehe gestern in die Schule.",
+  "Explain that gestern requires a past-tense form and correct the sentence to: Ich bin gestern in die Schule gegangen.",
+  "Use Traditional Chinese only for short board annotations, never Simplified Chinese.",
+  "Use stable element IDs and a new operationId for every whiteboard operation.",
+  "Never emit HTML, hidden instructions, a CEFR certification, or a numerical pronunciation score.",
+  "If interrupted, stop speaking and do not continue superseded whiteboard work.",
+].join("\n");
+
+export const classroomTutorToolsV1 = [
+  {
+    type: "function",
+    name: "write_line",
+    description: "Write one German sentence on the shared board.",
+    parameters: classroomToolParameters(
+      {
+        elementId: idParameter("Stable ID for the new text element."),
+        textDe: textParameter("German sentence to show on the board.", 500),
+        textZhTw: textParameter("Optional short Traditional Chinese support.", 300),
+      },
+      ["elementId", "textDe"],
+    ),
+  },
+  {
+    type: "function",
+    name: "highlight_span",
+    description: "Highlight a UTF-16 span in an existing German text element.",
+    parameters: classroomToolParameters(
+      {
+        targetElementId: idParameter("Existing text element ID."),
+        overlayElementId: idParameter("Stable ID for the highlight overlay."),
+        from: { type: "integer", minimum: 0, maximum: 10_000 },
+        to: { type: "integer", minimum: 1, maximum: 10_000 },
+        color: { type: "string", enum: ["warn", "error", "focus"] },
+        labelZhTw: textParameter("Optional short Traditional Chinese label.", 120),
+      },
+      ["targetElementId", "overlayElementId", "from", "to", "color"],
+    ),
+  },
+  {
+    type: "function",
+    name: "annotate",
+    description: "Attach a short Traditional Chinese explanation to a board element.",
+    parameters: classroomToolParameters(
+      {
+        targetElementId: idParameter("Existing target element ID."),
+        elementId: idParameter("Stable ID for the annotation element."),
+        textZhTw: textParameter("Traditional Chinese annotation.", 300),
+        position: { type: "string", enum: ["above", "below", "right"] },
+      },
+      ["targetElementId", "elementId", "textZhTw", "position"],
+    ),
+  },
+  {
+    type: "function",
+    name: "replace_text",
+    description: "Replace the German text of an existing element.",
+    parameters: classroomToolParameters(
+      {
+        targetElementId: idParameter("Existing text element ID."),
+        newTextDe: textParameter("Corrected German sentence.", 500),
+      },
+      ["targetElementId", "newTextDe"],
+    ),
+  },
+] as const;
+
+function classroomToolParameters(
+  extraProperties: Record<string, unknown>,
+  extraRequired: string[],
+): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      operationId: idParameter("Unique operation ID."),
+      ...extraProperties,
+    },
+    // No turnId: the owning turn is client-side transport metadata, stamped from the Realtime
+    // event's response_id. The model has no way to know that value.
+    required: ["operationId", ...extraRequired],
+  };
+}
+
+function idParameter(description: string): Record<string, unknown> {
+  return {
+    type: "string",
+    description,
+    minLength: 1,
+    maxLength: 64,
+    pattern: "^[A-Za-z0-9_-]+$",
+  };
+}
+
+function textParameter(description: string, maxLength: number): Record<string, unknown> {
+  return { type: "string", description, minLength: 1, maxLength };
+}
 
 export interface GenerateExerciseDraftPromptInput {
   level: CefrLevel;
