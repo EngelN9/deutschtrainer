@@ -23,10 +23,13 @@ export interface ReviewScheduleDecision {
 
 export function calculateNextMastery(previous: SkillMastery, signal: AttemptSignal): SkillMastery {
   const speedPenalty = signal.responseTimeMs > signal.expectedResponseTimeMs * 1.5 ? 5 : 0;
-  const hintPenalty = signal.usedHint ? 8 : 0;
   const difficultyBonus = Math.max(0, signal.difficulty - 2);
+  // A hint halves the gain rather than subtracting from it. Subtracting a flat 8 cancelled the
+  // whole base gain, so anyone using hints below difficulty 3 was pinned at their current score
+  // and could only ever lose ground. Correct answers must never reduce mastery.
+  const gain = 8 + difficultyBonus - speedPenalty;
   const rawDelta = signal.isCorrect
-    ? 8 + difficultyBonus - speedPenalty - hintPenalty
+    ? Math.max(1, signal.usedHint ? Math.round(gain / 2) : gain)
     : -12 - signal.difficulty;
   const masteryScore = clamp(previous.masteryScore + rawDelta, 0, 100);
   const attemptCount = previous.attemptCount + 1;
