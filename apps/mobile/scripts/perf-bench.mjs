@@ -1,6 +1,7 @@
 // Android on-device frame/CPU benchmark. Needs adb + a connected device with the app installed.
 //
-// Usage: node scripts/perf-bench.mjs            (runs the full suite, prints a table)
+// Usage: node scripts/perf-bench.mjs            (captures the idle CPU baseline)
+// Import `bench` from a device-flow driver to bracket interactions and report frame/CPU costs.
 //
 // ponytail: black-box only -- attributes cost to thread + render stage, not to a JS call site.
 // Pinning a cost inside one React render needs a JS-instrumented build; this tells you whether
