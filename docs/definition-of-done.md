@@ -31,6 +31,27 @@ all required A–J gates are `PASS`.
 | I. Operability          | Monitoring/alerts, distributed abuse controls, backup/restore, rollback, incident response and privacy deletion operations are deployed and rehearsed.                                                       | Provider configuration plus dated alert, restore, rollback and incident/deletion drill records.               |
 | J. Public delivery      | Public support/privacy/terms/deletion URLs and release assets are deployed; identifiers/checksums and any store review are complete.                                                                         | Public URLs, release/build IDs, checksum, install evidence and store status when applicable.                  |
 
+## Scope: which product these gates describe
+
+The A-J gates above describe the **existing learner product**: the Expo learner app, the Admin
+console, and the API that serves them. They were written before the virtual-classroom work and are
+not widened by it.
+
+The AI-native virtual classroom (real-time voice tutor, collaborative whiteboard, tutor session
+memory) is a separate surface with its own evidence set. Its gates start `BLOCKED` and move only on
+their own evidence. In particular:
+
+- Gate C does not cover tutor output. Conversational pedagogical quality is unevidenced and requires
+  the same qualified human reviewer already blocking Gate C for seeded content.
+- Gate G requires real AI with fake mode disabled. Real AI has never executed in this project, so
+  the classroom's first real conversation is also this project's first real provider call.
+- Gate I acquires an obligation the existing product does not have: per-minute cost control for
+  real-time voice. See [`ARCHITECTURE.md`](../ARCHITECTURE.md) section 5.
+
+A classroom demonstration, a recorded session, or a working vertical slice does not move any gate in
+this document. See [`CURRENT_STATE.md`](../CURRENT_STATE.md), [`ARCHITECTURE.md`](../ARCHITECTURE.md),
+[`MVP_SPEC.md`](../MVP_SPEC.md), and [`ROADMAP.md`](../ROADMAP.md).
+
 ## Current release classification
 
 The repository contains substantial implementation and automated verification. The 2026-07-31
