@@ -111,7 +111,8 @@ def model_registry() -> tuple[ModelRegistryEntry, ...]:
             license="Proprietary API",
             status="NOT_EVALUATED",
             recommendation=(
-                "Retain existing OpenAI results for comparison; do not change production provider."
+                "API model candidate for a future separately authorized comparison; do not "
+                "change the production provider."
             ),
         ),
     )
@@ -148,11 +149,12 @@ def export_huggingface_dataset(output_root: Path = HF_EXPORT_ROOT) -> dict[str, 
     write_json(output_root / "model-registry.v1.json", model_registry())
     metadata = {
         "dataset_id": HF_DATASET_ID,
-        "dataset_visibility": "private",
+        "dataset_visibility": "not_uploaded",
         "disclaimer": SYNTHETIC_EVIDENCE_DISCLAIMER,
-        "gold_answers_public": False,
+        "gold_answers_public": True,
         "harness_version": HARNESS_VERSION,
         "provider_outputs_included": False,
+        "repository_artifact_visibility": "public",
         "row_count": len(rows),
         "rows_sha256": hashlib.sha256(payload).hexdigest(),
         "source_fingerprint": rows[0].source_fingerprint,

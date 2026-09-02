@@ -1,10 +1,11 @@
 {
   "dataset_id": "EngelN9/deutschtrainer-writing-feedback-eval",
-  "dataset_visibility": "private",
+  "dataset_visibility": "not_uploaded",
   "disclaimer": "SYNTHETIC EVALUATION — NOT REAL LEARNER EVIDENCE",
-  "gold_answers_public": false,
+  "gold_answers_public": true,
   "harness_version": "0.1.0",
   "provider_outputs_included": false,
+  "repository_artifact_visibility": "public",
   "row_count": 36,
   "rows_sha256": "3a99f2fcaa4ed1d01f7b6b3434c82c48a8a7a940a178335fa4b961b3bcd5418c",
   "source_fingerprint": "1e624eaf95026e6c59f7ad091abcea7adb28100feb8a32a18022f5ab23dadc57",

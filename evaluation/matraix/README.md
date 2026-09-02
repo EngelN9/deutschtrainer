@@ -21,9 +21,10 @@ uv run --frozen dt-matraix verify-isolation
 uv run --frozen dt-matraix export-huggingface
 ```
 
-The Hugging Face export is a private, synthetic-only registry layer. It performs no model inference
-and does not change DeutschTrainer's production provider, API contracts, quotas, Mobile app,
-Supabase schema, or deployment configuration.
+The Hugging Face export is a repository-local, synthetic-only registry layer. Its checked fixtures
+and gold answers are public repository artifacts, but no Hugging Face dataset is uploaded by the
+command. It performs no model inference and does not change DeutschTrainer's production provider,
+API contracts, quotas, Mobile app, Supabase schema, or deployment configuration.
 
 `generate-checked-artifacts` is a maintainer command. Run it only after intentional cohort or
 scenario edits, then review the complete generated diff and rerun the TypeScript writing-feedback

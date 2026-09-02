@@ -27,7 +27,7 @@
     "license": "Proprietary API",
     "model_id": "gpt-5.6-luna",
     "parameters": "API-only",
-    "recommendation": "Retain existing OpenAI results for comparison; do not change production provider.",
+    "recommendation": "API model candidate for a future separately authorized comparison; do not change the production provider.",
     "role": "current_api_baseline",
     "status": "NOT_EVALUATED"
   }

@@ -2,7 +2,12 @@
   "additionalProperties": false,
   "properties": {
     "cefr_level": {
-      "enum": ["B1", "B2", "C1", "C2"],
+      "enum": [
+        "B1",
+        "B2",
+        "C1",
+        "C2"
+      ],
       "title": "Cefr Level",
       "type": "string"
     },

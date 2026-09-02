@@ -34,6 +34,15 @@ UPSTREAM_CREDENTIAL_NAMES = {
     "openai": "OPENAI_API_KEY",
     "anthropic": "ANTHROPIC_API_KEY",
 }
+HARBOR_ENVIRONMENT_ALLOWLIST = (
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "PATH",
+    "SSL_CERT_DIR",
+    "SSL_CERT_FILE",
+    "TMPDIR",
+)
 
 
 def run_live(*, run_id: str, provider: str, model: str, seed: int) -> RunManifest:
@@ -72,11 +81,8 @@ def run_live(*, run_id: str, provider: str, model: str, seed: int) -> RunManifes
         config_path.write_text(
             yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8"
         )
-        subprocess_environment = dict(os.environ)
         evaluation_key_name = str(environment["keyName"])
-        subprocess_environment[UPSTREAM_CREDENTIAL_NAMES[provider]] = os.environ[
-            evaluation_key_name
-        ]
+        subprocess_environment = _harbor_environment(provider, evaluation_key_name)
         try:
             harbor_executable = shutil.which("harbor")
             if harbor_executable is None:
@@ -206,7 +212,9 @@ def _job_config(
         "timeout_multiplier": 1.0,
         "n_concurrent_trials": 1,
         "quiet": False,
-        "environment": {"type": "docker", "delete": True},
+        # JSON survey agents are host-native in MatrAIx auto mode. Here, "host" is still the
+        # locked-down outer evaluation container; it does not require or receive a Docker socket.
+        "environment": {"type": "host", "delete": True},
         "agents": [
             {
                 "name": "persona-json-survey",
@@ -221,6 +229,14 @@ def _job_config(
         ],
         "tasks": [{"path": (f"application/tasks/deutschtrainer-runs/{run_id}/tasks/{task_name}")}],
     }
+
+
+def _harbor_environment(provider: str, evaluation_key_name: str) -> dict[str, str]:
+    environment = {
+        name: value for name in HARBOR_ENVIRONMENT_ALLOWLIST if (value := os.environ.get(name))
+    }
+    environment[UPSTREAM_CREDENTIAL_NAMES[provider]] = os.environ[evaluation_key_name]
+    return environment
 
 
 def _single_survey_result(run_id: str, cell_id: str) -> Path:

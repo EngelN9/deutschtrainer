@@ -155,6 +155,8 @@ Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 
 - Live provider 只接受獨立 `MATRAIX_EVAL_*` key；禁止讀取 production `OPENAI_API_KEY`、
   public client variables 或 learner BYOK。Provider terms、retention 與 OpenAI `store:false`
   adapter 未核准前一律 fail closed。
+- Harbor survey subprocess 在受限 evaluation container 內使用 host runtime，且只繼承
+  allowlisted runtime 變數與映射後的 evaluation-only provider key；不得傳遞完整環境。
 - `.runs/` 保存 ignored 原始結果；checked report 不含 provider 原文。輸出須限制大小並拒絕
   raw HTML、secret、JWT、private key 與直接聯絡 PII。
 - Synthetic 結果不得改變 grading、CEFR、content status、prompt、quota、migration、PR、

@@ -120,6 +120,9 @@ feedback contracts。
 不得讀取 production `OPENAI_API_KEY`、Mobile/Admin public variables 或 learner BYOK。執行時
 須限制 output 64 KiB、timeout 與 retry，並拒絕 raw HTML、secret、JWT、private key、email
 或電話。狀態只使用 `CANDIDATE`、`ACCEPTED_FOR_HUMAN_REVIEW`、`REJECTED` 或 `BLOCKED`。
+Survey agent 依 MatrAIx auto-mode contract 在受限的外層 evaluation container 內以 host runtime
+執行，不掛載 Docker socket。Harbor subprocess 只繼承執行所需的 allowlisted runtime 變數與
+映射後的單一 evaluation-only provider key，不繼承完整 container environment。
 
 ## 人工審查、隱私與發布
 

@@ -34,7 +34,9 @@ def test_export_round_trips_through_checked_schema(tmp_path) -> None:
     rows = load_exported_rows(tmp_path / "writing-feedback-eval.v1.jsonl")
 
     assert len(rows) == metadata["row_count"] == 36
-    assert metadata["dataset_visibility"] == "private"
+    assert metadata["dataset_visibility"] == "not_uploaded"
+    assert metadata["repository_artifact_visibility"] == "public"
+    assert metadata["gold_answers_public"] is True
     assert metadata["provider_outputs_included"] is False
     assert (
         metadata["rows_sha256"]
