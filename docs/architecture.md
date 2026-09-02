@@ -251,3 +251,14 @@ Learner App 的共用 shell 以 viewport 寬度分類 compact（`<600`）、medi
 - ContentVersion
 
 `packages/validation` 至少建立每個 API 的 request 與 response Zod Schema。命名採 `<Operation>RequestSchema`、`<Operation>ResponseSchema`，對應 TypeScript 型別 `<Operation>Request`、`<Operation>Response`。
+
+## 10. Synthetic evaluation 邊界
+
+`evaluation/matraix` 是 Python 3.12 的獨立研究 subproject，不在 pnpm workspace，也不進入
+Mobile、Admin、API、Supabase 或 production Docker dependency graph。它只讀取人工建立的
+完全虛構 adult fixtures，並用凍結、通過正式 `WritingFeedback.v1` Zod schema 的回饋進行
+理解度 preflight；不得呼叫 `WritingEvaluationService` 或任何 production persistence。
+
+Live adapter 只存在於 evaluation container 的 optional dependency group。Production runtime
+與 client bundle 不得引用 `dt_matraix`、`MATRAIX_EVAL_*` 或 fixture gold。完整資料流、矩陣及
+rollback 見 `docs/matraix-synthetic-evaluation.md`。
