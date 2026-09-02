@@ -16,6 +16,7 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - `packages/database`: repository contracts and database-facing types.
 - `supabase`: local configuration, migrations, seed content, and functions.
 - `docs`: product, architecture, security, testing, and phase reports.
+- `evaluation/matraix`: isolated, synthetic-only writing-feedback evaluation; never a production dependency or release gate.
 
 ## Important Documentation
 
@@ -26,6 +27,7 @@ DeutschTrainer is a cross-platform B1-C2 German self-study app for Traditional C
 - [`docs/architecture.md`](docs/architecture.md): current system architecture and component boundaries.
 - [`docs/security.md`](docs/security.md): security, privacy, authorization, and data-protection requirements.
 - [`docs/testing-strategy.md`](docs/testing-strategy.md): automated, local integration, connected, and device testing strategy.
+- [`docs/matraix-synthetic-evaluation.md`](docs/matraix-synthetic-evaluation.md): optional synthetic writing-feedback preflight, isolation, governance, and evidence limits.
 - [`docs/acceptance-criteria.md`](docs/acceptance-criteria.md): measurable product and phase acceptance criteria.
 
 The virtual-classroom work (real-time AI German tutor, voice, collaborative whiteboard) is specified

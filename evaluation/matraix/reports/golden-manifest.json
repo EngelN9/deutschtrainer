@@ -1,0 +1,11 @@
+{
+  "cohortChecksum": "a179aeeb204291ee1ffdcd8c4abab8001313271a8b6610a23524f7a8e0a70a58",
+  "disclaimer": "SYNTHETIC EVALUATION — NOT REAL LEARNER EVIDENCE",
+  "expandedScenarioChecksum": "4c0aacabd77f93054916e4f0f1d65bdb71c43d00791263ed3604a9d2ce0fb975",
+  "feedbackContractChecksum": "ede263d8616d1a9c6cac24d91ac38b754b6a99e2a7aab44fec36eafac190e24c",
+  "feedbackSchemaId": "WritingFeedback.v1",
+  "planChecksum": "67b90042bf4078a777c52b1d0a3fe5471267090e0f625808fb9340fdc447c741",
+  "promptContractChecksum": "68c2ed479581c3dd8722c8c4f9ae59d05d196dc79223f2628034cf10a38441a8",
+  "reportChecksum": "890ba701c405f8d665a411060d624819e2cac95489a026b4d9d2c8aa3177cf5b",
+  "scenarioSourceChecksum": "1e624eaf95026e6c59f7ad091abcea7adb28100feb8a32a18022f5ab23dadc57"
+}
