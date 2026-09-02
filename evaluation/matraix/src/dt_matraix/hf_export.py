@@ -122,6 +122,23 @@ def jsonl_bytes(rows: tuple[HuggingFaceEvalRow, ...]) -> bytes:
     return b"".join(canonical_json_bytes(row) + b"\n" for row in rows)
 
 
+def write_huggingface_schema(path: Path) -> None:
+    schema = HuggingFaceEvalRow.model_json_schema()
+    rendered = json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    vertical_cefr_enum = """      "enum": [
+        "B1",
+        "B2",
+        "C1",
+        "C2"
+      ],"""
+    if vertical_cefr_enum not in rendered:
+        raise ValueError("Hugging Face schema CEFR enum changed; update its canonical formatter.")
+    with path.open("w", encoding="utf-8", newline="\n") as schema_file:
+        schema_file.write(
+            rendered.replace(vertical_cefr_enum, '      "enum": ["B1", "B2", "C1", "C2"],')
+        )
+
+
 def scan_export_files(output_root: Path) -> None:
     expected_files = (
         "README.md",
@@ -145,7 +162,7 @@ def export_huggingface_dataset(output_root: Path = HF_EXPORT_ROOT) -> dict[str, 
     (output_root / "README.md").write_text(dataset_card, encoding="utf-8")
     data_path = output_root / "writing-feedback-eval.v1.jsonl"
     data_path.write_bytes(payload)
-    write_json(output_root / "schema.v1.json", HuggingFaceEvalRow.model_json_schema())
+    write_huggingface_schema(output_root / "schema.v1.json")
     write_json(output_root / "model-registry.v1.json", model_registry())
     metadata = {
         "dataset_id": HF_DATASET_ID,

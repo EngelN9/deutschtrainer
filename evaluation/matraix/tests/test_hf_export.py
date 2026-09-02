@@ -32,6 +32,8 @@ def test_export_is_stable_unique_and_exactly_36_rows() -> None:
 def test_export_round_trips_through_checked_schema(tmp_path) -> None:
     metadata = export_huggingface_dataset(tmp_path)
     rows = load_exported_rows(tmp_path / "writing-feedback-eval.v1.jsonl")
+    schema_path = tmp_path / "schema.v1.json"
+    schema = schema_path.read_text(encoding="utf-8")
 
     assert len(rows) == metadata["row_count"] == 36
     assert metadata["dataset_visibility"] == "not_uploaded"
@@ -42,6 +44,8 @@ def test_export_round_trips_through_checked_schema(tmp_path) -> None:
         metadata["rows_sha256"]
         == hashlib.sha256((tmp_path / "writing-feedback-eval.v1.jsonl").read_bytes()).hexdigest()
     )
+    assert '"enum": ["B1", "B2", "C1", "C2"]' in schema
+    assert b"\r\n" not in schema_path.read_bytes()
 
 
 @pytest.mark.parametrize(
