@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, spacingTokens, typographyTokens } from "@deutschtrainer/ui";
 
 interface AppScreenProps extends PropsWithChildren {
   description?: string;
@@ -11,14 +11,27 @@ interface AppScreenProps extends PropsWithChildren {
 
 export function AppScreen({ children, description, eyebrow, title }: AppScreenProps) {
   return (
-    <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      style={styles.screen}
+    >
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-        <Text style={styles.title}>{title}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+      <View style={styles.container}>
+        <View style={styles.header}>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+          <Text accessibilityRole="header" style={styles.title}>
+            {title}
+          </Text>
+          {description ? (
+            <Text selectable style={styles.description}>
+              {description}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.body}>{children}</View>
       </View>
-      <View style={styles.body}>{children}</View>
     </ScrollView>
   );
 }
@@ -32,15 +45,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacingTokens.lg,
   },
+  container: {
+    alignSelf: "center",
+    maxWidth: 620,
+    width: "100%",
+  },
   description: {
     color: colorTokens.mutedText,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: typographyTokens.body.fontSize,
+    lineHeight: typographyTokens.body.lineHeight,
   },
   eyebrow: {
     color: colorTokens.primary,
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: typographyTokens.caption.fontSize,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    lineHeight: typographyTokens.caption.lineHeight,
   },
   header: {
     gap: spacingTokens.sm,
@@ -52,8 +72,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colorTokens.text,
-    fontSize: 30,
-    fontWeight: "800",
-    lineHeight: 38,
+    fontSize: typographyTokens.title.fontSize,
+    fontWeight: typographyTokens.title.fontWeight,
+    lineHeight: typographyTokens.title.lineHeight,
   },
 });
