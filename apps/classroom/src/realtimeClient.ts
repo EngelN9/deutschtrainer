@@ -67,6 +67,10 @@ export async function createClassroomConnection(options: {
     if (shutdownTimer.value !== undefined) clearTimeout(shutdownTimer.value);
     shutdownClassroomResources(microphone, dataChannel, peerConnection);
     options.audioElement.srcObject = null;
+    // Tell the server so it can hang up at the provider and free this learner's session slot.
+    // Best effort only: closing the tab skips this entirely, which is exactly why the server
+    // sweeps expired sessions rather than trusting the client to report.
+    void releaseServerSession(options.apiBaseUrl, options.accessToken);
     callbacks.onStatus("stopped", "教室已停止，麥克風與連線均已關閉。");
   };
 
@@ -161,6 +165,22 @@ export async function createClassroomConnection(options: {
 
   shutdownTimer.value = window.setTimeout(stop, options.maximumDurationMs ?? 300_000);
   return { stop };
+}
+
+export async function releaseServerSession(
+  apiBaseUrl: string,
+  accessToken: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/classroom/session/end`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}` },
+      keepalive: true,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export function shutdownClassroomResources(

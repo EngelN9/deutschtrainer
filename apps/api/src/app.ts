@@ -555,6 +555,17 @@ export function createApiHandler(options: ApiHandlerOptions) {
       );
     }
 
+    if (request.method === "POST" && url.pathname === "/classroom/session/end") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const ended = await options.classroomService.endActiveSession(accessToken);
+        return jsonResponse({ ended }, 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
     const speakingDeleteMatch = url.pathname.match(
       /^\/speaking\/submissions\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
     );

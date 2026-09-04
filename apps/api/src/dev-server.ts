@@ -8,6 +8,7 @@ import {
   UnavailableRealtimeProvider,
 } from "./classroom/openAiRealtimeProvider";
 import { SupabaseClassroomAuthenticator } from "./classroom/supabaseClassroomAuthenticator";
+import { SupabaseClassroomRepository } from "./classroom/supabaseClassroomRepository";
 import { SupabaseAiQuotaGate } from "./ai-quota/supabaseAiQuotaGate";
 import { AccountDataService } from "./account-data/accountDataService";
 import { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
@@ -188,8 +189,12 @@ const classroomService = new ClassroomService({
     config.supabaseUrl,
     config.supabaseServiceRoleKey,
   ),
+  dailySessionLimit: config.classroomDailySessionLimit,
   enabled: config.classroomEnabled,
+  globalDailySessionLimit: config.classroomGlobalDailySessionLimit,
+  maxSessionSeconds: config.classroomMaxSessionSeconds,
   provider: classroomProvider,
+  repository: new SupabaseClassroomRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   safetyIdentifierSalt: config.openAiSafetyIdentifierSalt,
 });
 const handlerDependencies = {
@@ -295,6 +300,33 @@ server.listen(config.port, config.host, () => {
     }),
   );
 });
+
+// Sweeping on boot as well as on an interval is the point: a deploy or a crash restarts this
+// process while calls keep running and billing at the provider, and only a boot sweep ends them.
+// ponytail: a single in-process timer, correct while the API runs one instance. Two instances
+// would double-hang-up (harmless, hangup is idempotent) but should move to a scheduled job.
+if (config.classroomEnabled) {
+  void runClassroomSweep();
+  const sweepTimer = setInterval(() => void runClassroomSweep(), config.classroomSweepIntervalMs);
+  sweepTimer.unref();
+}
+
+async function runClassroomSweep(): Promise<void> {
+  try {
+    const ended = await classroomService.sweepExpiredSessions();
+    if (ended > 0) {
+      console.log(JSON.stringify({ level: "info", event: "classroom_sessions_expired", ended }));
+    }
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        event: "classroom_sweep_failed",
+        message: error instanceof Error ? error.message : "unknown",
+      }),
+    );
+  }
+}
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => shutdown(signal));

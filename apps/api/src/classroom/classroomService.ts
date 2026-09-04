@@ -2,22 +2,99 @@ import { createHmac } from "node:crypto";
 import { ApiError } from "../errors";
 import type {
   ClassroomAuthenticator,
+  ClassroomLearner,
+  ClassroomRepository,
   ClassroomServiceContract,
+  ClassroomSessionRefusal,
   RealtimeCallProvider,
 } from "./types";
 
 interface ClassroomServiceOptions {
   allowedProfileIds: ReadonlySet<string>;
   authenticator: ClassroomAuthenticator;
+  dailySessionLimit: number;
   enabled: boolean;
+  globalDailySessionLimit: number;
+  maxSessionSeconds: number;
   provider: RealtimeCallProvider;
+  repository: ClassroomRepository;
   safetyIdentifierSalt: string;
 }
+
+const REFUSAL_MESSAGES: Record<ClassroomSessionRefusal, string> = {
+  ACTIVE_SESSION: "你已經有一個進行中的教室連線，請先結束後再開始新的課程。",
+  DAILY_LIMIT: "過去 24 小時的教室課程額度已用完，請明天再試。",
+  GLOBAL_LIMIT: "今日教室課程總額度已用完，請明天再試。",
+};
 
 export class ClassroomService implements ClassroomServiceContract {
   constructor(private readonly options: ClassroomServiceOptions) {}
 
   async createRealtimeCall(accessToken: string, sdp: string): Promise<string> {
+    const learner = await this.authorize(accessToken);
+    const safetyIdentifier = createSafetyIdentifier(
+      learner.profileId,
+      this.options.safetyIdentifierSalt,
+    );
+
+    const call = await this.options.provider.createCall({ sdp, safetyIdentifier });
+
+    // The session row is what makes the call stoppable, so if it cannot be written — a concurrent
+    // session, an exhausted budget, or a database failure — the call is hung up immediately rather
+    // than left running unattended on the server's key.
+    let started;
+    try {
+      started = await this.options.repository.startSession({
+        callId: call.callId,
+        dailyLimit: this.options.dailySessionLimit,
+        globalDailyLimit: this.options.globalDailySessionLimit,
+        maxSessionSeconds: this.options.maxSessionSeconds,
+        safetyIdentifier,
+        userId: learner.profileId,
+      });
+    } catch (error) {
+      await this.options.provider.hangup(call.callId);
+      throw error;
+    }
+
+    if (!started.allowed) {
+      await this.options.provider.hangup(call.callId);
+      const reason = started.reason ?? "ACTIVE_SESSION";
+      throw new ApiError("CLASSROOM_SESSION_LIMIT", REFUSAL_MESSAGES[reason], 429, true);
+    }
+
+    return call.sdp;
+  }
+
+  async endActiveSession(accessToken: string): Promise<boolean> {
+    const learner = await this.authorize(accessToken);
+    const callId = await this.options.repository.findActiveCallId(learner.profileId);
+    if (!callId) return false;
+    // Hang up before closing the row. If this process dies in between, the row stays active and
+    // the sweeper ends the call at its expiry — the failure mode costs minutes, not a session.
+    await this.options.provider.hangup(callId);
+    return this.options.repository.endSession(callId, "client_ended");
+  }
+
+  /**
+   * Ends every session past its server-side budget. Runs on an interval and once at boot, so a
+   * deploy or a crash cannot orphan a live call.
+   */
+  async sweepExpiredSessions(): Promise<number> {
+    if (!this.options.enabled) return 0;
+    const callIds = await this.options.repository.listExpiredCallIds();
+    let ended = 0;
+    for (const callId of callIds) {
+      // hangup never throws; close the row either way so a permanently unreachable call cannot
+      // wedge the sweeper into retrying it forever.
+      await this.options.provider.hangup(callId);
+      await this.options.repository.endSession(callId, "expired");
+      ended += 1;
+    }
+    return ended;
+  }
+
+  private async authorize(accessToken: string): Promise<ClassroomLearner> {
     if (!this.options.enabled) {
       throw new ApiError("CLASSROOM_DISABLED", "即時教室目前尚未啟用。", 503, false);
     }
@@ -43,14 +120,7 @@ export class ClassroomService implements ClassroomServiceContract {
         false,
       );
     }
-
-    return this.options.provider.createCall({
-      sdp,
-      safetyIdentifier: createSafetyIdentifier(
-        learner.profileId,
-        this.options.safetyIdentifierSalt,
-      ),
-    });
+    return learner;
   }
 }
 

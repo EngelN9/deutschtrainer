@@ -25,6 +25,10 @@ export interface ApiConfig {
   fakeEvaluationMode: boolean;
   classroomEnabled: boolean;
   classroomAllowedProfileIds: string[];
+  classroomMaxSessionSeconds: number;
+  classroomDailySessionLimit: number;
+  classroomGlobalDailySessionLimit: number;
+  classroomSweepIntervalMs: number;
   openAiRealtimeModel: string;
   openAiSafetyIdentifierSalt: string;
 }
@@ -65,6 +69,15 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
     classroomEnabled: env.CLASSROOM_ENABLED === "true",
     classroomAllowedProfileIds: readCommaSeparatedValues(env.CLASSROOM_ALLOWED_PROFILE_IDS),
+    // 15 minutes: long enough for a real lesson, and realtime cost grows superlinearly with
+    // session length because the conversation is replayed as input on every turn.
+    classroomMaxSessionSeconds: readPositiveInteger(env.CLASSROOM_MAX_SESSION_SECONDS, 900),
+    classroomDailySessionLimit: readPositiveInteger(env.CLASSROOM_DAILY_SESSION_LIMIT, 2),
+    classroomGlobalDailySessionLimit: readPositiveInteger(
+      env.CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT,
+      3,
+    ),
+    classroomSweepIntervalMs: readPositiveInteger(env.CLASSROOM_SWEEP_INTERVAL_MS, 30_000),
     openAiRealtimeModel: env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime-mini-2025-12-15",
     openAiSafetyIdentifierSalt: cleanSecret(env.OPENAI_SAFETY_IDENTIFIER_SALT),
   };

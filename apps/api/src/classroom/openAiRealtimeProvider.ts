@@ -1,6 +1,6 @@
 import { classroomTutorInstructionsV1, classroomTutorToolsV1 } from "@deutschtrainer/ai-prompts";
 import { ApiError } from "../errors";
-import type { CreateRealtimeCallInput, RealtimeCallProvider } from "./types";
+import type { CreateRealtimeCallInput, RealtimeCall, RealtimeCallProvider } from "./types";
 
 interface OpenAiRealtimeProviderOptions {
   apiKey: string;
@@ -14,7 +14,7 @@ export class OpenAiRealtimeProvider implements RealtimeCallProvider {
 
   constructor(private readonly options: OpenAiRealtimeProviderOptions) {}
 
-  async createCall(input: CreateRealtimeCallInput): Promise<string> {
+  async createCall(input: CreateRealtimeCallInput): Promise<RealtimeCall> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs);
     try {
@@ -45,11 +45,17 @@ export class OpenAiRealtimeProvider implements RealtimeCallProvider {
       if (!response.ok) {
         throw providerError();
       }
+      // The Location header carries the call id. Without it the server can never end this call,
+      // so treat a missing one as a provider failure rather than starting an unstoppable session.
+      const callId = readCallId(response.headers.get("location"));
+      if (!callId) {
+        throw providerError();
+      }
       const answer = await response.text();
       if (!answer.trim().startsWith("v=0")) {
         throw providerError();
       }
-      return answer;
+      return { callId, sdp: answer };
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -62,14 +68,55 @@ export class OpenAiRealtimeProvider implements RealtimeCallProvider {
       clearTimeout(timeout);
     }
   }
+
+  /**
+   * End an active call at the provider. This is the only control that survives a closed laptop,
+   * a killed tab, or a client that never reports back, so it never throws — a failure here must
+   * not stop the sweeper from working through the rest of the expired sessions.
+   */
+  async hangup(callId: string): Promise<boolean> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs);
+    try {
+      const response = await fetch(
+        `https://api.openai.com/v1/realtime/calls/${encodeURIComponent(callId)}/hangup`,
+        {
+          method: "POST",
+          headers: { authorization: `Bearer ${this.options.apiKey}` },
+          signal: controller.signal,
+        },
+      );
+      // 404 means the call already ended on its own; that is a success for our purposes.
+      return response.ok || response.status === 404;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 }
 
 export class UnavailableRealtimeProvider implements RealtimeCallProvider {
   readonly configured = false;
 
-  async createCall(): Promise<string> {
+  async createCall(): Promise<RealtimeCall> {
     throw new ApiError("CLASSROOM_NOT_CONFIGURED", "即時教室尚未完成伺服器設定。", 503, false);
   }
+
+  async hangup(): Promise<boolean> {
+    return false;
+  }
+}
+
+/**
+ * The Location header is either a bare call id or a URL ending in one. Accept both, and keep only
+ * the final path segment so a full URL cannot be interpolated into the hangup path.
+ */
+export function readCallId(location: string | null): string | undefined {
+  if (!location) return undefined;
+  const trimmed = location.trim().replace(/[/\s]+$/u, "");
+  const segment = trimmed.slice(trimmed.lastIndexOf("/") + 1);
+  return /^[A-Za-z0-9_-]{1,200}$/u.test(segment) ? segment : undefined;
 }
 
 function providerError(): ApiError {

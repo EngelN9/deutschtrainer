@@ -10,7 +10,11 @@ function createService(result: string | ApiError = "v=0\r\nanswer") {
     }
     return result;
   });
-  return { createRealtimeCall };
+  const endActiveSession = jest.fn<ClassroomServiceContract["endActiveSession"]>(async () => true);
+  const sweepExpiredSessions = jest.fn<ClassroomServiceContract["sweepExpiredSessions"]>(
+    async () => 0,
+  );
+  return { createRealtimeCall, endActiveSession, sweepExpiredSessions };
 }
 
 function createRequest(body: string, contentType = "application/sdp") {

@@ -36,6 +36,16 @@ services:
         value: "false"
       - key: CLASSROOM_ALLOWED_PROFILE_IDS
         sync: false
+      # Server-enforced session budget. The browser countdown is UX only and a modified client can
+      # remove it; these values and the hangup sweeper are the controls that actually hold.
+      - key: CLASSROOM_MAX_SESSION_SECONDS
+        value: "900"
+      - key: CLASSROOM_DAILY_SESSION_LIMIT
+        value: "2"
+      - key: CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT
+        value: "3"
+      - key: CLASSROOM_SWEEP_INTERVAL_MS
+        value: "30000"
       - key: OPENAI_REALTIME_MODEL
         value: gpt-realtime-mini-2025-12-15
       - key: OPENAI_SAFETY_IDENTIFIER_SALT
