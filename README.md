@@ -104,14 +104,16 @@ Local mobile web is available at `http://localhost:8081`; the admin console uses
 
 The public source repository is
 [EngelN9/deutschtrainer](https://github.com/EngelN9/deutschtrainer). The root `render.yaml`
-describes the three existing free Render preview services and a disabled-by-default Phase 0
-classroom static-site declaration. This uncommitted worktree does not create or deploy that fourth
-service:
+describes three free Render preview services. The Phase 0 classroom is not a fourth service: it is
+built into the learner web service's own static output at `/classroom-app/` and reached from
+`/classroom`, so it shares that origin and its signed-in Supabase session:
 
 - [deutschtrainer-engeln9-api](https://deutschtrainer-engeln9-api.onrender.com/health): Docker API with `/health`;
 - [deutschtrainer-engeln9-site](https://deutschtrainer-engeln9-site.onrender.com): Next.js public information site and role-gated `/admin`;
 - [deutschtrainer-engeln9-web](https://deutschtrainer-engeln9-web.onrender.com): Expo Web learner preview with SPA route rewrites.
-- `deutschtrainer-engeln9-classroom`: undeployed Vite classroom declaration; no public URL or connected evidence yet.
+  The classroom is hidden from the navigation until `EXPO_PUBLIC_CLASSROOM_ENABLED=true`, and the
+  API refuses it entirely until `CLASSROOM_ENABLED=true`; neither is set, so there is no connected
+  classroom evidence yet.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
 

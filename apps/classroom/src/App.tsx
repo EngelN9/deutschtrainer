@@ -1,5 +1,5 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   classroomBoardReducer,
   initialClassroomBoardState,
@@ -31,7 +31,18 @@ export function App() {
   }, []);
   const config = configuration.config;
   const supabase = useMemo(
-    () => (config ? createClient(config.supabaseUrl, config.supabaseAnonKey) : undefined),
+    () =>
+      config
+        ? // The classroom runs in a same-origin iframe inside the learner web app, so this client
+          // and the host's share one localStorage session under the same sb-<ref>-auth-token key.
+          // auth-js 2.110.5 has no cross-realm refresh lock — its single-flight is per document —
+          // so two auto-refreshing clients would race the same refresh token and one could be
+          // signed out. The host owns refresh; this client only reads, and still receives
+          // TOKEN_REFRESHED over the same-origin BroadcastChannel that persistSession opens.
+          createClient(config.supabaseUrl, config.supabaseAnonKey, {
+            auth: { autoRefreshToken: false, detectSessionInUrl: false },
+          })
+        : undefined,
     [config],
   );
   const [session, setSession] = useState<Session | null>(null);
@@ -49,63 +60,21 @@ export function App() {
     return <FatalConfiguration message={configuration.error ?? "虛擬教室設定無效。"} />;
   }
   if (!session) {
-    return <LoginScreen supabase={supabase} />;
+    return <SignedOutNotice />;
   }
   return <ClassroomSession config={config} session={session} supabase={supabase} />;
 }
 
-function LoginScreen({ supabase }: { supabase: SupabaseClient }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    const result = await supabase.auth.signInWithPassword({ email, password });
-    if (result.error) setMessage("登入失敗。請確認 DeutschTrainer Email 與密碼後再試。");
-    setBusy(false);
-  }
-
+// The classroom is only ever reached from inside the signed-in learner web app, which shares this
+// origin and therefore this session. There is no login form here: signing in from a nested frame
+// would write the same storage key the host owns.
+function SignedOutNotice() {
   return (
     <main className="centered-page">
-      <section className="auth-card" aria-labelledby="login-title">
+      <section className="auth-card" aria-labelledby="signed-out-title">
         <p className="eyebrow">Phase 0 · 內部驗證</p>
-        <h1 id="login-title">DeutschTrainer 虛擬教室</h1>
-        <p>使用既有 DeutschTrainer 帳號登入。此頁不提供註冊。</p>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              autoComplete="email"
-              inputMode="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            密碼
-            <input
-              autoComplete="current-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </label>
-          {message ? (
-            <p className="error-message" role="alert">
-              {message}
-            </p>
-          ) : null}
-          <button type="submit" disabled={busy}>
-            {busy ? "登入中…" : "登入"}
-          </button>
-        </form>
-        <p className="privacy-note">不同網站 origin 不共享登入狀態，因此首次進入教室需獨立登入。</p>
+        <h1 id="signed-out-title">尚未登入</h1>
+        <p>請先回到 DeutschTrainer 主畫面登入，再進入虛擬教室。</p>
       </section>
     </main>
   );
@@ -175,7 +144,18 @@ function ClassroomSession({
     if (remainingSeconds === 0) teardownClassroom();
   }, [remainingSeconds]);
 
-  useEffect(() => () => teardownClassroom(), []);
+  // Unmount alone is not enough: navigating away in the host app removes this iframe, and closing
+  // the tab ends the document — both destroy it without running React cleanup. An abandoned session
+  // would then keep a paid provider call open and, because the database allows one active session
+  // per learner, lock the learner out until it expires. teardownClassroom only reads refs, so the
+  // first render's closure stays correct for the life of the listener.
+  useEffect(() => {
+    window.addEventListener("pagehide", teardownClassroom);
+    return () => {
+      window.removeEventListener("pagehide", teardownClassroom);
+      teardownClassroom();
+    };
+  }, []);
 
   function applyBoardAction(action: ClassroomBoardAction): OperationResult | undefined {
     const next = classroomBoardReducer(boardRef.current, action);
@@ -254,16 +234,6 @@ function ClassroomSession({
 
   return (
     <main className="classroom-shell">
-      <header className="classroom-header">
-        <div>
-          <p className="eyebrow">Phase 0 · 無持久化內部垂直切片</p>
-          <h1>德語語音虛擬教室</h1>
-        </div>
-        <button className="secondary-button" onClick={() => void supabase.auth.signOut()}>
-          登出
-        </button>
-      </header>
-
       <section className="status-grid" aria-label="教室狀態">
         <StatusCard
           label="帳號"

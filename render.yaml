@@ -19,7 +19,7 @@ services:
       # sync: false. assertRemoteCorsOrigins in apps/api/src/config.ts rejects "*", non-HTTPS
       # and localhost, and the API refuses to boot when this is unset.
       - key: CORS_ALLOWED_ORIGINS
-        value: https://deutschtrainer-engeln9-web.onrender.com,https://deutschtrainer-engeln9-site.onrender.com,https://deutschtrainer-engeln9-classroom.onrender.com
+        value: https://deutschtrainer-engeln9-web.onrender.com,https://deutschtrainer-engeln9-site.onrender.com
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
@@ -37,9 +37,11 @@ services:
       - key: CLASSROOM_ALLOWED_PROFILE_IDS
         sync: false
       # Server-enforced session budget. The browser countdown is UX only and a modified client can
-      # remove it; these values and the hangup sweeper are the controls that actually hold.
+      # remove it; these values and the hangup sweeper are the controls that actually hold. Kept
+      # equal to the browser's 300s so an abandoned session — the learner navigating away inside the
+      # web app — bills and blocks a restart for at most as long as the visible countdown promised.
       - key: CLASSROOM_MAX_SESSION_SECONDS
-        value: "900"
+        value: "300"
       - key: CLASSROOM_DAILY_SESSION_LIMIT
         value: "2"
       - key: CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT
@@ -107,8 +109,15 @@ services:
     name: deutschtrainer-engeln9-web
     runtime: static
     branch: main
+    # export:web also builds apps/classroom into ./apps/mobile/dist/classroom-app, so the classroom
+    # ships on this origin and shares this app's Supabase session. Its Vite config reads VITE_* at
+    # build time; mapping them from the EXPO_PUBLIC_* values keeps one source of truth for the
+    # anon key rather than a second copy in the dashboard.
     buildCommand: >-
       corepack pnpm install --frozen-lockfile &&
+      VITE_API_BASE_URL=$EXPO_PUBLIC_API_BASE_URL
+      VITE_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL
+      VITE_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY
       corepack pnpm --filter @deutschtrainer/mobile export:web
     staticPublishPath: ./apps/mobile/dist
     autoDeployTrigger: checksPass
@@ -119,40 +128,15 @@ services:
         value: api
       - key: EXPO_PUBLIC_GUEST_TRIAL_ENABLED
         value: "true"
+      # Only hides the classroom from the navigation. /classroom stays reachable by URL so the
+      # deployed build can be verified before the feature is announced.
+      - key: EXPO_PUBLIC_CLASSROOM_ENABLED
+        value: "false"
       - key: EXPO_PUBLIC_API_BASE_URL
         sync: false
       - key: EXPO_PUBLIC_SUPABASE_URL
         sync: false
       - key: EXPO_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    headers:
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-
-  # Phase 0 declaration only. This local branch is not pushed, so no Render service is created.
-  - type: web
-    name: deutschtrainer-engeln9-classroom
-    runtime: static
-    branch: main
-    buildCommand: >-
-      corepack pnpm install --frozen-lockfile &&
-      corepack pnpm --filter @deutschtrainer/classroom build
-    staticPublishPath: ./apps/classroom/dist
-    autoDeployTrigger: checksPass
-    envVars:
-      - key: VITE_API_BASE_URL
-        sync: false
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
         sync: false
     routes:
       - type: rewrite

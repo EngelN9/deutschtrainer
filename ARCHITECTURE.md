@@ -75,8 +75,13 @@ Supabase URL, and Supabase anon key.
 
 ## Browser lifecycle
 
-1. The learner signs in on the classroom origin. The client verifies the profile only to render an
-   early message; the API repeats all authorization and is authoritative.
+1. The learner is already signed in: the classroom is served from the learner web app's own origin
+   at `/classroom-app/`, inside a same-origin frame, so both documents read one Supabase session
+   from one `localStorage` key and the classroom has no login of its own. It disables
+   `autoRefreshToken` because auth-js refreshes single-flight per document, so two refreshing
+   clients on one origin would race the same refresh token; the host refreshes and the frame is
+   told over `BroadcastChannel`. The client verifies the profile only to render an early message;
+   the API repeats all authorization and is authoritative.
 2. The browser requests microphone permission and creates an `RTCPeerConnection` plus data channel.
 3. The browser posts its SDP offer and receives an SDP answer from the API.
 4. The provider audio track is played by the browser. Tool arguments arriving on the data channel
