@@ -237,7 +237,7 @@ function ClassroomSession({
     setBoard(initialClassroomBoardState);
     applyBoardAction({ type: "begin_turn", turnId: MILESTONE_TURN_ID });
     for (const operation of milestoneOperations) {
-      const parsedOperation = parseToolArguments(JSON.stringify(operation));
+      const parsedOperation = parseToolArguments(JSON.stringify(operation), operation.type);
       applyBoardAction({
         type: "apply_operation",
         operation: parsedOperation,

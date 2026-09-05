@@ -9,15 +9,30 @@ import { milestoneOperations } from "./milestoneFixture";
 
 describe("classroom realtime client boundaries", () => {
   it("validates tool arguments with the production operation schema", () => {
-    expect(parseToolArguments(JSON.stringify(milestoneOperations[0]))).toEqual(
-      milestoneOperations[0],
-    );
-    expect(parseToolArguments("{not-json")).toBeUndefined();
+    const operation = milestoneOperations[0]!;
+    expect(parseToolArguments(JSON.stringify(operation), operation.type)).toEqual(operation);
+    expect(parseToolArguments("{not-json", "write_line")).toBeUndefined();
     expect(
       parseToolArguments(
-        JSON.stringify({ ...milestoneOperations[0], textDe: "<script>alert(1)</script>" }),
+        JSON.stringify({ ...operation, textDe: "<script>alert(1)</script>" }),
+        operation.type,
       ),
     ).toBeUndefined();
+  });
+
+  it("takes the operation type from the tool name, not from the arguments", () => {
+    // The wire shape. `response.function_call_arguments.done` carries the tool name in `name` and
+    // only the declared parameters in `arguments` - the parameter schemas never include `type`.
+    // Parsing `arguments` alone could not satisfy the discriminated union, so every real tool call
+    // was rejected and the board drew only for the fixture, whose objects carry `type` themselves.
+    const { type, ...wireArguments } = milestoneOperations[0]!;
+    expect(JSON.stringify(wireArguments)).not.toContain('"type"');
+
+    expect(parseToolArguments(JSON.stringify(wireArguments), type)).toEqual(
+      milestoneOperations[0],
+    );
+    expect(parseToolArguments(JSON.stringify(wireArguments), undefined)).toBeUndefined();
+    expect(parseToolArguments(JSON.stringify(wireArguments), "not_a_tool")).toBeUndefined();
   });
 
   it("provides actionable microphone permission and device messages", () => {

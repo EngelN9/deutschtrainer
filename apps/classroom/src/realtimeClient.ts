@@ -18,6 +18,9 @@ export interface ClassroomConnection {
 interface RealtimeEvent {
   arguments?: string;
   call_id?: string;
+  // The tool name. This is the discriminator the board schema needs: `arguments` carries only the
+  // declared parameters, so the operation type is never inside it.
+  name?: string;
   response?: { id?: string };
   response_id?: string;
   type?: string;
@@ -112,7 +115,7 @@ export async function createClassroomConnection(options: {
       // The event carries the owning response id. Trust it over any client-tracked value so a
       // tool call is always attributed to the turn that actually produced it.
       const turnId = event.response_id ?? activeTurnId;
-      const operation = parseToolArguments(event.arguments);
+      const operation = parseToolArguments(event.arguments, event.name);
       const result =
         operation && turnId
           ? callbacks.onOperation(operation, turnId)
@@ -193,11 +196,20 @@ export function shutdownClassroomResources(
   peerConnection.close();
 }
 
-export function parseToolArguments(argumentsJson: string | undefined): unknown | undefined {
-  if (!argumentsJson || argumentsJson.length > 16_384) return undefined;
+export function parseToolArguments(
+  argumentsJson: string | undefined,
+  toolName: string | undefined,
+): unknown | undefined {
+  if (!argumentsJson || argumentsJson.length > 16_384 || !toolName) return undefined;
   try {
     const parsed = JSON.parse(argumentsJson) as unknown;
-    const result = classroomToolOperationSchema.safeParse(parsed);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined;
+    // The board schema is a discriminated union on `type`, but the Realtime API sends the tool
+    // name alongside the arguments rather than inside them, and the tool parameter schemas do not
+    // declare a `type` property. Parsing `arguments` alone therefore never matched the union and
+    // every real tool call was rejected as INVALID_OPERATION - the board only ever drew for the
+    // deterministic fixture, whose objects carry `type` themselves. Trust the wire-level name.
+    const result = classroomToolOperationSchema.safeParse({ ...parsed, type: toolName });
     return result.success ? result.data : undefined;
   } catch {
     return undefined;
