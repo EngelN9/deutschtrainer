@@ -1,24 +1,10 @@
-export type ApiErrorCode =
-  | "VALIDATION_ERROR"
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "RATE_LIMITED"
-  | "NETWORK_ERROR"
-  | "DATABASE_ERROR"
-  | "AI_TIMEOUT"
-  | "AI_RESPONSE_INVALID"
-  | "AI_NOT_CONFIGURED"
-  | "AI_QUOTA_EXCEEDED"
-  | "AI_GLOBALLY_DISABLED"
-  | "CLASSROOM_DISABLED"
-  | "CLASSROOM_NOT_CONFIGURED"
-  | "CLASSROOM_ACCESS_RESTRICTED"
-  | "CLASSROOM_SESSION_LIMIT"
-  | "CLASSROOM_PROVIDER_ERROR"
-  | "CONFLICT"
-  | "AUDIO_UPLOAD_FAILED"
-  | "CONTENT_NOT_PUBLISHED";
+import type { z } from "zod";
+import { apiErrorCodeSchema } from "@deutschtrainer/validation";
+
+// Derived, not duplicated: the hand-written union drifted from apiErrorCodeSchema once already
+// (CLASSROOM_SESSION_LIMIT was added here but not there, so the 429 refusal failed client-side
+// response validation). Inferring makes that class of drift impossible.
+export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
 export class ApiError extends Error {
   constructor(
