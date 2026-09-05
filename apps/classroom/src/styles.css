@@ -235,3 +235,13 @@ p {
     animation: none !important;
   }
 }
+
+.board-operation-error {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+}

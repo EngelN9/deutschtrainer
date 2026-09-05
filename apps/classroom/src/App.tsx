@@ -314,6 +314,14 @@ function ClassroomSession({
           </div>
           <span className="operation-badge">{board.processedOperationIds.length} operations</span>
         </div>
+        {board.lastOperationResult && !board.lastOperationResult.success ? (
+          // A rejected operation used to be reported only back to the model, so the board simply
+          // stayed blank with no way to tell a silent model from a malformed one.
+          <p className="board-operation-error" role="status">
+            最後一個白板操作被拒絕（{board.lastOperationResult.code}）：
+            {board.lastOperationResult.message}
+          </p>
+        ) : null}
         <ClassroomBoard state={board} />
       </section>
 

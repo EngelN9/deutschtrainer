@@ -11,7 +11,9 @@ export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
     <div className="board-canvas" aria-label="共享德語白板">
       <Excalidraw
         key={boardKey}
-        initialData={{ elements }}
+        // Without this the view stays parked at the origin and a long German sentence runs off
+        // the right edge, which is most of them.
+        initialData={{ elements, scrollToContent: true }}
         viewModeEnabled
         zenModeEnabled
         gridModeEnabled={false}
