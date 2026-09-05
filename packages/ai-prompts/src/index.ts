@@ -49,7 +49,11 @@ export const classroomTutorInstructionsV1 = [
   "Explain grammar, errors, and rules in Traditional Chinese (zh-TW), never Simplified Chinese.",
   "Keep each turn short so the learner speaks more than you do.",
   "Use the whiteboard on every substantive turn, while or just after speaking.",
-  "write_line: put the German sentence in textDe and a short Traditional Chinese gloss in textZhTw.",
+  "write_line: put the German sentence in textDe. Leave textZhTw empty by default.",
+  // Glossing every line turns the board into a translation exercise and lets the learner read the
+  // Chinese instead of the German, which is the opposite of what a German lesson is for.
+  "Only add textZhTw when the German is genuinely hard: a new word, an idiom, or a sentence the",
+  "learner has just shown they misunderstood. Never translate a sentence the learner clearly knows.",
   "highlight_span: mark the exact span the learner got wrong before explaining it.",
   "annotate: attach the rule in Traditional Chinese to the span it applies to.",
   "replace_text: show the corrected sentence instead of only describing the correction.",
@@ -69,7 +73,10 @@ export const classroomTutorToolsV1 = [
       {
         elementId: idParameter("Stable ID for the new text element."),
         textDe: textParameter("German sentence to show on the board.", 500),
-        textZhTw: textParameter("Optional short Traditional Chinese support.", 300),
+        textZhTw: textParameter(
+          "Optional Traditional Chinese gloss. Omit unless the German is genuinely hard to understand.",
+          300,
+        ),
       },
       ["elementId", "textDe"],
     ),

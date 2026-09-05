@@ -1,11 +1,25 @@
 import { convertToExcalidrawElements, Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ClassroomBoardState } from "./boardReducer";
 
 export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
   const elements = useMemo(() => toExcalidrawElements(state), [state]);
-  const boardKey = state.processedOperationIds.join(":") || "empty";
+  // Excalidraw sizes a text element by measuring the string, and its handwriting font loads
+  // asynchronously. Measuring before the font arrives uses fallback metrics and cuts the box
+  // short, which clipped the last characters off every sentence. Remount once fonts are ready so
+  // the text is measured with the font it is actually drawn in.
+  const [fontsReady, setFontsReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void document.fonts.ready.then(() => {
+      if (active) setFontsReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const boardKey = `${fontsReady ? "f1" : "f0"}:${state.processedOperationIds.join(":") || "empty"}`;
 
   return (
     <div className="board-canvas" aria-label="共享德語白板">
