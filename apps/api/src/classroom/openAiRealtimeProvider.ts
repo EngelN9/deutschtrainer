@@ -43,16 +43,24 @@ export class OpenAiRealtimeProvider implements RealtimeCallProvider {
         signal: controller.signal,
       });
       if (!response.ok) {
+        // The client response stays deliberately vague, but a 502 with no server-side detail is
+        // undiagnosable. OpenAI error bodies carry only message/type/code, never credentials.
+        logProviderFailure("http_status", {
+          status: response.status,
+          body: (await response.text().catch(() => "")).slice(0, 500),
+        });
         throw providerError();
       }
       // The Location header carries the call id. Without it the server can never end this call,
       // so treat a missing one as a provider failure rather than starting an unstoppable session.
       const callId = readCallId(response.headers.get("location"));
       if (!callId) {
+        logProviderFailure("missing_call_id", { location: response.headers.get("location") });
         throw providerError();
       }
       const answer = await response.text();
       if (!answer.trim().startsWith("v=0")) {
+        logProviderFailure("malformed_sdp_answer", { answerPrefix: answer.slice(0, 200) });
         throw providerError();
       }
       return { callId, sdp: answer };
@@ -117,6 +125,16 @@ export function readCallId(location: string | null): string | undefined {
   const trimmed = location.trim().replace(/[/\s]+$/u, "");
   const segment = trimmed.slice(trimmed.lastIndexOf("/") + 1);
   return /^[A-Za-z0-9_-]{1,200}$/u.test(segment) ? segment : undefined;
+}
+
+/**
+ * Records why a call could not be established. The learner-facing error stays generic on purpose;
+ * this is the only place the actual provider response is visible to an operator.
+ */
+function logProviderFailure(reason: string, detail: Record<string, unknown>): void {
+  console.error(
+    JSON.stringify({ level: "error", event: "classroom_provider_call_failed", reason, ...detail }),
+  );
 }
 
 function providerError(): ApiError {
