@@ -134,7 +134,8 @@ export const classroomTutorToolsV1 = [
         },
         rows: {
           type: "array",
-          description: "Rows, 1 to 8. Every row must have exactly as many cells as there are headers.",
+          description:
+            "Rows, 1 to 8. Every row must have exactly as many cells as there are headers.",
           minItems: 1,
           maxItems: 8,
           items: {

@@ -28,9 +28,7 @@ describe("classroom realtime client boundaries", () => {
     const { type, ...wireArguments } = milestoneOperations[0]!;
     expect(JSON.stringify(wireArguments)).not.toContain('"type"');
 
-    expect(parseToolArguments(JSON.stringify(wireArguments), type)).toEqual(
-      milestoneOperations[0],
-    );
+    expect(parseToolArguments(JSON.stringify(wireArguments), type)).toEqual(milestoneOperations[0]);
     expect(parseToolArguments(JSON.stringify(wireArguments), undefined)).toBeUndefined();
     expect(parseToolArguments(JSON.stringify(wireArguments), "not_a_tool")).toBeUndefined();
   });

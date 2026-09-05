@@ -188,11 +188,7 @@ describe("write_table", () => {
     captionZhTw: "第四格冠詞",
     headers: ["Kasus", "maskulin", "neutrum"],
     rows: [
-      [
-        { textDe: "Nominativ" },
-        { textDe: "der" },
-        { textDe: "das" },
-      ],
+      [{ textDe: "Nominativ" }, { textDe: "der" }, { textDe: "das" }],
       [
         { textDe: "Akkusativ" },
         { textDe: "den", textZhTw: "只有陽性會變", emphasis: "correct" as const },

@@ -33,3 +33,13 @@ Thumbs.db
 # Supabase local runtime
 supabase/.branches/
 supabase/.temp/
+
+# Isolated Python evaluation artifacts
+evaluation/matraix/.pytest_cache/
+evaluation/matraix/.test-tmp/
+evaluation/matraix/.ruff_cache/
+evaluation/matraix/.runs/
+evaluation/matraix/.venv/
+evaluation/matraix/.uv-cache/
+evaluation/matraix/**/__pycache__/
+evaluation/matraix/**/*.pyc

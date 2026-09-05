@@ -12,6 +12,9 @@
 
 Repository implementation, a mock/demo, local Supabase, fake AI, CI configuration, a generated
 bundle, and a versioned device flow are different evidence layers. None substitutes for the others.
+Synthetic persona evidence is supplementary evaluation evidence only and cannot satisfy any gate
+requiring real learners, qualified human-language review, real AI, device evidence, or production
+evidence. A MatrAIx result can therefore never change an A–J gate to `PASS` by itself.
 DeutschTrainer may be called complete, publicly available, production-ready, or released only when
 all required A-J gates are `PASS`.
 

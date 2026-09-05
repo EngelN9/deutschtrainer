@@ -10,19 +10,13 @@ module.exports = {
     "^@deutschtrainer/ui$": "<rootDir>/packages/ui/src/index.ts",
     "^@deutschtrainer/validation$": "<rootDir>/packages/validation/src/index.ts",
   },
-  // `work/` holds gitignored git worktrees of other branches. testMatch already skips them, but
-  // jest-haste-map still indexes their package.json files and then refuses to resolve
-  // @deutschtrainer/* because several packages claim the same name.
-  modulePathIgnorePatterns: ["<rootDir>/work/"],
+  // Gitignored worktrees contain duplicate workspace manifests. Keep haste-map scoped to the
+  // product workspaces so Windows worktree paths never enter test discovery.
+  modulePathIgnorePatterns: ["<rootDir>/work/", "<rootDir>/.claude/worktrees/"],
   preset: "ts-jest",
+  roots: ["<rootDir>/apps", "<rootDir>/packages"],
   testEnvironment: "node",
-  testMatch: [
-    "<rootDir>/apps/admin/src/**/*.test.ts",
-    "<rootDir>/apps/api/**/*.test.ts",
-    "<rootDir>/apps/classroom/src/**/*.test.ts",
-    "<rootDir>/apps/mobile/src/**/*.test.ts",
-    "<rootDir>/packages/**/*.test.ts",
-  ],
+  testMatch: ["**/*.test.ts"],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",

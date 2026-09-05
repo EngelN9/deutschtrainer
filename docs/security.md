@@ -145,3 +145,19 @@ Phase 9 至 Phase 11 的私人學習／工作區／設定 API 在單一 runtime 
   headers、token、body、作文、逐字稿或錄音。
 - process-local rate limiter 不是多執行個體的全域限制；部署前須使用 gateway 或共享
   store 並驗證。完整營運邊界見 `docs/operations.md`。
+
+## 11. Synthetic evaluation isolation
+
+- `evaluation/matraix` 只允許完全虛構、年滿 18 歲、無姓名、email、地點、敏感屬性或
+  production identifier 的 cohort；不得由真實 learner submission 匿名化或改寫而來。
+- 不下載或抽樣 Persona 1M，也不掛載 repository `.env`、production data、Docker socket 或
+  完整工作目錄。
+- Live provider 只接受獨立 `MATRAIX_EVAL_*` key；禁止讀取 production `OPENAI_API_KEY`、
+  public client variables 或 learner BYOK。Provider terms、retention 與 OpenAI `store:false`
+  adapter 未核准前一律 fail closed。
+- Harbor survey subprocess 在受限 evaluation container 內使用 host runtime，且只繼承
+  allowlisted runtime 變數與映射後的 evaluation-only provider key；不得傳遞完整環境。
+- `.runs/` 保存 ignored 原始結果；checked report 不含 provider 原文。輸出須限制大小並拒絕
+  raw HTML、secret、JWT、private key 與直接聯絡 PII。
+- Synthetic 結果不得改變 grading、CEFR、content status、prompt、quota、migration、PR、
+  deployment、release 或 Definition of Done 判定。
