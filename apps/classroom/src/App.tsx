@@ -322,7 +322,10 @@ function ClassroomSession({
             {board.lastOperationResult.message}
           </p>
         ) : null}
-        <ClassroomBoard state={board} />
+        <ClassroomBoard
+          onSendBoardText={(text) => connectionRef.current?.sendLearnerNote(text) ?? false}
+          state={board}
+        />
       </section>
 
       <aside className="safety-panel">

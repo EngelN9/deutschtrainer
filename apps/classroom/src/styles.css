@@ -245,3 +245,12 @@ p {
   color: #991b1b;
   font-size: 14px;
 }
+
+.board-send-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #475569;
+}

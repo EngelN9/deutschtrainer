@@ -8,7 +8,13 @@ import type { ClassroomBoardState } from "./boardReducer";
 // instead of running off into empty canvas.
 const TEXT_WIDTH = 900;
 
-export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
+export function ClassroomBoard({
+  state,
+  onSendBoardText,
+}: {
+  onSendBoardText?: (text: string) => boolean;
+  state: ClassroomBoardState;
+}) {
   // Excalidraw bakes a text element's width in at convertToExcalidrawElements time by measuring
   // the string, and its handwriting font loads asynchronously. Measured before the font arrives,
   // the box comes out narrower than the text later drawn into it and the last characters are cut
@@ -32,6 +38,7 @@ export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
   // tutor elements in through updateScene instead, and replace only the ones we put there before.
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
   const tutorElementIds = useRef<Set<string>>(new Set());
+  const [sendState, setSendState] = useState<"idle" | "empty" | "sent" | "failed">("idle");
 
   useEffect(() => {
     if (!api) return;
@@ -47,8 +54,36 @@ export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
     }
   }, [api, elements]);
 
+  // The board is otherwise one-way, so text the learner types is invisible to the tutor. This is
+  // an explicit button rather than an auto-send on change: pushing every keystroke would interrupt
+  // the tutor mid-turn and spend tokens on half-typed words.
+  function sendLearnerText(): void {
+    if (!api || !onSendBoardText) return;
+    const learnerText = api
+      .getSceneElements()
+      .filter((element) => element.type === "text" && !tutorElementIds.current.has(element.id))
+      .map((element) => (element as { text?: string }).text ?? "")
+      .filter((line) => line.trim().length > 0)
+      .join("\n");
+    if (!learnerText) {
+      setSendState("empty");
+      return;
+    }
+    setSendState(onSendBoardText(learnerText) ? "sent" : "failed");
+  }
+
   return (
     <div className="board-canvas" aria-label="共享德語白板">
+      {onSendBoardText ? (
+        <div className="board-send-row">
+          <button className="secondary-button" onClick={sendLearnerText} type="button">
+            把白板上的文字傳給老師
+          </button>
+          {sendState === "empty" ? <span>白板上沒有你輸入的文字。</span> : null}
+          {sendState === "sent" ? <span>已傳送，老師會回應。</span> : null}
+          {sendState === "failed" ? <span>目前沒有連線，無法傳送。</span> : null}
+        </div>
+      ) : null}
       <Excalidraw
         excalidrawAPI={setApi}
         gridModeEnabled={false}

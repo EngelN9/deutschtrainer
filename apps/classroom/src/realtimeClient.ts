@@ -12,6 +12,7 @@ export interface ClassroomConnectionCallbacks {
 }
 
 export interface ClassroomConnection {
+  sendLearnerNote: (text: string) => boolean;
   stop: () => void;
 }
 
@@ -167,7 +168,7 @@ export async function createClassroomConnection(options: {
   }
 
   shutdownTimer.value = window.setTimeout(stop, options.maximumDurationMs ?? 300_000);
-  return { stop };
+  return { sendLearnerNote: (text) => sendLearnerBoardNote(dataChannel, text), stop };
 }
 
 export async function releaseServerSession(
@@ -234,6 +235,38 @@ function parseRealtimeEvent(value: unknown): RealtimeEvent | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Sends what the learner wrote on the board to the tutor. The board is otherwise one-way - the
+ * model draws on it but never sees it - so anything the learner writes there is invisible without
+ * this. Sent as a normal user message, which is how the model already treats untrusted learner
+ * content; it is deliberately not phrased as an instruction.
+ */
+export function sendLearnerBoardNote(
+  dataChannel: Pick<RTCDataChannel, "readyState" | "send">,
+  text: string,
+): boolean {
+  const trimmed = text.trim();
+  if (dataChannel.readyState !== "open" || !trimmed) return false;
+  dataChannel.send(
+    JSON.stringify({
+      type: "conversation.item.create",
+      item: {
+        type: "message",
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: `[學習者寫在白板上的內容]\n${trimmed.slice(0, 2_000)}`,
+          },
+        ],
+      },
+    }),
+  );
+  // As with a tool result, adding the item does not make the model reply on its own.
+  dataChannel.send(JSON.stringify({ type: "response.create" }));
+  return true;
 }
 
 export function sendFunctionResult(
