@@ -197,7 +197,10 @@ describe("ClassroomService", () => {
 
   it("uses a stable opaque HMAC rather than the profile identifier", () => {
     const identifier = createSafetyIdentifier("profile-allowed", "server-only-salt");
-    expect(identifier).toMatch(/^dt_[0-9a-f]{64}$/);
+    expect(identifier).toMatch(/^dt_[0-9a-f]{61}$/);
+    // The provider rejects anything longer, and a mocked fetch will never tell you so. The
+    // previous format was 67 characters and failed every real call with a 400.
+    expect(identifier.length).toBeLessThanOrEqual(64);
     expect(identifier).not.toContain("profile-allowed");
   });
 });

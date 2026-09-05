@@ -1318,10 +1318,36 @@ export const classroomReplaceTextOperationSchema = classroomOperationBaseSchema
   })
   .strict();
 
+// A structural table: case endings, conjugations, a wrong/correct contrast, or the Feldermodell
+// columns German word order is normally taught with. Every bound is deliberate - this is untrusted
+// model output rendered straight onto the board, so an oversized grid must be rejected, not drawn.
+export const classroomTableCellSchema = z
+  .object({
+    textDe: classroomBoardTextSchema.max(120).optional(),
+    textZhTw: classroomBoardTextSchema.max(120).optional(),
+    emphasis: z.enum(["correct", "incorrect"]).optional(),
+  })
+  .strict();
+
+export const classroomWriteTableOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("write_table"),
+    elementId: classroomElementIdSchema,
+    captionZhTw: classroomBoardTextSchema.max(120).optional(),
+    headers: z.array(classroomBoardTextSchema.max(60)).min(1).max(5),
+    rows: z.array(z.array(classroomTableCellSchema).min(1).max(5)).min(1).max(8),
+  })
+  .strict()
+  .refine((operation) => operation.rows.every((row) => row.length === operation.headers.length), {
+    message: "每一列的欄位數必須與標題列相同。",
+    path: ["rows"],
+  });
+
 export const classroomToolOperationSchema = z.discriminatedUnion("type", [
   classroomWriteLineOperationSchema,
   classroomHighlightSpanOperationSchema,
   classroomAnnotateOperationSchema,
   classroomReplaceTextOperationSchema,
+  classroomWriteTableOperationSchema,
 ]);
 export type ClassroomToolOperation = z.infer<typeof classroomToolOperationSchema>;

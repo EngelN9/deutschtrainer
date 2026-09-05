@@ -25,6 +25,19 @@ export interface BoardAnnotation {
   textZhTw: string;
 }
 
+export interface BoardTableCell {
+  emphasis?: "correct" | "incorrect";
+  textDe?: string;
+  textZhTw?: string;
+}
+
+export interface BoardTable {
+  captionZhTw?: string;
+  headers: string[];
+  id: string;
+  rows: BoardTableCell[][];
+}
+
 export interface ClassroomBoardState {
   activeTurnId?: string;
   annotations: BoardAnnotation[];
@@ -32,6 +45,7 @@ export interface ClassroomBoardState {
   lastOperationResult?: OperationResult;
   processedOperationIds: string[];
   supersededTurnIds: string[];
+  tables: BoardTable[];
   texts: BoardTextElement[];
 }
 
@@ -53,6 +67,7 @@ export const initialClassroomBoardState: ClassroomBoardState = {
   highlights: [],
   processedOperationIds: [],
   supersededTurnIds: [],
+  tables: [],
   texts: [],
 };
 
@@ -132,6 +147,34 @@ function applyOperation(
             id: operation.elementId,
             textDe: operation.textDe,
             ...(operation.textZhTw ? { textZhTw: operation.textZhTw } : {}),
+          },
+        ],
+      },
+      operation,
+    );
+  }
+
+  if (operation.type === "write_table") {
+    if (state.tables.some((table) => table.id === operation.elementId)) {
+      return failureWithProcessed(state, processedOperationIds, operation, "UNKNOWN_TARGET");
+    }
+    return applied(
+      {
+        ...state,
+        processedOperationIds,
+        tables: [
+          ...state.tables,
+          {
+            id: operation.elementId,
+            headers: [...operation.headers],
+            rows: operation.rows.map((row) =>
+              row.map((cell) => ({
+                ...(cell.textDe ? { textDe: cell.textDe } : {}),
+                ...(cell.textZhTw ? { textZhTw: cell.textZhTw } : {}),
+                ...(cell.emphasis ? { emphasis: cell.emphasis } : {}),
+              })),
+            ),
+            ...(operation.captionZhTw ? { captionZhTw: operation.captionZhTw } : {}),
           },
         ],
       },

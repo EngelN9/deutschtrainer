@@ -80,5 +80,97 @@ export function toExcalidrawElements(state: ClassroomBoardState) {
       strokeColor: "#0f766e",
     });
   });
+  // Tables sit below the free text so a grid never lands on top of a sentence or its annotations.
+  const tableTop = 220 + state.texts.length * 180;
+  const CELL_WIDTH = 190;
+  const CELL_HEIGHT = 52;
+  state.tables.forEach((table, tableIndex) => {
+    const originY = tableTop + tableIndex * 320;
+    if (table.captionZhTw) {
+      skeletons.push({
+        type: "text",
+        id: `${table.id}_caption`,
+        x: 80,
+        y: originY - 34,
+        text: table.captionZhTw,
+        fontSize: 20,
+        strokeColor: "#0f766e",
+      });
+    }
+    table.headers.forEach((header, columnIndex) => {
+      const x = 80 + columnIndex * CELL_WIDTH;
+      skeletons.push({
+        type: "rectangle",
+        id: `${table.id}_h${columnIndex}`,
+        x,
+        y: originY,
+        width: CELL_WIDTH,
+        height: CELL_HEIGHT,
+        strokeColor: "#1f2937",
+        backgroundColor: "#e2e8f0",
+        fillStyle: "solid",
+      });
+      skeletons.push({
+        type: "text",
+        id: `${table.id}_h${columnIndex}_t`,
+        x: x + 12,
+        y: originY + 16,
+        text: header,
+        fontSize: 18,
+        strokeColor: "#1f2937",
+      });
+    });
+    table.rows.forEach((row, rowIndex) => {
+      const y = originY + (rowIndex + 1) * CELL_HEIGHT;
+      row.forEach((cell, columnIndex) => {
+        const x = 80 + columnIndex * CELL_WIDTH;
+        skeletons.push({
+          type: "rectangle",
+          id: `${table.id}_r${rowIndex}c${columnIndex}`,
+          x,
+          y,
+          width: CELL_WIDTH,
+          height: CELL_HEIGHT,
+          strokeColor: cellStroke(cell.emphasis),
+          backgroundColor: cellBackground(cell.emphasis),
+          fillStyle: "solid",
+        });
+        if (cell.textDe) {
+          skeletons.push({
+            type: "text",
+            id: `${table.id}_r${rowIndex}c${columnIndex}_de`,
+            x: x + 12,
+            y: y + 8,
+            text: cell.textDe,
+            fontSize: 17,
+            strokeColor: "#1f2937",
+          });
+        }
+        if (cell.textZhTw) {
+          skeletons.push({
+            type: "text",
+            id: `${table.id}_r${rowIndex}c${columnIndex}_zh`,
+            x: x + 12,
+            y: y + (cell.textDe ? 28 : 16),
+            text: cell.textZhTw,
+            fontSize: 14,
+            strokeColor: "#0f766e",
+          });
+        }
+      });
+    });
+  });
   return convertToExcalidrawElements(skeletons, { regenerateIds: false });
+}
+
+function cellStroke(emphasis?: "correct" | "incorrect"): string {
+  if (emphasis === "correct") return "#15803d";
+  if (emphasis === "incorrect") return "#b91c1c";
+  return "#94a3b8";
+}
+
+function cellBackground(emphasis?: "correct" | "incorrect"): string {
+  if (emphasis === "correct") return "#dcfce7";
+  if (emphasis === "incorrect") return "#fee2e2";
+  return "#ffffff";
 }

@@ -124,6 +124,13 @@ export class ClassroomService implements ClassroomServiceContract {
   }
 }
 
+// OpenAI rejects a safety identifier longer than 64 characters, and a full sha256 hex digest plus
+// the "dt_" prefix is 67. Truncating the digest to 61 keeps the prefix, lands exactly on the limit,
+// and still leaves 244 bits - far more than a pseudonymous per-learner identifier needs.
+const SAFETY_IDENTIFIER_MAX_LENGTH = 64;
+const SAFETY_IDENTIFIER_PREFIX = "dt_";
+
 export function createSafetyIdentifier(profileId: string, salt: string): string {
-  return `dt_${createHmac("sha256", salt).update(profileId).digest("hex")}`;
+  const digest = createHmac("sha256", salt).update(profileId).digest("hex");
+  return `${SAFETY_IDENTIFIER_PREFIX}${digest.slice(0, SAFETY_IDENTIFIER_MAX_LENGTH - SAFETY_IDENTIFIER_PREFIX.length)}`;
 }

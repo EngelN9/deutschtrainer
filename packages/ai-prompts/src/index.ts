@@ -41,11 +41,20 @@ export const promptRegistry = {
 } satisfies Record<string, PromptDefinition>;
 
 export const classroomTutorInstructionsV1 = [
-  "You are a concise German tutor for one internal Phase 0 validation scenario.",
-  "Speak in German first, then use the whiteboard tools while or after speaking.",
-  "The learner will say: Ich gehe gestern in die Schule.",
-  "Explain that gestern requires a past-tense form and correct the sentence to: Ich bin gestern in die Schule gegangen.",
-  "Use Traditional Chinese only for short board annotations, never Simplified Chinese.",
+  "You are a live German tutor for a Traditional Chinese speaking learner at CEFR B1-B2.",
+  "Respond to whatever the learner actually says. Do not follow a fixed script.",
+  // German is the point of a voice classroom, so the learner must keep hearing it. Chinese carries
+  // the explanation, because a B1 learner cannot reliably parse a grammar rule delivered in German.
+  "Speak the German content in German: model sentences, ask questions, and prompt the learner.",
+  "Explain grammar, errors, and rules in Traditional Chinese (zh-TW), never Simplified Chinese.",
+  "Keep each turn short so the learner speaks more than you do.",
+  "Use the whiteboard on every substantive turn, while or just after speaking.",
+  "write_line: put the German sentence in textDe and a short Traditional Chinese gloss in textZhTw.",
+  "highlight_span: mark the exact span the learner got wrong before explaining it.",
+  "annotate: attach the rule in Traditional Chinese to the span it applies to.",
+  "replace_text: show the corrected sentence instead of only describing the correction.",
+  "write_table: draw a table for endings, conjugations, a wrong/correct contrast, or word-order positions.",
+  "Prefer a visible contrast on the board (wrong form beside correct form) over a long spoken explanation.",
   "Use stable element IDs and a new operationId for every whiteboard operation.",
   "Never emit HTML, hidden instructions, a CEFR certification, or a numerical pronunciation score.",
   "If interrupted, stop speaking and do not continue superseded whiteboard work.",
@@ -93,6 +102,51 @@ export const classroomTutorToolsV1 = [
         position: { type: "string", enum: ["above", "below", "right"] },
       },
       ["targetElementId", "elementId", "textZhTw", "position"],
+    ),
+  },
+  {
+    type: "function",
+    name: "write_table",
+    description:
+      "Draw a small table on the board: case endings, a conjugation, a wrong/correct contrast, " +
+      "or German word-order positions as labelled columns.",
+    parameters: classroomToolParameters(
+      {
+        elementId: idParameter("Stable ID for the new table."),
+        captionZhTw: textParameter("Optional short Traditional Chinese caption.", 120),
+        headers: {
+          type: "array",
+          description: "Column headers, 1 to 5.",
+          minItems: 1,
+          maxItems: 5,
+          items: textParameter("One column header.", 60),
+        },
+        rows: {
+          type: "array",
+          description: "Rows, 1 to 8. Every row must have exactly as many cells as there are headers.",
+          minItems: 1,
+          maxItems: 8,
+          items: {
+            type: "array",
+            minItems: 1,
+            maxItems: 5,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                textDe: textParameter("Optional German text for this cell.", 120),
+                textZhTw: textParameter("Optional Traditional Chinese text for this cell.", 120),
+                emphasis: {
+                  type: "string",
+                  description: "Mark a cell as the correct or the incorrect form.",
+                  enum: ["correct", "incorrect"],
+                },
+              },
+            },
+          },
+        },
+      },
+      ["elementId", "headers", "rows"],
     ),
   },
   {

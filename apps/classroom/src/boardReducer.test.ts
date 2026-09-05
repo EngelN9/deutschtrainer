@@ -179,3 +179,78 @@ describe("classroomBoardReducer", () => {
     expect(late.lastOperationResult?.code).toBe("SUPERSEDED_TURN");
   });
 });
+
+describe("write_table", () => {
+  const table = {
+    operationId: "op_table_1",
+    type: "write_table" as const,
+    elementId: "table_akkusativ",
+    captionZhTw: "第四格冠詞",
+    headers: ["Kasus", "maskulin", "neutrum"],
+    rows: [
+      [
+        { textDe: "Nominativ" },
+        { textDe: "der" },
+        { textDe: "das" },
+      ],
+      [
+        { textDe: "Akkusativ" },
+        { textDe: "den", textZhTw: "只有陽性會變", emphasis: "correct" as const },
+        { textDe: "das" },
+      ],
+    ],
+  };
+
+  function withActiveTurn() {
+    return classroomBoardReducer(initialClassroomBoardState, {
+      type: "begin_turn",
+      turnId: TURN,
+    });
+  }
+
+  it("adds a bilingual table with per-cell emphasis", () => {
+    const state = classroomBoardReducer(withActiveTurn(), {
+      type: "apply_operation",
+      operation: table,
+      turnId: TURN,
+    });
+
+    expect(state.lastOperationResult?.code).toBe("APPLIED");
+    expect(state.tables).toHaveLength(1);
+    expect(state.tables[0]?.headers).toEqual(["Kasus", "maskulin", "neutrum"]);
+    expect(state.tables[0]?.rows[1]?.[1]).toEqual({
+      textDe: "den",
+      textZhTw: "只有陽性會變",
+      emphasis: "correct",
+    });
+  });
+
+  it("rejects a row whose cell count does not match the headers", () => {
+    // The renderer lays cells out on a fixed column grid, so a short row would silently draw a
+    // malformed table rather than fail.
+    const state = classroomBoardReducer(withActiveTurn(), {
+      type: "apply_operation",
+      operation: { ...table, rows: [[{ textDe: "Nominativ" }, { textDe: "der" }]] },
+      turnId: TURN,
+    });
+
+    expect(state.lastOperationResult?.code).toBe("INVALID_OPERATION");
+    expect(state.tables).toHaveLength(0);
+  });
+
+  it("refuses to overwrite an existing table id", () => {
+    const first = classroomBoardReducer(withActiveTurn(), {
+      type: "apply_operation",
+      operation: table,
+      turnId: TURN,
+    });
+    const second = classroomBoardReducer(first, {
+      type: "apply_operation",
+      operation: { ...table, operationId: "op_table_2" },
+      turnId: TURN,
+    });
+
+    expect(second.lastOperationResult?.code).toBe("UNKNOWN_TARGET");
+    expect(second.tables).toHaveLength(1);
+  });
+});
