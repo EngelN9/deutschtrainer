@@ -1,14 +1,19 @@
 import { convertToExcalidrawElements, Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
-import { useEffect, useMemo, useState } from "react";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ClassroomBoardState } from "./boardReducer";
 
+// Wide enough for a normal German sentence at fontSize 30, narrow enough that a long one wraps
+// instead of running off into empty canvas.
+const TEXT_WIDTH = 900;
+
 export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
-  const elements = useMemo(() => toExcalidrawElements(state), [state]);
-  // Excalidraw sizes a text element by measuring the string, and its handwriting font loads
-  // asynchronously. Measuring before the font arrives uses fallback metrics and cuts the box
-  // short, which clipped the last characters off every sentence. Remount once fonts are ready so
-  // the text is measured with the font it is actually drawn in.
+  // Excalidraw bakes a text element's width in at convertToExcalidrawElements time by measuring
+  // the string, and its handwriting font loads asynchronously. Measured before the font arrives,
+  // the box comes out narrower than the text later drawn into it and the last characters are cut
+  // off. fontsReady is a dependency here, not just a remount key: remounting with the same
+  // already-measured element objects changes nothing.
   const [fontsReady, setFontsReady] = useState(false);
   useEffect(() => {
     let active = true;
@@ -19,17 +24,33 @@ export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
       active = false;
     };
   }, []);
-  const boardKey = `${fontsReady ? "f1" : "f0"}:${state.processedOperationIds.join(":") || "empty"}`;
+
+  const elements = useMemo(() => toExcalidrawElements(state), [state, fontsReady]);
+
+  // The board used to remount on every operation, which is fine for read-only output and fatal
+  // once the learner can draw: their work would vanish the moment the tutor wrote anything. Push
+  // tutor elements in through updateScene instead, and replace only the ones we put there before.
+  const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
+  const tutorElementIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!api) return;
+    const nextIds = new Set(elements.map((element) => element.id));
+    const previousIds = tutorElementIds.current;
+    const learnerElements = api
+      .getSceneElements()
+      .filter((element) => !previousIds.has(element.id) && !nextIds.has(element.id));
+    tutorElementIds.current = nextIds;
+    api.updateScene({ elements: [...learnerElements, ...elements] });
+    if (elements.length > 0) {
+      api.scrollToContent(elements, { fitToContent: true });
+    }
+  }, [api, elements]);
 
   return (
     <div className="board-canvas" aria-label="共享德語白板">
       <Excalidraw
-        key={boardKey}
-        // Without this the view stays parked at the origin and a long German sentence runs off
-        // the right edge, which is most of them.
-        initialData={{ elements, scrollToContent: true }}
-        viewModeEnabled
-        zenModeEnabled
+        excalidrawAPI={setApi}
         gridModeEnabled={false}
         UIOptions={{
           canvasActions: {
@@ -48,28 +69,38 @@ export function ClassroomBoard({ state }: { state: ClassroomBoardState }) {
 
 export function toExcalidrawElements(state: ClassroomBoardState) {
   const skeletons: Parameters<typeof convertToExcalidrawElements>[0] = [];
-  state.texts.forEach((text, index) => {
-    const y = 80 + index * 180;
+  // A running cursor rather than index * fixedStride: wrapped text is taller than one line, so a
+  // fixed stride would let a two-line sentence sit on top of the next one.
+  let cursorY = 80;
+  state.texts.forEach((text) => {
+    const germanHeight = wrappedHeight(text.textDe, 30);
     skeletons.push({
       type: "text",
       id: text.id,
       x: 80,
-      y,
+      y: cursorY,
       text: text.textDe,
       fontSize: 30,
       strokeColor: "#1f2937",
+      width: TEXT_WIDTH,
+      autoResize: false,
     });
+    cursorY += germanHeight + 12;
     if (text.textZhTw) {
       skeletons.push({
         type: "text",
         id: `${text.id}_zh_tw`,
         x: 80,
-        y: y + 52,
+        y: cursorY,
         text: text.textZhTw,
         fontSize: 18,
         strokeColor: "#0f766e",
+        width: TEXT_WIDTH,
+        autoResize: false,
       });
+      cursorY += wrappedHeight(text.textZhTw, 18) + 12;
     }
+    cursorY += 40;
   });
   state.highlights.forEach((highlight, index) => {
     skeletons.push({
@@ -94,10 +125,12 @@ export function toExcalidrawElements(state: ClassroomBoardState) {
       text: annotation.textZhTw,
       fontSize: 18,
       strokeColor: "#0f766e",
+      width: TEXT_WIDTH,
+      autoResize: false,
     });
   });
   // Tables sit below the free text so a grid never lands on top of a sentence or its annotations.
-  const tableTop = 220 + state.texts.length * 180;
+  const tableTop = cursorY + 120;
   const CELL_WIDTH = 190;
   const CELL_HEIGHT = 52;
   state.tables.forEach((table, tableIndex) => {
@@ -189,4 +222,14 @@ function cellBackground(emphasis?: "correct" | "incorrect"): string {
   if (emphasis === "correct") return "#dcfce7";
   if (emphasis === "incorrect") return "#fee2e2";
   return "#ffffff";
+}
+
+// Excalidraw wraps at the element width, so height depends on how many lines the string needs.
+// A CJK glyph occupies roughly a full em against about 0.55 for Latin, so they are counted
+// separately - treating Chinese as Latin-width badly underestimates the wrap and overlaps.
+function wrappedHeight(text: string, fontSize: number): number {
+  const cjk = (text.match(/[㐀-鿿＀-￯]/gu) ?? []).length;
+  const widthUnits = cjk * fontSize + (text.length - cjk) * fontSize * 0.55;
+  const lines = Math.max(1, Math.ceil(widthUnits / TEXT_WIDTH));
+  return lines * fontSize * 1.25;
 }
