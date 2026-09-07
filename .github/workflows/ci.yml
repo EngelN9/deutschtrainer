@@ -5,6 +5,13 @@ on:
   push:
     branches:
       - main
+  # Manual escape hatch. On 2026-09-02 event-triggered runs silently stopped being created across
+  # the account: no failed run, none at all, while the Actions API, the workflow state and the
+  # trigger config all looked healthy. That is not a hypothetical outage — every Render service
+  # uses autoDeployTrigger: checksPass, so zero checks also means zero deploys, and a merge appears
+  # to succeed while changing nothing live. GitHub only offers this trigger when it is present on
+  # the default branch, so it has to live here to be worth anything.
+  workflow_dispatch:
 
 jobs:
   matraix-evaluation:
