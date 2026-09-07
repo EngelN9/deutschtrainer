@@ -1,0 +1,106 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "cefr_level": {
+      "enum": ["B1", "B2", "C1", "C2"],
+      "title": "Cefr Level",
+      "type": "string"
+    },
+    "error_category": {
+      "enum": [
+        "word_order",
+        "case",
+        "article",
+        "preposition",
+        "tense",
+        "collocation",
+        "register",
+        "cohesion",
+        "literal_zh_de_transfer"
+      ],
+      "title": "Error Category",
+      "type": "string"
+    },
+    "expected_facets": {
+      "items": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Expected Facets",
+      "type": "array"
+    },
+    "gold_correction": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Gold Correction",
+      "type": "string"
+    },
+    "harness_version": {
+      "const": "0.1.0",
+      "title": "Harness Version",
+      "type": "string"
+    },
+    "prompt_id": {
+      "const": "evaluate-writing",
+      "title": "Prompt Id",
+      "type": "string"
+    },
+    "prompt_version": {
+      "const": "1.0.0",
+      "title": "Prompt Version",
+      "type": "string"
+    },
+    "scenario_id": {
+      "pattern": "^dt-(B1|B2|C1|C2)-[a-z0-9-]+-v1$",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "scenario_version": {
+      "const": "scenario.v1",
+      "title": "Scenario Version",
+      "type": "string"
+    },
+    "schema_id": {
+      "const": "WritingFeedback.v1",
+      "title": "Schema Id",
+      "type": "string"
+    },
+    "source_fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Fingerprint",
+      "type": "string"
+    },
+    "synthetic_learner_input": {
+      "maxLength": 1200,
+      "minLength": 1,
+      "title": "Synthetic Learner Input",
+      "type": "string"
+    },
+    "synthetic_only": {
+      "const": true,
+      "title": "Synthetic Only",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "scenario_version",
+    "cefr_level",
+    "error_category",
+    "synthetic_learner_input",
+    "gold_correction",
+    "expected_facets",
+    "prompt_id",
+    "prompt_version",
+    "schema_id",
+    "harness_version",
+    "synthetic_only",
+    "source_fingerprint"
+  ],
+  "title": "HuggingFaceEvalRow",
+  "type": "object"
+}

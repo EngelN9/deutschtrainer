@@ -6,4 +6,10 @@ dist
 build
 outputs
 work
+evaluation/matraix/data/expanded
+evaluation/matraix/reports
+evaluation/matraix/.runs
+evaluation/matraix/.test-tmp
+evaluation/matraix/.uv-cache
+evaluation/matraix/.venv
 pnpm-lock.yaml

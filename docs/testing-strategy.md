@@ -224,3 +224,17 @@ pnpm test
   env file，也不得以 placeholder 取代。
 - connected staging 重複雙使用者流程；Android 實機另驗證 settings、notification、
   downloads/pending queue、progress 與 Auth session 在 restart 後仍已清除。
+
+## 21. MatrAIx synthetic evaluation
+
+Deterministic evaluation CI 使用 Python 3.12 與固定 uv 版本，且不提供 provider secret、不
+下載 Persona 1M、不執行 live model。它驗證 cohort/scenario/result/manifest schema、36/144/
+192 cardinality、checksum 重現性、未核准 scenario fail closed、denominator/failure buckets、
+golden JSON/Markdown disclaimer、路徑 containment、output size、raw HTML、secret/PII 掃描，
+以及 production dependency isolation。
+
+36 個 frozen feedback fixtures 另由 TypeScript script 直接通過 production
+`WritingFeedback.v1` schema、prompt registry version 與 UTF-16 offset 檢查。36-cell 兩位
+reviewer calibration 只校準 harness，不能滿足 Gate C。Live 192 evaluations、provider
+quality/cost/latency、真實 learner understanding、裝置或 production evidence 均維持獨立
+`BLOCKED`，不可由 deterministic golden report 取代。

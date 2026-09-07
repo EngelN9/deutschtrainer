@@ -42,6 +42,63 @@ describe("learning engine", () => {
     expect(mastery.correctStreak).toBe(1);
   });
 
+  it("still raises mastery for correct answers that used a hint", () => {
+    const mastery = calculateNextMastery(baseMastery, {
+      difficulty: 2,
+      expectedResponseTimeMs: 4000,
+      isCorrect: true,
+      responseTimeMs: 3000,
+      score: 100,
+      usedHint: true,
+    });
+
+    expect(mastery.masteryScore).toBeGreaterThan(baseMastery.masteryScore);
+  });
+
+  it("never lowers mastery for a correct answer, even when hinted and slow", () => {
+    const mastery = calculateNextMastery(baseMastery, {
+      difficulty: 2,
+      expectedResponseTimeMs: 1000,
+      isCorrect: true,
+      responseTimeMs: 9000,
+      score: 100,
+      usedHint: true,
+    });
+
+    expect(mastery.masteryScore).toBeGreaterThan(baseMastery.masteryScore);
+  });
+
+  it("rewards an unhinted correct answer more than a hinted one", () => {
+    const signal = {
+      difficulty: 2,
+      expectedResponseTimeMs: 4000,
+      isCorrect: true,
+      responseTimeMs: 3000,
+      score: 100,
+    };
+    const hinted = calculateNextMastery(baseMastery, { ...signal, usedHint: true });
+    const unhinted = calculateNextMastery(baseMastery, { ...signal, usedHint: false });
+
+    expect(unhinted.masteryScore).toBeGreaterThan(hinted.masteryScore);
+    expect(hinted.masteryScore).toBeGreaterThan(baseMastery.masteryScore);
+  });
+
+  it("lets a learner who always uses hints still reach stable mastery", () => {
+    let mastery: SkillMastery = { ...baseMastery, masteryScore: 0 };
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      mastery = calculateNextMastery(mastery, {
+        difficulty: 2,
+        expectedResponseTimeMs: 4000,
+        isCorrect: true,
+        responseTimeMs: 3000,
+        score: 100,
+        usedHint: true,
+      });
+    }
+
+    expect(getMasteryBand(mastery.masteryScore)).toBe("stable_mastery");
+  });
+
   it("schedules same-day review for incorrect answers", () => {
     const decision = scheduleReview(
       {
