@@ -1,0 +1,412 @@
+{
+  "schema_version": "1.0",
+  "scenario_version": "scenario.v1",
+  "prompt_id": "evaluate-writing",
+  "prompt_version": "1.0.0",
+  "feedback_schema_id": "WritingFeedback.v1",
+  "categories": [
+    {
+      "category": "word_order",
+      "feedback_error_type": "word_order",
+      "related_skill_id_template": "{level}.grammar.word_order",
+      "explanation_zh_tw": "從屬連接詞引導的子句中，變位動詞通常放在子句末尾。",
+      "rule_facet_groups_zh_tw": [
+        ["從屬子句", "從句"],
+        ["句末", "末尾"]
+      ],
+      "revision_task_zh_tw": "找出從屬子句，將變位動詞移到該子句末尾後重寫整句。",
+      "diagnostic_issue": "overly_complex_explanation",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Ich bleibe heute zu Hause, weil ich bin krank.",
+          "original_de": "weil ich bin krank",
+          "correction_de": "weil ich krank bin",
+          "transfer_prompt_zh_tw": "請改正：Er kommt später, weil er muss arbeiten.",
+          "accepted_transfer_answers_de": ["Er kommt später, weil er arbeiten muss."]
+        },
+        "B2": {
+          "learner_text_de": "Obwohl das Wetter war schlecht, fand die Veranstaltung statt.",
+          "original_de": "Obwohl das Wetter war schlecht",
+          "correction_de": "Obwohl das Wetter schlecht war",
+          "transfer_prompt_zh_tw": "請改正：Obwohl sie hatte wenig Zeit, half sie uns.",
+          "accepted_transfer_answers_de": ["Obwohl sie wenig Zeit hatte, half sie uns."]
+        },
+        "C1": {
+          "learner_text_de": "Die Studie zeigt, dass die Maßnahmen können langfristig wirken.",
+          "original_de": "dass die Maßnahmen können langfristig wirken",
+          "correction_de": "dass die Maßnahmen langfristig wirken können",
+          "transfer_prompt_zh_tw": "請改正：Es ist möglich, dass die Ergebnisse müssen neu bewertet werden.",
+          "accepted_transfer_answers_de": [
+            "Es ist möglich, dass die Ergebnisse neu bewertet werden müssen."
+          ]
+        },
+        "C2": {
+          "learner_text_de": "Es bleibt fraglich, inwiefern lässt sich diese Annahme empirisch belegen.",
+          "original_de": "inwiefern lässt sich diese Annahme empirisch belegen",
+          "correction_de": "inwiefern sich diese Annahme empirisch belegen lässt",
+          "transfer_prompt_zh_tw": "請改正：Unklar ist, weshalb wurde dieser Einwand nicht berücksichtigt.",
+          "accepted_transfer_answers_de": [
+            "Unklar ist, weshalb dieser Einwand nicht berücksichtigt wurde."
+          ]
+        }
+      }
+    },
+    {
+      "category": "case",
+      "feedback_error_type": "case",
+      "related_skill_id_template": "{level}.grammar.case",
+      "explanation_zh_tw": "名詞片語的格由動詞或介系詞支配；應依支配關係調整冠詞與詞尾。",
+      "rule_facet_groups_zh_tw": [
+        ["支配", "要求"],
+        ["格", "詞尾", "冠詞"]
+      ],
+      "revision_task_zh_tw": "先標出支配格的動詞或介系詞，再調整受支配名詞片語。",
+      "diagnostic_issue": "feedback_level_mismatch",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Ich helfe mein Bruder bei den Hausaufgaben.",
+          "original_de": "mein Bruder",
+          "correction_de": "meinem Bruder",
+          "transfer_prompt_zh_tw": "請改正：Sie dankt ihr Lehrer.",
+          "accepted_transfer_answers_de": ["Sie dankt ihrem Lehrer."]
+        },
+        "B2": {
+          "learner_text_de": "Trotz dem starken Regen gingen wir spazieren.",
+          "original_de": "Trotz dem starken Regen",
+          "correction_de": "Trotz des starken Regens",
+          "transfer_prompt_zh_tw": "請改正：Wegen dem Unwetter blieb die Schule geschlossen.",
+          "accepted_transfer_answers_de": ["Wegen des Unwetters blieb die Schule geschlossen."]
+        },
+        "C1": {
+          "learner_text_de": "Die Reform bedarf eine sorgfältige Prüfung.",
+          "original_de": "eine sorgfältige Prüfung",
+          "correction_de": "einer sorgfältigen Prüfung",
+          "transfer_prompt_zh_tw": "請改正：Der Vorwurf entbehrt jede sachliche Grundlage.",
+          "accepted_transfer_answers_de": ["Der Vorwurf entbehrt jeder sachlichen Grundlage."]
+        },
+        "C2": {
+          "learner_text_de": "Der Ansatz entbehrt eine belastbare empirische Grundlage.",
+          "original_de": "eine belastbare empirische Grundlage",
+          "correction_de": "einer belastbaren empirischen Grundlage",
+          "transfer_prompt_zh_tw": "請改正：Diese Behauptung bedarf eine genauere Begründung.",
+          "accepted_transfer_answers_de": ["Diese Behauptung bedarf einer genaueren Begründung."]
+        }
+      }
+    },
+    {
+      "category": "article",
+      "feedback_error_type": "article",
+      "related_skill_id_template": "{level}.grammar.article",
+      "explanation_zh_tw": "可數單數名詞通常需要冠詞；若是身分或職業等固定用法，則可能使用零冠詞。",
+      "rule_facet_groups_zh_tw": [["冠詞"], ["單數", "職業", "固定用法"]],
+      "revision_task_zh_tw": "判斷名詞是特指、非特指或零冠詞用法，再補上或移除冠詞。",
+      "diagnostic_issue": "unclear_feedback_detected",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Ich möchte neues Fahrrad kaufen.",
+          "original_de": "neues Fahrrad",
+          "correction_de": "ein neues Fahrrad",
+          "transfer_prompt_zh_tw": "請改正：Wir suchen günstige Wohnung.",
+          "accepted_transfer_answers_de": ["Wir suchen eine günstige Wohnung."]
+        },
+        "B2": {
+          "learner_text_de": "Sie arbeitet als die Ärztin in einer kleinen Klinik.",
+          "original_de": "als die Ärztin",
+          "correction_de": "als Ärztin",
+          "transfer_prompt_zh_tw": "請改正：Er arbeitet als ein Lehrer in Köln.",
+          "accepted_transfer_answers_de": ["Er arbeitet als Lehrer in Köln."]
+        },
+        "C1": {
+          "learner_text_de": "Dies ist Ergebnis einer langfristigen Entwicklung.",
+          "original_de": "ist Ergebnis",
+          "correction_de": "ist das Ergebnis",
+          "transfer_prompt_zh_tw": "請改正：Das war Folge einer unklaren Regelung.",
+          "accepted_transfer_answers_de": ["Das war die Folge einer unklaren Regelung."]
+        },
+        "C2": {
+          "learner_text_de": "Unter Voraussetzung, dass alle Beteiligten zustimmen, ist eine Einigung möglich.",
+          "original_de": "Unter Voraussetzung",
+          "correction_de": "Unter der Voraussetzung",
+          "transfer_prompt_zh_tw": "請改正：Unter Annahme, dass die Daten stimmen, bleibt das Modell plausibel.",
+          "accepted_transfer_answers_de": [
+            "Unter der Annahme, dass die Daten stimmen, bleibt das Modell plausibel."
+          ]
+        }
+      }
+    },
+    {
+      "category": "preposition",
+      "feedback_error_type": "preposition",
+      "related_skill_id_template": "{level}.grammar.preposition",
+      "explanation_zh_tw": "許多動詞、形容詞與名詞有固定介系詞搭配，不能直接依中文逐字選擇。",
+      "rule_facet_groups_zh_tw": [["固定搭配", "搭配"], ["介系詞"]],
+      "revision_task_zh_tw": "把目標詞與其固定介系詞一起記錄，並用同一搭配重寫句子。",
+      "diagnostic_issue": "missing_actionable_guidance",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Ich warte seit zwanzig Minuten für den Bus.",
+          "original_de": "für den Bus",
+          "correction_de": "auf den Bus",
+          "transfer_prompt_zh_tw": "請改正：Wir warten für eine Antwort.",
+          "accepted_transfer_answers_de": ["Wir warten auf eine Antwort."]
+        },
+        "B2": {
+          "learner_text_de": "Er interessiert sich seit Jahren an moderner Architektur.",
+          "original_de": "an moderner Architektur",
+          "correction_de": "für moderne Architektur",
+          "transfer_prompt_zh_tw": "請改正：Sie interessiert sich an nachhaltige Mode.",
+          "accepted_transfer_answers_de": ["Sie interessiert sich für nachhaltige Mode."]
+        },
+        "C1": {
+          "learner_text_de": "Die Entscheidung hängt auf den verfügbaren Daten ab.",
+          "original_de": "auf den verfügbaren Daten ab",
+          "correction_de": "von den verfügbaren Daten ab",
+          "transfer_prompt_zh_tw": "請改正：Der Erfolg hängt auf einer guten Planung ab.",
+          "accepted_transfer_answers_de": ["Der Erfolg hängt von einer guten Planung ab."]
+        },
+        "C2": {
+          "learner_text_de": "Diese These steht im Widerspruch mit den jüngsten Befunden.",
+          "original_de": "im Widerspruch mit den jüngsten Befunden",
+          "correction_de": "im Widerspruch zu den jüngsten Befunden",
+          "transfer_prompt_zh_tw": "請改正：Seine Aussage steht im Einklang zu den Daten.",
+          "accepted_transfer_answers_de": ["Seine Aussage steht im Einklang mit den Daten."]
+        }
+      }
+    },
+    {
+      "category": "tense",
+      "feedback_error_type": "tense",
+      "related_skill_id_template": "{level}.grammar.tense",
+      "explanation_zh_tw": "時態要和時間標記及敘事時間一致；先確定事件發生的時間，再選擇動詞形式。",
+      "rule_facet_groups_zh_tw": [
+        ["時間", "時間標記"],
+        ["時態", "動詞形式"]
+      ],
+      "revision_task_zh_tw": "圈出時間標記，確認事件順序，再統一主要敘事時態。",
+      "diagnostic_issue": "overly_complex_explanation",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Gestern gehe ich mit meiner Schwester ins Kino.",
+          "original_de": "gehe ich",
+          "correction_de": "bin ich gegangen",
+          "transfer_prompt_zh_tw": "請改正：Letzte Woche besuche ich meine Großeltern.",
+          "accepted_transfer_answers_de": [
+            "Letzte Woche habe ich meine Großeltern besucht.",
+            "Letzte Woche besuchte ich meine Großeltern."
+          ]
+        },
+        "B2": {
+          "learner_text_de": "Seit drei Jahren lernte ich jeden Abend Deutsch.",
+          "original_de": "lernte ich",
+          "correction_de": "lerne ich",
+          "transfer_prompt_zh_tw": "請改正：Seit Januar arbeitete sie in Berlin.",
+          "accepted_transfer_answers_de": ["Seit Januar arbeitet sie in Berlin."]
+        },
+        "C1": {
+          "learner_text_de": "Nachdem sie den Bericht liest, stellte sie mehrere Fragen.",
+          "original_de": "den Bericht liest",
+          "correction_de": "den Bericht gelesen hatte",
+          "transfer_prompt_zh_tw": "請改正：Nachdem er die Daten prüft, änderte er seine Einschätzung.",
+          "accepted_transfer_answers_de": [
+            "Nachdem er die Daten geprüft hatte, änderte er seine Einschätzung."
+          ]
+        },
+        "C2": {
+          "learner_text_de": "Nachdem die Verhandlungen scheiterten, zieht die Regierung den Entwurf zurück.",
+          "original_de": "zieht die Regierung den Entwurf zurück",
+          "correction_de": "zog die Regierung den Entwurf zurück",
+          "transfer_prompt_zh_tw": "請改正：Als die Kritik zunahm, überarbeitet das Gremium seinen Vorschlag.",
+          "accepted_transfer_answers_de": [
+            "Als die Kritik zunahm, überarbeitete das Gremium seinen Vorschlag."
+          ]
+        }
+      }
+    },
+    {
+      "category": "collocation",
+      "feedback_error_type": "collocation",
+      "related_skill_id_template": "{level}.vocabulary.collocation",
+      "explanation_zh_tw": "德文常以固定詞語搭配表達意思；個別單字雖可理解，仍需使用慣用搭配。",
+      "rule_facet_groups_zh_tw": [
+        ["固定搭配", "慣用搭配"],
+        ["動詞", "詞語"]
+      ],
+      "revision_task_zh_tw": "把名詞和慣用動詞一起記錄，並以完整搭配改寫。",
+      "diagnostic_issue": "unclear_feedback_detected",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Wir müssen heute eine wichtige Entscheidung machen.",
+          "original_de": "eine wichtige Entscheidung machen",
+          "correction_de": "eine wichtige Entscheidung treffen",
+          "transfer_prompt_zh_tw": "請改正：Sie machte eine schnelle Entscheidung.",
+          "accepted_transfer_answers_de": ["Sie traf eine schnelle Entscheidung."]
+        },
+        "B2": {
+          "learner_text_de": "Mit regelmäßigem Training kann man schnell Fortschritte tun.",
+          "original_de": "Fortschritte tun",
+          "correction_de": "Fortschritte machen",
+          "transfer_prompt_zh_tw": "請改正：Das Team tat große Fortschritte.",
+          "accepted_transfer_answers_de": ["Das Team machte große Fortschritte."]
+        },
+        "C1": {
+          "learner_text_de": "Transparente Kommunikation führt eine zentrale Rolle im Veränderungsprozess durch.",
+          "original_de": "führt eine zentrale Rolle im Veränderungsprozess durch",
+          "correction_de": "spielt eine zentrale Rolle im Veränderungsprozess",
+          "transfer_prompt_zh_tw": "請改正：Vertrauen führt eine wichtige Rolle durch.",
+          "accepted_transfer_answers_de": ["Vertrauen spielt eine wichtige Rolle."]
+        },
+        "C2": {
+          "learner_text_de": "Aus diesen Beobachtungen lässt sich eine eindeutige Schlussfolgerung stellen.",
+          "original_de": "eine eindeutige Schlussfolgerung stellen",
+          "correction_de": "eine eindeutige Schlussfolgerung ziehen",
+          "transfer_prompt_zh_tw": "請改正：Die Autoren stellen daraus voreilige Schlüsse.",
+          "accepted_transfer_answers_de": ["Die Autoren ziehen daraus voreilige Schlüsse."]
+        }
+      }
+    },
+    {
+      "category": "register",
+      "feedback_error_type": "register",
+      "related_skill_id_template": "{level}.writing.register",
+      "explanation_zh_tw": "用語需符合情境與對象；正式書面語應避免命令式、口語或過度隨便的表達。",
+      "rule_facet_groups_zh_tw": [
+        ["情境", "對象"],
+        ["正式", "禮貌", "書面語"]
+      ],
+      "revision_task_zh_tw": "先確認收件者與文本類型，再改成符合該語域的完整句子。",
+      "diagnostic_issue": "feedback_level_mismatch",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Hallo Frau Müller, schick mir bitte die Unterlagen.",
+          "original_de": "Hallo Frau Müller, schick mir bitte die Unterlagen.",
+          "correction_de": "Sehr geehrte Frau Müller, schicken Sie mir bitte die Unterlagen.",
+          "transfer_prompt_zh_tw": "請將正式信件中的句子改得合宜：Gib mir bitte schnell eine Antwort.",
+          "accepted_transfer_answers_de": [
+            "Bitte geben Sie mir bald eine Antwort.",
+            "Könnten Sie mir bitte bald antworten?"
+          ]
+        },
+        "B2": {
+          "learner_text_de": "Ich will, dass Sie mir die zusätzlichen Kosten erklären.",
+          "original_de": "Ich will, dass Sie mir die zusätzlichen Kosten erklären.",
+          "correction_de": "Ich möchte Sie bitten, mir die zusätzlichen Kosten zu erklären.",
+          "transfer_prompt_zh_tw": "請將申訴信中的句子改得較正式：Ich will mein Geld zurück.",
+          "accepted_transfer_answers_de": ["Ich möchte Sie um eine Rückerstattung bitten."]
+        },
+        "C1": {
+          "learner_text_de": "Die gesamte Organisation der Veranstaltung war echt mies.",
+          "original_de": "echt mies",
+          "correction_de": "äußerst unbefriedigend",
+          "transfer_prompt_zh_tw": "請改成正式報告語氣：Die Planung war total chaotisch.",
+          "accepted_transfer_answers_de": [
+            "Die Planung war äußerst mangelhaft.",
+            "Die Planung wies erhebliche Mängel auf."
+          ]
+        },
+        "C2": {
+          "learner_text_de": "Die vorgelegten Zahlen sind im Vergleich zur Prognose total daneben.",
+          "original_de": "total daneben",
+          "correction_de": "weichen erheblich von den Erwartungen ab",
+          "transfer_prompt_zh_tw": "請改成專業分析語氣：Die Ergebnisse sind ziemlich komisch.",
+          "accepted_transfer_answers_de": [
+            "Die Ergebnisse sind in erheblichem Maße unerwartet.",
+            "Die Ergebnisse weichen erheblich von den Erwartungen ab."
+          ]
+        }
+      }
+    },
+    {
+      "category": "cohesion",
+      "feedback_error_type": "cohesion",
+      "related_skill_id_template": "{level}.writing.cohesion",
+      "explanation_zh_tw": "連接詞必須正確表達前後句的邏輯關係，例如原因、結果、轉折或補充。",
+      "rule_facet_groups_zh_tw": [["連接詞"], ["邏輯", "原因", "結果", "轉折", "補充"]],
+      "revision_task_zh_tw": "先說明兩句之間的邏輯，再選擇對應的連接詞。",
+      "diagnostic_issue": "missing_actionable_guidance",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Ich möchte in Berlin arbeiten. Aber besuche ich jetzt einen Deutschkurs.",
+          "original_de": "Aber besuche ich jetzt einen Deutschkurs.",
+          "correction_de": "Deshalb besuche ich jetzt einen Deutschkurs.",
+          "transfer_prompt_zh_tw": "請改正連接詞：Ich bin krank. Aber bleibe ich heute zu Hause.",
+          "accepted_transfer_answers_de": ["Ich bin krank. Deshalb bleibe ich heute zu Hause."]
+        },
+        "B2": {
+          "learner_text_de": "Die Maßnahme ist zunächst teuer. Deshalb spart sie langfristig viel Geld.",
+          "original_de": "Deshalb spart sie langfristig viel Geld.",
+          "correction_de": "Allerdings spart sie langfristig viel Geld.",
+          "transfer_prompt_zh_tw": "請改正連接詞：Die Reise dauert lange. Deshalb ist sie sehr abwechslungsreich.",
+          "accepted_transfer_answers_de": [
+            "Die Reise dauert lange. Allerdings ist sie sehr abwechslungsreich."
+          ]
+        },
+        "C1": {
+          "learner_text_de": "Die Studie ist methodisch solide. Infolgedessen ist die Stichprobe relativ klein.",
+          "original_de": "Infolgedessen ist die Stichprobe relativ klein.",
+          "correction_de": "Allerdings ist die Stichprobe relativ klein.",
+          "transfer_prompt_zh_tw": "請改正連接詞：Der Ansatz ist innovativ. Daher fehlen noch belastbare Daten.",
+          "accepted_transfer_answers_de": [
+            "Der Ansatz ist innovativ. Allerdings fehlen noch belastbare Daten."
+          ]
+        },
+        "C2": {
+          "learner_text_de": "Die Argumentation ist in sich schlüssig. Infolgedessen fehlen empirische Belege.",
+          "original_de": "Infolgedessen fehlen empirische Belege.",
+          "correction_de": "Allerdings fehlen empirische Belege.",
+          "transfer_prompt_zh_tw": "請改正連接詞：Das Modell ist theoretisch überzeugend. Folglich bleibt seine empirische Basis schwach.",
+          "accepted_transfer_answers_de": [
+            "Das Modell ist theoretisch überzeugend. Allerdings bleibt seine empirische Basis schwach."
+          ]
+        }
+      }
+    },
+    {
+      "category": "literal_zh_de_transfer",
+      "feedback_error_type": "idiomaticity",
+      "related_skill_id_template": "{level}.writing.idiomaticity",
+      "explanation_zh_tw": "這是受中文表達影響的逐字翻譯；德文通常使用另一個慣用結構表達相同意思。",
+      "rule_facet_groups_zh_tw": [
+        ["逐字翻譯", "直譯", "中文"],
+        ["慣用", "自然"]
+      ],
+      "revision_task_zh_tw": "保留原意，但改用德文慣用動詞或固定結構重寫。",
+      "diagnostic_issue": "unclear_feedback_detected",
+      "examples": {
+        "B1": {
+          "learner_text_de": "Nach dem Sport mache ich zuerst eine Dusche.",
+          "original_de": "mache ich zuerst eine Dusche",
+          "correction_de": "dusche ich zuerst",
+          "transfer_prompt_zh_tw": "請改得自然：Am Abend mache ich eine Pause von zehn Minuten.",
+          "accepted_transfer_answers_de": [
+            "Am Abend mache ich zehn Minuten Pause.",
+            "Am Abend lege ich eine zehnminütige Pause ein."
+          ]
+        },
+        "B2": {
+          "learner_text_de": "Ich habe einen Vorschlag zu dir: Wir könnten früher anfangen.",
+          "original_de": "einen Vorschlag zu dir",
+          "correction_de": "einen Vorschlag für dich",
+          "transfer_prompt_zh_tw": "請改得自然：Ich habe eine Frage zu dich.",
+          "accepted_transfer_answers_de": ["Ich habe eine Frage an dich."]
+        },
+        "C1": {
+          "learner_text_de": "Die neue Regelung gibt den Beschäftigten erheblichen Druck.",
+          "original_de": "gibt den Beschäftigten erheblichen Druck",
+          "correction_de": "setzt die Beschäftigten erheblich unter Druck",
+          "transfer_prompt_zh_tw": "請改得自然：Die Frist gibt dem Team großen Druck.",
+          "accepted_transfer_answers_de": ["Die Frist setzt das Team stark unter Druck."]
+        },
+        "C2": {
+          "learner_text_de": "Diese Entwicklung bringt uns eine tiefe Nachdenklichkeit über institutionelle Verantwortung.",
+          "original_de": "bringt uns eine tiefe Nachdenklichkeit über institutionelle Verantwortung",
+          "correction_de": "regt uns zu vertieftem Nachdenken über institutionelle Verantwortung an",
+          "transfer_prompt_zh_tw": "請改得自然：Der Befund bringt die Öffentlichkeit zu einer starken Sorge.",
+          "accepted_transfer_answers_de": [
+            "Der Befund gibt der Öffentlichkeit großen Anlass zur Sorge.",
+            "Der Befund löst in der Öffentlichkeit große Sorge aus."
+          ]
+        }
+      }
+    }
+  ]
+}

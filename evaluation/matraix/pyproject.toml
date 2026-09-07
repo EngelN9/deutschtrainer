@@ -1,0 +1,48 @@
+[project]
+name = "deutschtrainer-matraix-evaluation"
+version = "0.1.0"
+description = "Isolated synthetic learner evaluation harness for DeutschTrainer writing feedback."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "pydantic==2.12.5",
+  "PyYAML==6.0.3",
+  "typer==0.21.0",
+]
+
+[project.optional-dependencies]
+live = [
+  "matraix @ git+https://github.com/MatrAIx-ai/MatrAIx-Persona-8B.git@6439df181996c2a67cac16f3b0089a909c011ada",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.0.2",
+  "ruff==0.15.1",
+]
+
+[project.scripts]
+dt-matraix = "dt_matraix.cli:app"
+
+[build-system]
+requires = ["hatchling==1.28.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dt_matraix"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-config --strict-markers -p no:cacheprovider"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "S", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]

@@ -1,0 +1,1505 @@
+{
+  "artifactContractValid": 0,
+  "completedEvaluations": 0,
+  "disclaimer": "SYNTHETIC EVALUATION — NOT REAL LEARNER EVIDENCE",
+  "failureBuckets": {
+    "none": 0,
+    "provider_failure": 0,
+    "schema_invalid": 0,
+    "security_rejected": 0,
+    "timeout": 0
+  },
+  "formalEvidence": false,
+  "humanCalibration": {
+    "completedCells": 0,
+    "note": "Calibration evidence is not Gate C language-review evidence.",
+    "requiredCells": 36,
+    "requiredReviewers": 2,
+    "status": "BLOCKED"
+  },
+  "limitations": [
+    "No live provider run has been performed.",
+    "All 36 formal scenarios remain pending qualified German-language review.",
+    "The 36-cell, two-reviewer measurement calibration is incomplete.",
+    "Synthetic evidence cannot satisfy any product release gate."
+  ],
+  "metrics": {
+    "correction_comprehension_success": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "error_identification_success": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "feedback_level_mismatch": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "missing_actionable_guidance": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "overly_complex_explanation": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "rule_comprehension_success": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "transfer_item_success": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    },
+    "unclear_feedback_detected": {
+      "conditionalTrueRate": null,
+      "endToEndTrueRate": 0.0,
+      "false": 0,
+      "notScorable": 192,
+      "scheduled": 192,
+      "scorable": 0,
+      "true": 0,
+      "wilson95": null
+    }
+  },
+  "pedagogicalDetection": {
+    "feedback_level_mismatch": {
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "falsePositiveRate": null,
+      "sensitivity": null,
+      "trueNegative": 0,
+      "truePositive": 0
+    },
+    "missing_actionable_guidance": {
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "falsePositiveRate": null,
+      "sensitivity": null,
+      "trueNegative": 0,
+      "truePositive": 0
+    },
+    "overly_complex_explanation": {
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "falsePositiveRate": null,
+      "sensitivity": null,
+      "trueNegative": 0,
+      "truePositive": 0
+    },
+    "unclear_feedback_detected": {
+      "falseNegative": 0,
+      "falsePositive": 0,
+      "falsePositiveRate": null,
+      "sensitivity": null,
+      "trueNegative": 0,
+      "truePositive": 0
+    }
+  },
+  "replicateConsistency": {
+    "completeGroups": 0,
+    "exactChecksumAgreementRate": null,
+    "metricFlipRate": null,
+    "metricVectorAgreementRate": null,
+    "perMetricThreeOfThreeAgreement": {
+      "correction_comprehension_success": null,
+      "error_identification_success": null,
+      "feedback_level_mismatch": null,
+      "missing_actionable_guidance": null,
+      "overly_complex_explanation": null,
+      "rule_comprehension_success": null,
+      "transfer_item_success": null,
+      "unclear_feedback_detected": null
+    },
+    "schemaValidRate": null
+  },
+  "scheduledEvaluations": 192,
+  "schemaVersion": "report.v1",
+  "status": "BLOCKED",
+  "strata": {
+    "cefr_level": [
+      {
+        "completed": 0,
+        "field": "cefr_level",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 48,
+        "value": "B1"
+      },
+      {
+        "completed": 0,
+        "field": "cefr_level",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 48,
+        "value": "B2"
+      },
+      {
+        "completed": 0,
+        "field": "cefr_level",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 48,
+        "value": "C1"
+      },
+      {
+        "completed": 0,
+        "field": "cefr_level",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 48,
+            "scheduled": 48,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 48,
+        "value": "C2"
+      }
+    ],
+    "error_category": [
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "article"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "case"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": false,
+        "scheduled": 16,
+        "value": "cohesion"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "collocation"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "literal_zh_de_transfer"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": false,
+        "scheduled": 16,
+        "value": "preposition"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "register"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 24,
+            "scheduled": 24,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 24,
+        "value": "tense"
+      },
+      {
+        "completed": 0,
+        "field": "error_category",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 16,
+            "scheduled": 16,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": false,
+        "scheduled": 16,
+        "value": "word_order"
+      }
+    ],
+    "feedback_variant": [
+      {
+        "completed": 0,
+        "field": "feedback_variant",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 120,
+            "scheduled": 120,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 120,
+        "value": "baseline"
+      },
+      {
+        "completed": 0,
+        "field": "feedback_variant",
+        "metrics": {
+          "correction_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "error_identification_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "feedback_level_mismatch": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "missing_actionable_guidance": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "overly_complex_explanation": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "rule_comprehension_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "transfer_item_success": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          },
+          "unclear_feedback_detected": {
+            "conditionalTrueRate": null,
+            "endToEndTrueRate": 0.0,
+            "false": 0,
+            "notScorable": 72,
+            "scheduled": 72,
+            "scorable": 0,
+            "true": 0,
+            "wilson95": null
+          }
+        },
+        "rankingAllowed": true,
+        "scheduled": 72,
+        "value": "diagnostic_perturbation"
+      }
+    ]
+  }
+}
