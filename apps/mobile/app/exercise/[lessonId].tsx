@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Lightbulb, XCircle } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { LessonExercise } from "@deutschtrainer/shared-types";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { gradeFixedExercise, type GradingResult } from "@deutschtrainer/grading";
 import type { EvaluateResponseResponse } from "@deutschtrainer/validation";
 import { AuthGate } from "../../src/features/auth/AuthGate";
@@ -488,8 +488,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   correct: {
-    backgroundColor: "#ECFDF3",
-    borderColor: "#86C99A",
+    backgroundColor: colorTokens.successSoft,
+    borderColor: "#86C9A5",
   },
   explanation: {
     color: colorTokens.mutedText,
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   feedback: {
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.sm,
     padding: spacingTokens.md,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   incorrect: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colorTokens.dangerSoft,
     borderColor: "#E6A1A1",
   },
   instruction: {

@@ -13,9 +13,15 @@ export function AdminLoginPage() {
   if (!repository) {
     return (
       <main className="state-screen state-error">
-        <TriangleAlert size={28} />
-        <strong>管理後台環境尚未設定</strong>
-        <p>缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY。</p>
+        <section className="state-card" aria-labelledby="admin-config-title">
+          <span className="state-card-icon" aria-hidden="true">
+            <TriangleAlert size={28} />
+          </span>
+          <p className="section-kicker">Configuration required</p>
+          <h1 id="admin-config-title">管理後台環境尚未設定</h1>
+          <p>缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY。</p>
+          <small>為保護管理功能，此頁不會使用不安全的預設連線。</small>
+        </section>
       </main>
     );
   }

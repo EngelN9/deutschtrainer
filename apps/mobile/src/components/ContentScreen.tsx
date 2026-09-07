@@ -2,8 +2,9 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from "@deutschtrainer/ui";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
 import { MainNavigation } from "./MainNavigation";
 
@@ -11,6 +12,7 @@ interface ContentScreenProps extends PropsWithChildren {
   action?: ReactNode;
   description?: string;
   eyebrow?: string;
+  footer?: ReactNode;
   onBack?: () => void;
   showBack?: boolean;
   showMainNavigation?: boolean;
@@ -22,6 +24,7 @@ export function ContentScreen({
   children,
   description,
   eyebrow,
+  footer,
   onBack,
   showBack = false,
   showMainNavigation = false,
@@ -40,10 +43,12 @@ export function ContentScreen({
           </View>
         ) : null}
         <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[
             styles.scrollContent,
             isCompact ? styles.compactScrollContent : null,
           ]}
+          keyboardShouldPersistTaps="handled"
           style={styles.screen}
         >
           <View
@@ -70,12 +75,19 @@ export function ContentScreen({
             </View>
             <View style={styles.header}>
               {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-              <Text style={styles.title}>{title}</Text>
-              {description ? <Text style={styles.description}>{description}</Text> : null}
+              <Text accessibilityRole="header" style={styles.title}>
+                {title}
+              </Text>
+              {description ? (
+                <Text selectable style={styles.description}>
+                  {description}
+                </Text>
+              ) : null}
             </View>
             <View style={styles.body}>{children}</View>
           </View>
         </ScrollView>
+        {footer ? <View style={styles.stickyFooter}>{footer}</View> : null}
         {showMainNavigation && !isWide ? (
           <View style={styles.navigationDock}>
             <MainNavigation />
@@ -101,13 +113,15 @@ const styles = StyleSheet.create({
   },
   description: {
     color: colorTokens.mutedText,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: typographyTokens.body.fontSize,
+    lineHeight: typographyTokens.body.lineHeight,
   },
   eyebrow: {
     color: colorTokens.teal,
-    fontSize: 13,
+    fontSize: typographyTokens.caption.fontSize,
     fontWeight: "800",
+    letterSpacing: 0.4,
+    lineHeight: typographyTokens.caption.lineHeight,
   },
   header: {
     gap: spacingTokens.sm,
@@ -117,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.md,
     borderWidth: 1,
     height: 44,
     justifyContent: "center",
@@ -138,6 +152,13 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.background,
     flex: 1,
   },
+  stickyFooter: {
+    backgroundColor: colorTokens.surface,
+    borderTopColor: colorTokens.border,
+    borderTopWidth: 1,
+    paddingHorizontal: spacingTokens.md,
+    paddingVertical: spacingTokens.sm,
+  },
   scrollContent: {
     flexGrow: 1,
     padding: spacingTokens.lg,
@@ -147,11 +168,11 @@ const styles = StyleSheet.create({
     maxWidth: 900,
   },
   navigationDock: {
-    backgroundColor: colorTokens.background,
+    backgroundColor: colorTokens.surface,
     borderTopColor: colorTokens.border,
     borderTopWidth: 1,
     paddingHorizontal: spacingTokens.sm,
-    paddingVertical: spacingTokens.xs,
+    paddingVertical: spacingTokens.sm,
   },
   navigationRail: {
     backgroundColor: colorTokens.background,
@@ -165,9 +186,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colorTokens.text,
-    fontSize: 30,
-    fontWeight: "800",
-    lineHeight: 38,
+    fontSize: typographyTokens.title.fontSize,
+    fontWeight: typographyTokens.title.fontWeight,
+    lineHeight: typographyTokens.title.lineHeight,
   },
   topAction: {
     alignItems: "flex-end",

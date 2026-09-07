@@ -4,7 +4,7 @@ import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import { ChevronRight, Clock3, FilePenLine, History } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { ContentScreen } from "../src/components/ContentScreen";
 import { LevelSelector } from "../src/components/LevelSelector";
@@ -13,6 +13,7 @@ import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
 import { writingStatusLabel, writingTypeLabel } from "../src/features/writing/writingLabels";
 import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
+import { WritingJourneyStepper } from "../src/components/WritingJourneyStepper";
 
 export default function WritingScreen() {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function WritingScreen() {
                 <Text style={styles.recommendedDescription}>
                   寫出第一稿後，只先看三個最重要的問題，再重寫一次比較改善。
                 </Text>
+                <WritingJourneyStepper current="draft" />
                 <View style={styles.metaRow}>
                   <Text style={styles.typeLabel}>
                     {level} · {writingTypeLabel(recommendedPrompt.writingType)}
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.md,
@@ -232,9 +234,9 @@ const styles = StyleSheet.create({
     lineHeight: 25,
   },
   recommendedCard: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
-    borderRadius: 8,
+    backgroundColor: colorTokens.primarySoft,
+    borderColor: "#B8D0FF",
+    borderRadius: radiusTokens.lg,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.lg,

@@ -7,6 +7,7 @@ import type {
   TranscribeRequest,
 } from "@deutschtrainer/validation";
 import { useAuthStore } from "../auth/useAuthStore";
+import { canLoadAuthenticatedAudioWorkspace } from "./audioLearningAccess";
 import {
   deleteSpeakingSubmission,
   getAudioLearningWorkspace,
@@ -19,10 +20,11 @@ import {
 
 export function useAudioLearningWorkspace() {
   const profile = useAuthStore((state) => state.profile);
+  const authMode = useAuthStore((state) => state.authMode);
   return useQuery({
     queryKey: audioLearningQueryKey(profile?.id),
     queryFn: getAudioLearningWorkspace,
-    enabled: Boolean(profile),
+    enabled: canLoadAuthenticatedAudioWorkspace({ authMode, profileId: profile?.id }),
     staleTime: 15 * 1000,
     retry: 1,
   });

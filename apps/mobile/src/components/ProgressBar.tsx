@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import { colorTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens } from "@deutschtrainer/ui";
 
 interface ProgressBarProps {
   accessibilityLabel: string;
@@ -30,8 +30,8 @@ export function ProgressBar({ accessibilityLabel, percent, tone = "primary" }: P
 
 const styles = StyleSheet.create({
   fill: {
-    borderRadius: 3,
-    height: 6,
+    borderRadius: radiusTokens.pill,
+    height: 8,
   },
   primary: {
     backgroundColor: colorTokens.primary,
@@ -40,9 +40,9 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.success,
   },
   track: {
-    backgroundColor: "#DDE3EA",
-    borderRadius: 3,
-    height: 6,
+    backgroundColor: colorTokens.border,
+    borderRadius: radiusTokens.pill,
+    height: 8,
     overflow: "hidden",
     width: "100%",
   },

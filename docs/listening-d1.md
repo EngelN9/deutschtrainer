@@ -48,16 +48,14 @@ the `聽說` tab is currently a dead end on the public preview: the Blueprint sh
 `AI_PUBLIC_ENABLED=false` with no `OPENAI_API_KEY`, so its on-demand TTS is refused and no audio is
 ever produced. D1 is the offline answer to that, not a replacement for the connected path.
 
-### Reachability, and what is deliberately not wired
+### Reachability and capability boundary
 
-D1 is reachable from `/audio-training` in connected and guest-trial sessions, which is what the
-public web preview serves. It is **not** yet reachable from the offline Demo navigation, which
-still exposes only Home, Courses, and Review. Adding it there needs the demo/connected navigation
-split and the workspace-query gate from `codex/listening-d1`
-(`navigationPolicy.ts`, `audioLearningAccess.ts`); those were left on the branch because they
-arrived bundled with an auth-screen rewrite that predates and conflicts with the guest-trial model
-now on `main`. Until they are ported, a Demo session on `/audio-training` still issues the
-authenticated workspace request, and the Android offline APK cannot reach D1 through its menu.
+D1 is reachable from `/audio-training` in connected, guest-trial, and offline Demo sessions. The
+Mobile capability registry exposes the bundled listening exercise under `更多` in Demo without
+exposing connected speaking or AI capabilities. `audioLearningAccess.ts` keeps the authenticated
+workspace query disabled unless both the Supabase auth mode and a connected profile are present;
+Demo therefore loads only the local D1 content and does not issue a protected audio-workspace
+request.
 
 The EAS profile split (`preview` offline-only, `staging` connected-only) also lives on that branch
 and is not in effect here.

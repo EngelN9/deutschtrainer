@@ -11,6 +11,7 @@ import { IconButton } from "../../src/components/IconButton";
 import { MessageBanner } from "../../src/components/MessageBanner";
 import { PrimaryButton } from "../../src/components/PrimaryButton";
 import { StatePanel } from "../../src/components/StatePanel";
+import { WritingJourneyStepper } from "../../src/components/WritingJourneyStepper";
 import { WritingDiffView } from "../../src/features/writing/WritingDiffView";
 import { WritingFeedbackPanel } from "../../src/features/writing/WritingFeedbackPanel";
 import { getWritingImprovementSummary } from "../../src/features/writing/writingJourney";
@@ -132,6 +133,11 @@ export default function WritingSubmissionScreen() {
           <>
             <MessageBanner message={deleteMutation.error?.message ?? null} tone="error" />
             <MessageBanner message={retryMutation.error?.message ?? null} tone="error" />
+            <WritingJourneyStepper
+              current={
+                versions.length >= 2 ? "compare" : currentVersion?.feedback ? "issues" : "draft"
+              }
+            />
 
             <View style={styles.versionSection}>
               <Text style={styles.sectionTitle}>查看版本</Text>
