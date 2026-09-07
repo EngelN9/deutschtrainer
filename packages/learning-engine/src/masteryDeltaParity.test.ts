@@ -28,7 +28,20 @@ interface AttemptCase {
 function psql(query: string): string {
   return execFileSync(
     "docker",
-    ["exec", "-i", DB_CONTAINER, "psql", "-U", "postgres", "-d", "postgres", "-X", "-At", "-c", query],
+    [
+      "exec",
+      "-i",
+      DB_CONTAINER,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-X",
+      "-At",
+      "-c",
+      query,
+    ],
     { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
   );
 }
@@ -62,7 +75,10 @@ function durationMs(slow: boolean): number {
 }
 
 function typescriptDelta(attempt: AttemptCase): number {
-  const previous = {
+  const previous: SkillMastery = {
+    userId: "parity-test-user",
+    skillId: "B1.word_order.subordinate_clause",
+    lastErrorTypes: [],
     masteryScore: BASELINE,
     confidenceScore: BASELINE,
     attemptCount: 0,
@@ -72,7 +88,7 @@ function typescriptDelta(attempt: AttemptCase): number {
     averageResponseTimeMs: 0,
     correctStreak: 0,
     incorrectStreak: 0,
-  } as unknown as SkillMastery;
+  };
   const signal: AttemptSignal = {
     isCorrect: attempt.isCorrect,
     usedHint: attempt.usedHint,
