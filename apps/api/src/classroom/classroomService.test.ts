@@ -172,6 +172,14 @@ describe("ClassroomService", () => {
     expect(endSession).toHaveBeenCalledWith("rtc_test123", "client_ended");
   });
 
+  it("keeps the caller session active when provider hangup is not confirmed", async () => {
+    const fixture = createFixture();
+    fixture.hangup.mockResolvedValueOnce(false);
+
+    await expect(fixture.service.endActiveSession("token")).resolves.toBe(false);
+    expect(fixture.endSession).not.toHaveBeenCalled();
+  });
+
   it("is a no-op when the caller has no active session", async () => {
     const fixture = createFixture();
     fixture.findActiveCallId.mockResolvedValueOnce(undefined);
@@ -179,13 +187,22 @@ describe("ClassroomService", () => {
     expect(fixture.hangup).not.toHaveBeenCalled();
   });
 
-  it("sweeps every expired session even when a hangup fails", async () => {
+  it("keeps an expired session for retry when provider hangup is not confirmed", async () => {
     const fixture = createFixture({ expiredCallIds: ["rtc_a", "rtc_b"] });
     fixture.hangup.mockResolvedValueOnce(false);
 
-    await expect(fixture.service.sweepExpiredSessions()).resolves.toBe(2);
+    await expect(fixture.service.sweepExpiredSessions()).resolves.toBe(1);
     expect(fixture.hangup.mock.calls.map(([id]) => id)).toEqual(["rtc_a", "rtc_b"]);
-    // Rows close regardless, so an unreachable call cannot wedge the sweeper into retrying forever.
+    expect(fixture.endSession.mock.calls.map(([id]) => id)).toEqual(["rtc_b"]);
+  });
+
+  it("counts only the rows the sweep actually closed", async () => {
+    const fixture = createFixture({ expiredCallIds: ["rtc_a", "rtc_b"] });
+    // rtc_a was already closed — normally because the client's own session/end won the race.
+    fixture.endSession.mockResolvedValueOnce(false);
+
+    await expect(fixture.service.sweepExpiredSessions()).resolves.toBe(1);
+    // Both are still attempted; only the one that closed is counted.
     expect(fixture.endSession.mock.calls.map(([id]) => id)).toEqual(["rtc_a", "rtc_b"]);
   });
 

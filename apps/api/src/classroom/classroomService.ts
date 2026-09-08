@@ -72,7 +72,13 @@ export class ClassroomService implements ClassroomServiceContract {
     if (!callId) return false;
     // Hang up before closing the row. If this process dies in between, the row stays active and
     // the sweeper ends the call at its expiry — the failure mode costs minutes, not a session.
-    await this.options.provider.hangup(callId);
+    const endedAtProvider = await this.options.provider.hangup(callId);
+    if (!endedAtProvider) {
+      // Keep the row active when the provider could not confirm termination. The sweeper can then
+      // retry against the only server-side handle we have instead of losing track of a potentially
+      // billable call.
+      return false;
+    }
     return this.options.repository.endSession(callId, "client_ended");
   }
 
@@ -85,11 +91,16 @@ export class ClassroomService implements ClassroomServiceContract {
     const callIds = await this.options.repository.listExpiredCallIds();
     let ended = 0;
     for (const callId of callIds) {
-      // hangup never throws; close the row either way so a permanently unreachable call cannot
-      // wedge the sweeper into retrying it forever.
-      await this.options.provider.hangup(callId);
-      await this.options.repository.endSession(callId, "expired");
-      ended += 1;
+      // hangup never throws. A false result means termination was not confirmed, so retain the row
+      // and its call id for the next sweep. The provider maps an already-ended 404 to true.
+      const endedAtProvider = await this.options.provider.hangup(callId);
+      if (!endedAtProvider) continue;
+      // Count only rows this sweep actually closed. endSession returns false when the row was
+      // already closed — normally because the client's own session/end won the race — and counting
+      // those made the sweeper look like it had ended sessions it merely raced.
+      if (await this.options.repository.endSession(callId, "expired")) {
+        ended += 1;
+      }
     }
     return ended;
   }

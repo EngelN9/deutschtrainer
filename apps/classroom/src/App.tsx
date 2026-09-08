@@ -14,6 +14,7 @@ import {
   createClassroomConnection,
   parseToolArguments,
   type ClassroomConnection,
+  type ClassroomInputMode,
   type ClassroomConnectionStatus,
 } from "./realtimeClient";
 
@@ -174,7 +175,7 @@ function ClassroomSession({
     connectionRef.current = undefined;
   }
 
-  async function startClassroom() {
+  async function startClassroom(inputMode: ClassroomInputMode) {
     if (!audioRef.current || eligibility !== "eligible") return;
     setRemainingSeconds(SESSION_SECONDS);
     teardownClassroom();
@@ -185,6 +186,7 @@ function ClassroomSession({
         accessToken: session.access_token,
         apiBaseUrl: config.apiBaseUrl,
         audioElement: audioRef.current,
+        inputMode,
         signal: controller.signal,
         callbacks: {
           onOperation: (operation, turnId) =>
@@ -254,18 +256,25 @@ function ClassroomSession({
 
       <section className="control-panel" aria-labelledby="controls-title">
         <div>
-          <h2 id="controls-title">麥克風與連線</h2>
-          <p>開始後瀏覽器會要求麥克風權限。Phase 0 上限為 5 分鐘。</p>
+          <h2 id="controls-title">AI 導師連線</h2>
+          <p>可使用麥克風進行語音課程，或在無法使用麥克風時改用文字。每次上限為 5 分鐘。</p>
         </div>
         <div className="button-row">
           <button
             disabled={active || eligibility !== "eligible"}
-            onClick={() => void startClassroom()}
+            onClick={() => void startClassroom("voice")}
           >
-            開始教室
+            開始語音課程
+          </button>
+          <button
+            className="secondary-button"
+            disabled={active || eligibility !== "eligible"}
+            onClick={() => void startClassroom("typed")}
+          >
+            不用麥克風，改用文字
           </button>
           <button className="danger-button" disabled={!active} onClick={stopClassroom}>
-            停止並關閉麥克風
+            停止 AI 導師
           </button>
           {import.meta.env.DEV ? (
             <button className="secondary-button" onClick={runSimulator}>
@@ -293,7 +302,7 @@ function ClassroomSession({
           </p>
         ) : null}
         <ClassroomBoard
-          onSendBoardText={(text) => connectionRef.current?.sendLearnerNote(text) ?? false}
+          onSendBoardText={(text) => connectionRef.current?.sendLearnerText(text) ?? false}
           state={board}
         />
       </section>

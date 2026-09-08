@@ -152,12 +152,52 @@ p {
   background: #eef2f6;
   color: #4b5563;
 }
+/* The send row is a sibling of .board-canvas, never a child: as a child it pushed Excalidraw's
+   height:100% root down and the overflow:hidden below clipped the editor's bottom edge, which is
+   where Excalidraw pins its tool island on touch layouts. */
+.board-area {
+  display: flex;
+  flex-direction: column;
+}
+.board-input {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.board-input textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  font: inherit;
+  font-size: 16px;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  resize: vertical;
+}
+.board-input p {
+  color: #475569;
+  font-size: 14px;
+  margin: 0;
+}
+.board-input-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.board-input input {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
 .board-canvas {
   width: 100%;
   height: 460px;
   overflow: hidden;
   border: 1px solid #d7dce2;
   border-radius: 12px;
+  /* Excalidraw already sets touch-action:none on its canvas; this stops a scroll that starts on
+     the surrounding chrome from chaining out into the host page's scroller. */
+  overscroll-behavior: contain;
 }
 .safety-panel {
   border-left: 5px solid #b45309;
@@ -181,11 +221,21 @@ p {
   .button-row button {
     width: 100%;
   }
+  .board-input-actions {
+    flex-direction: column;
+  }
+  .board-input-actions button {
+    width: 100%;
+  }
   .board-heading {
     flex-direction: column;
   }
   .board-canvas {
-    height: 400px;
+    /* Excalidraw's touch layout needs room for the tool island plus a usable drawing area. 400px
+       flat left almost nothing to draw on once the chrome is accounted for. vh here is the iframe's
+       height, not the phone's. */
+    height: 62vh;
+    min-height: 420px;
   }
   .auth-card,
   .control-panel,
@@ -217,6 +267,7 @@ p {
 
 .board-send-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;

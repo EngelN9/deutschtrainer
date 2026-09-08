@@ -54,9 +54,11 @@ analytics result is not evidence of zero users. Overall release readiness remain
 ## Virtual classroom Phase 0 evidence
 
 The isolated `codex/classroom-phase0` worktree adds a repository-local, five-minute,
-single-developer virtual-classroom slice with no persistence or migration. B1-B6 may be marked
-`PASS` only for the exact locally tested worktree: browser shell/auth eligibility, safe SDP API,
-WebRTC lifecycle, whiteboard reducer, tool schemas, and versioned tutor prompt. The development
+single-developer virtual-classroom slice. It persists server-authoritative session identifiers and
+expiry state through the append-only classroom session-controls migration; learner conversation,
+audio, and freehand board content are not persisted. B1-B6 may be marked `PASS` only for the exact
+locally tested worktree: browser shell/auth eligibility, safe SDP API, WebRTC lifecycle, whiteboard
+reducer, tool schemas, versioned tutor prompt, and session-budget controls. The development
 simulator is deterministic synthetic evidence only.
 
 B7 remains `BLOCKED` until a real provider session with fake mode disabled demonstrates spoken

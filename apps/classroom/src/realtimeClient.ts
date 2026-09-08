@@ -4,6 +4,8 @@ import type { OperationResult } from "./boardReducer";
 export type ClassroomConnectionStatus =
   "idle" | "requesting_microphone" | "connecting" | "connected" | "stopped" | "error";
 
+export type ClassroomInputMode = "voice" | "typed";
+
 export interface ClassroomConnectionCallbacks {
   onOperation: (operation: unknown, turnId: string) => OperationResult | undefined;
   onStatus: (status: ClassroomConnectionStatus, message: string) => void;
@@ -12,7 +14,7 @@ export interface ClassroomConnectionCallbacks {
 }
 
 export interface ClassroomConnection {
-  sendLearnerNote: (text: string) => boolean;
+  sendLearnerText: (text: string) => boolean;
   stop: () => void;
 }
 
@@ -36,25 +38,34 @@ export async function createClassroomConnection(options: {
   apiBaseUrl: string;
   audioElement: HTMLAudioElement;
   callbacks: ClassroomConnectionCallbacks;
+  inputMode: ClassroomInputMode;
   maximumDurationMs?: number;
   signal?: AbortSignal;
 }): Promise<ClassroomConnection> {
-  const { callbacks, signal } = options;
+  const { callbacks, inputMode, signal } = options;
   if (signal?.aborted) throw classroomAbortError();
-  callbacks.onStatus("requesting_microphone", "正在請求麥克風權限…");
+  if (!window.isSecureContext) {
+    const message =
+      "AI 教室需要安全連線。請使用受信任的 HTTPS 網址；透過 Wi-Fi 使用其他裝置時，不能使用這台電腦的 localhost 網址。";
+    callbacks.onStatus("error", message);
+    throw new Error(message);
+  }
 
-  let microphone: MediaStream;
-  try {
-    microphone = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (error) {
-    callbacks.onStatus("error", microphoneErrorMessage(error));
-    throw error;
+  let microphone: MediaStream | undefined;
+  if (inputMode === "voice") {
+    callbacks.onStatus("requesting_microphone", "正在請求麥克風權限…");
+    try {
+      microphone = await requestClassroomMicrophone(inputMode, navigator.mediaDevices);
+    } catch (error) {
+      callbacks.onStatus("error", microphoneErrorMessage(error));
+      throw error;
+    }
   }
 
   // Stop was pressed, or the component unmounted, while the permission prompt was open. Nothing
   // downstream exists to clean up yet, so release the microphone here or it stays live.
   if (signal?.aborted) {
-    for (const track of microphone.getTracks()) track.stop();
+    for (const track of microphone?.getTracks() ?? []) track.stop();
     callbacks.onStatus("stopped", "教室已停止，麥克風與連線均已關閉。");
     throw classroomAbortError();
   }
@@ -75,7 +86,10 @@ export async function createClassroomConnection(options: {
     // Best effort only: closing the tab skips this entirely, which is exactly why the server
     // sweeps expired sessions rather than trusting the client to report.
     void releaseServerSession(options.apiBaseUrl, options.accessToken);
-    callbacks.onStatus("stopped", "教室已停止，麥克風與連線均已關閉。");
+    callbacks.onStatus(
+      "stopped",
+      inputMode === "voice" ? "教室已停止，麥克風與連線均已關閉。" : "教室已停止，連線已關閉。",
+    );
   };
 
   // From here on there are resources to release, so aborting can go through the normal teardown.
@@ -84,11 +98,21 @@ export async function createClassroomConnection(options: {
   peerConnection.ontrack = (event) => {
     options.audioElement.srcObject = event.streams[0] ?? null;
   };
-  for (const track of microphone.getTracks()) {
-    peerConnection.addTrack(track, microphone);
+  if (microphone) {
+    for (const track of microphone.getTracks()) {
+      peerConnection.addTrack(track, microphone);
+    }
+  } else {
+    // Keep tutor audio available without manufacturing a microphone stream. A recvonly
+    // transceiver puts an audio m-line in the SDP while the learner sends turns as input_text.
+    peerConnection.addTransceiver("audio", { direction: "recvonly" });
   }
 
-  dataChannel.onopen = () => callbacks.onStatus("connected", "已連線，可開始說德語。");
+  dataChannel.onopen = () =>
+    callbacks.onStatus(
+      "connected",
+      inputMode === "voice" ? "已連線，可開始說德語。" : "已連線，可輸入德語與 AI 導師對話。",
+    );
   dataChannel.onerror = () => {
     stop();
     callbacks.onStatus("error", "即時事件通道發生錯誤，請停止後重試。");
@@ -168,7 +192,18 @@ export async function createClassroomConnection(options: {
   }
 
   shutdownTimer.value = window.setTimeout(stop, options.maximumDurationMs ?? 300_000);
-  return { sendLearnerNote: (text) => sendLearnerBoardNote(dataChannel, text), stop };
+  return { sendLearnerText: (text) => sendLearnerBoardNote(dataChannel, text), stop };
+}
+
+export async function requestClassroomMicrophone(
+  inputMode: ClassroomInputMode,
+  mediaDevices?: Pick<MediaDevices, "getUserMedia">,
+): Promise<MediaStream | undefined> {
+  if (inputMode === "typed") return undefined;
+  if (!mediaDevices?.getUserMedia) {
+    throw new DOMException("No microphone API", "NotFoundError");
+  }
+  return mediaDevices.getUserMedia({ audio: true });
 }
 
 export async function releaseServerSession(
@@ -188,11 +223,11 @@ export async function releaseServerSession(
 }
 
 export function shutdownClassroomResources(
-  microphone: Pick<MediaStream, "getTracks">,
+  microphone: Pick<MediaStream, "getTracks"> | undefined,
   dataChannel: Pick<RTCDataChannel, "close" | "readyState">,
   peerConnection: Pick<RTCPeerConnection, "close">,
 ): void {
-  for (const track of microphone.getTracks()) track.stop();
+  for (const track of microphone?.getTracks() ?? []) track.stop();
   if (dataChannel.readyState !== "closed") dataChannel.close();
   peerConnection.close();
 }
