@@ -1,7 +1,14 @@
-import { createServer, type IncomingHttpHeaders, type IncomingMessage } from "node:http";
+import { createServer, type IncomingHttpHeaders } from "node:http";
 import { resolve } from "node:path";
 import { loadEnvFile } from "node:process";
 import { createApiHandler } from "./app";
+import { ClassroomService } from "./classroom/classroomService";
+import {
+  OpenAiRealtimeProvider,
+  UnavailableRealtimeProvider,
+} from "./classroom/openAiRealtimeProvider";
+import { SupabaseClassroomAuthenticator } from "./classroom/supabaseClassroomAuthenticator";
+import { SupabaseClassroomRepository } from "./classroom/supabaseClassroomRepository";
 import { SupabaseAiQuotaGate } from "./ai-quota/supabaseAiQuotaGate";
 import { AccountDataService } from "./account-data/accountDataService";
 import { SupabaseAccountDataRepository } from "./account-data/supabaseAccountDataRepository";
@@ -32,6 +39,7 @@ import { SupabaseLearningDataRepository } from "./learning-data/supabaseLearning
 import { KnowledgeService } from "./knowledge/knowledgeService";
 import { SupabaseKnowledgeRepository } from "./knowledge/supabaseKnowledgeRepository";
 import { createHttpRequestLog, resolveRequestId } from "./observability";
+import { readRequestBody, RequestBodyTooLargeError } from "./requestBody";
 import { PrivateRequestRateLimiter } from "./privateRequestRateLimiter";
 import { SettingsService } from "./settings/settingsService";
 import { SupabaseSettingsRepository } from "./settings/supabaseSettingsRepository";
@@ -168,6 +176,27 @@ const settingsService = new SettingsService({
     },
   },
 });
+const classroomProvider = config.openAiApiKey
+  ? new OpenAiRealtimeProvider({
+      apiKey: config.openAiApiKey,
+      model: config.openAiRealtimeModel,
+      timeoutMs: config.openAiTimeoutMs,
+    })
+  : new UnavailableRealtimeProvider();
+const classroomService = new ClassroomService({
+  allowedProfileIds: new Set(config.classroomAllowedProfileIds),
+  authenticator: new SupabaseClassroomAuthenticator(
+    config.supabaseUrl,
+    config.supabaseServiceRoleKey,
+  ),
+  dailySessionLimit: config.classroomDailySessionLimit,
+  enabled: config.classroomEnabled,
+  globalDailySessionLimit: config.classroomGlobalDailySessionLimit,
+  maxSessionSeconds: config.classroomMaxSessionSeconds,
+  provider: classroomProvider,
+  repository: new SupabaseClassroomRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
+  safetyIdentifierSalt: config.openAiSafetyIdentifierSalt,
+});
 const handlerDependencies = {
   accountDataService,
   evaluationService,
@@ -177,12 +206,18 @@ const handlerDependencies = {
   learningDataService,
   knowledgeService,
   settingsService,
+  classroomService,
   aiPublicEnabled: config.publicAiEnabled,
   aiConfigured:
     provider.configured &&
     writingProvider.configured &&
     audioProvider.configured &&
     contentGenerationProvider.configured,
+  classroomConfigured:
+    classroomProvider.configured &&
+    config.classroomAllowedProfileIds.length > 0 &&
+    Boolean(config.openAiSafetyIdentifierSalt),
+  classroomEnabled: config.classroomEnabled,
 };
 
 const server = createServer(async (incoming, outgoing) => {
@@ -218,7 +253,9 @@ const server = createServer(async (incoming, outgoing) => {
     status = response.status;
     outgoing.writeHead(response.status, responseHeaders);
     outgoing.end(Buffer.from(await response.arrayBuffer()));
-  } catch {
+  } catch (error) {
+    const requestTooLarge = error instanceof RequestBodyTooLargeError;
+    status = requestTooLarge ? 413 : 500;
     const responseHeaders: Record<string, string> = {
       "content-type": "application/json; charset=utf-8",
       "x-request-id": requestId,
@@ -228,13 +265,13 @@ const server = createServer(async (incoming, outgoing) => {
       readSingleHeader(incoming.headers.origin),
       config.corsAllowedOrigins,
     );
-    outgoing.writeHead(500, responseHeaders);
+    outgoing.writeHead(status, responseHeaders);
     outgoing.end(
       JSON.stringify({
         error: {
-          code: "DATABASE_ERROR",
-          message: "API 伺服器無法處理要求。",
-          retryable: true,
+          code: requestTooLarge ? "VALIDATION_ERROR" : "DATABASE_ERROR",
+          message: requestTooLarge ? "要求內容超過伺服器允許的大小。" : "API 伺服器無法處理要求。",
+          retryable: !requestTooLarge,
           requestId,
         },
       }),
@@ -264,6 +301,33 @@ server.listen(config.port, config.host, () => {
   );
 });
 
+// Sweeping on boot as well as on an interval is the point: a deploy or a crash restarts this
+// process while calls keep running and billing at the provider, and only a boot sweep ends them.
+// ponytail: a single in-process timer, correct while the API runs one instance. Two instances
+// would double-hang-up (harmless, hangup is idempotent) but should move to a scheduled job.
+if (config.classroomEnabled) {
+  void runClassroomSweep();
+  const sweepTimer = setInterval(() => void runClassroomSweep(), config.classroomSweepIntervalMs);
+  sweepTimer.unref();
+}
+
+async function runClassroomSweep(): Promise<void> {
+  try {
+    const ended = await classroomService.sweepExpiredSessions();
+    if (ended > 0) {
+      console.log(JSON.stringify({ level: "info", event: "classroom_sessions_expired", ended }));
+    }
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        event: "classroom_sweep_failed",
+        message: error instanceof Error ? error.message : "unknown",
+      }),
+    );
+  }
+}
+
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => shutdown(signal));
 }
@@ -289,17 +353,6 @@ function shutdown(signal: NodeJS.Signals): void {
       process.exit(1);
     }
     process.exit(0);
-  });
-}
-
-function readRequestBody(request: IncomingMessage): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    request.on("data", (chunk: Buffer | string) =>
-      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk),
-    );
-    request.on("end", () => resolve(Buffer.concat(chunks)));
-    request.on("error", reject);
   });
 }
 

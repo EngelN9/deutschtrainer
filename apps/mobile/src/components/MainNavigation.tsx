@@ -7,11 +7,13 @@ import {
   Headphones,
   Home,
   Library,
+  Presentation,
   RotateCcw,
 } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useAuthStore } from "../features/auth/useAuthStore";
+import { mobileEnv } from "../lib/env";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
 
 const items: Array<{
@@ -26,6 +28,7 @@ const items: Array<{
   { href: "/writing" as Href, icon: FilePenLine, label: "寫作", path: "/writing" },
   { href: "/audio-training" as Href, icon: Headphones, label: "聽說", path: "/audio-training" },
   { href: "/reviews" as Href, icon: RotateCcw, label: "複習", path: "/reviews" },
+  { href: "/classroom" as Href, icon: Presentation, label: "教室", path: "/classroom" },
   { href: "/analytics" as Href, icon: BarChart3, label: "分析", path: "/analytics" },
 ];
 
@@ -34,10 +37,15 @@ export function MainNavigation({ layout = "bar" }: { layout?: "bar" | "rail" }) 
   const router = useRouter();
   const authMode = useAuthStore((state) => state.authMode);
   const { isCompact } = useResponsiveLayout();
+  // The classroom route stays reachable by URL while the flag is off; this only decides whether it
+  // is advertised. Demo mode never sees it — the API allowlists real learner profiles.
+  const availableItems = mobileEnv.classroomEnabled
+    ? items
+    : items.filter((item) => item.path !== "/classroom");
   const visibleItems =
     authMode === "demo"
-      ? items.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
-      : items;
+      ? availableItems.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
+      : availableItems;
 
   const navigation = (
     <View

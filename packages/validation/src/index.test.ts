@@ -26,6 +26,7 @@ import {
   vocabularyDetailResponseSchema,
   vocabularyListRequestSchema,
   writingWorkspaceResponseSchema,
+  classroomToolOperationSchema,
 } from "./index";
 
 describe("generateExerciseDraftRequestSchema", () => {
@@ -418,6 +419,83 @@ describe("validation schemas", () => {
       accountDeletionRequestSchema.safeParse({
         confirmation: ACCOUNT_DELETION_CONFIRMATION,
         bypass: true,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("classroomToolOperationSchema", () => {
+  it("accepts the four version-one board operations", () => {
+    const operations = [
+      {
+        type: "write_line",
+        operationId: "op-write",
+        elementId: "sentence-1",
+        textDe: "Ich gehe gestern in die Schule.",
+      },
+      {
+        type: "highlight_span",
+        operationId: "op-highlight",
+        targetElementId: "sentence-1",
+        overlayElementId: "highlight-1",
+        from: 4,
+        to: 8,
+        color: "error",
+      },
+      {
+        type: "annotate",
+        operationId: "op-annotate",
+        targetElementId: "sentence-1",
+        elementId: "annotation-1",
+        textZhTw: "gestern → 過去式",
+        position: "below",
+      },
+      {
+        type: "replace_text",
+        operationId: "op-replace",
+        targetElementId: "sentence-1",
+        newTextDe: "Ich bin gestern in die Schule gegangen.",
+      },
+    ];
+
+    expect(operations.map((operation) => classroomToolOperationSchema.parse(operation))).toEqual(
+      operations,
+    );
+  });
+
+  it("rejects a payload carrying turnId", () => {
+    // turnId is transport metadata stamped by the client from the Realtime event's response_id.
+    // The model cannot know that value, so it must never appear in a tool payload. Asking for it
+    // once caused every real board operation to be discarded as SUPERSEDED_TURN.
+    expect(
+      classroomToolOperationSchema.safeParse({
+        type: "write_line",
+        operationId: "op-write",
+        turnId: "turn-1",
+        elementId: "sentence-1",
+        textDe: "Ich gehe gestern in die Schule.",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects HTML and invalid UTF-16 spans", () => {
+    expect(
+      classroomToolOperationSchema.safeParse({
+        type: "write_line",
+        operationId: "op-1",
+        elementId: "sentence-1",
+        textDe: "<img src=x>",
+      }).success,
+    ).toBe(false);
+    expect(
+      classroomToolOperationSchema.safeParse({
+        type: "highlight_span",
+        operationId: "op-2",
+        targetElementId: "sentence-1",
+        overlayElementId: "highlight-1",
+        from: 8,
+        to: 4,
+        color: "error",
       }).success,
     ).toBe(false);
   });

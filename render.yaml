@@ -32,6 +32,26 @@ services:
         value: "false"
       - key: AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT
         value: "100"
+      - key: CLASSROOM_ENABLED
+        value: "false"
+      - key: CLASSROOM_ALLOWED_PROFILE_IDS
+        sync: false
+      # Server-enforced session budget. The browser countdown is UX only and a modified client can
+      # remove it; these values and the hangup sweeper are the controls that actually hold. Kept
+      # equal to the browser's 300s so an abandoned session — the learner navigating away inside the
+      # web app — bills and blocks a restart for at most as long as the visible countdown promised.
+      - key: CLASSROOM_MAX_SESSION_SECONDS
+        value: "300"
+      - key: CLASSROOM_DAILY_SESSION_LIMIT
+        value: "2"
+      - key: CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT
+        value: "3"
+      - key: CLASSROOM_SWEEP_INTERVAL_MS
+        value: "30000"
+      - key: OPENAI_REALTIME_MODEL
+        value: gpt-realtime-mini-2025-12-15
+      - key: OPENAI_SAFETY_IDENTIFIER_SALT
+        sync: false
       - key: OPENAI_EVALUATION_MODEL
         sync: false
       - key: OPENAI_TTS_MODEL
@@ -89,8 +109,15 @@ services:
     name: deutschtrainer-engeln9-web
     runtime: static
     branch: main
+    # export:web also builds apps/classroom into ./apps/mobile/dist/classroom-app, so the classroom
+    # ships on this origin and shares this app's Supabase session. Its Vite config reads VITE_* at
+    # build time; mapping them from the EXPO_PUBLIC_* values keeps one source of truth for the
+    # anon key rather than a second copy in the dashboard.
     buildCommand: >-
       corepack pnpm install --frozen-lockfile &&
+      VITE_API_BASE_URL=$EXPO_PUBLIC_API_BASE_URL
+      VITE_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL
+      VITE_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY
       corepack pnpm --filter @deutschtrainer/mobile export:web
     staticPublishPath: ./apps/mobile/dist
     autoDeployTrigger: checksPass
@@ -101,6 +128,10 @@ services:
         value: api
       - key: EXPO_PUBLIC_GUEST_TRIAL_ENABLED
         value: "true"
+      # Only hides the classroom from the navigation. /classroom stays reachable by URL so the
+      # deployed build can be verified before the feature is announced.
+      - key: EXPO_PUBLIC_CLASSROOM_ENABLED
+        value: "false"
       - key: EXPO_PUBLIC_API_BASE_URL
         sync: false
       - key: EXPO_PUBLIC_SUPABASE_URL

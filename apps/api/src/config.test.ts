@@ -15,6 +15,8 @@ describe("API deployment config", () => {
     expect(config.audioTtsDailyFreeLimit).toBe(5);
     expect(config.audioTranscriptionDailyFreeLimit).toBe(2);
     expect(config.globalAiDailyProviderCallLimit).toBe(100);
+    expect(config.classroomEnabled).toBe(false);
+    expect(config.openAiRealtimeModel).toBe("gpt-realtime-mini-2025-12-15");
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
   });
 
@@ -75,6 +77,42 @@ describe("API deployment config", () => {
     });
 
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
+  });
+
+  it("fails closed when the classroom is enabled without server-only settings", () => {
+    const baseEnvironment = {
+      APP_ENV: "local",
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      CLASSROOM_ENABLED: "true",
+    };
+
+    expect(() => assertApiDeploymentConfig(readApiConfig(baseEnvironment))).toThrow(
+      "OPENAI_API_KEY is required when CLASSROOM_ENABLED=true",
+    );
+    expect(() =>
+      assertApiDeploymentConfig(
+        readApiConfig({ ...baseEnvironment, OPENAI_API_KEY: "provider-key" }),
+      ),
+    ).toThrow("CLASSROOM_ALLOWED_PROFILE_IDS is required");
+    expect(() =>
+      assertApiDeploymentConfig(
+        readApiConfig({
+          ...baseEnvironment,
+          OPENAI_API_KEY: "provider-key",
+          CLASSROOM_ALLOWED_PROFILE_IDS: "profile-a,profile-b",
+        }),
+      ),
+    ).toThrow("OPENAI_SAFETY_IDENTIFIER_SALT is required");
+    expect(() =>
+      assertApiDeploymentConfig(
+        readApiConfig({
+          ...baseEnvironment,
+          OPENAI_API_KEY: "provider-key",
+          CLASSROOM_ALLOWED_PROFILE_IDS: "profile-a,profile-b",
+          OPENAI_SAFETY_IDENTIFIER_SALT: "server-only-salt",
+        }),
+      ),
+    ).not.toThrow();
   });
 
   it("requires HTTPS Supabase in staging and production", () => {

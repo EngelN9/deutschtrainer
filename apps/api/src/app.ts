@@ -51,6 +51,7 @@ import {
 import type { AccountDataServiceContract } from "./account-data/types";
 import type { AudioLearningServiceContract } from "./audio/types";
 import type { ContentGenerationServiceContract } from "./content-generation/types";
+import type { ClassroomServiceContract } from "./classroom/types";
 import { ApiError, toApiError } from "./errors";
 import type { EvaluationService } from "./evaluation/types";
 import type { LearningDataServiceContract } from "./learning-data/types";
@@ -67,8 +68,11 @@ export interface ApiHandlerOptions {
   learningDataService: LearningDataServiceContract;
   knowledgeService: KnowledgeServiceContract;
   settingsService: SettingsServiceContract;
+  classroomService: ClassroomServiceContract;
   aiConfigured: boolean;
   aiPublicEnabled: boolean;
+  classroomConfigured: boolean;
+  classroomEnabled: boolean;
   requestId?: () => string;
 }
 
@@ -88,6 +92,8 @@ export function createApiHandler(options: ApiHandlerOptions) {
           service: "deutschtrainer-api",
           aiConfigured: options.aiConfigured,
           aiPublicEnabled: options.aiPublicEnabled,
+          classroomConfigured: options.classroomConfigured,
+          classroomEnabled: options.classroomEnabled,
         },
         200,
       );
@@ -541,6 +547,25 @@ export function createApiHandler(options: ApiHandlerOptions) {
       }
     }
 
+    if (request.method === "POST" && url.pathname === "/classroom/realtime-call") {
+      return handleClassroomRealtimeCallRequest(
+        request,
+        options.classroomService,
+        createRequestId(),
+      );
+    }
+
+    if (request.method === "POST" && url.pathname === "/classroom/session/end") {
+      const requestId = createRequestId();
+      try {
+        const accessToken = readBearerToken(request.headers.get("authorization"));
+        const ended = await options.classroomService.endActiveSession(accessToken);
+        return jsonResponse({ ended }, 200);
+      } catch (error) {
+        return errorResponse(toApiError(error), requestId);
+      }
+    }
+
     const speakingDeleteMatch = url.pathname.match(
       /^\/speaking\/submissions\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
     );
@@ -563,6 +588,49 @@ export function createApiHandler(options: ApiHandlerOptions) {
       createRequestId(),
     );
   };
+}
+
+export async function handleClassroomRealtimeCallRequest(
+  request: Request,
+  classroomService: ClassroomServiceContract,
+  requestId: string,
+): Promise<Response> {
+  try {
+    const accessToken = readBearerToken(request.headers.get("authorization"));
+    const contentType = request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
+    if (contentType !== "application/sdp") {
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "即時教室連線要求必須使用 application/sdp。",
+        415,
+        false,
+      );
+    }
+
+    const sdp = await request.text();
+    const byteLength = new TextEncoder().encode(sdp).byteLength;
+    if (!sdp.trim() || byteLength > 65_536) {
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        byteLength > 65_536 ? "即時教室連線資料超過 64 KiB 上限。" : "即時教室連線資料不可為空。",
+        byteLength > 65_536 ? 413 : 400,
+        false,
+      );
+    }
+
+    const answer = await classroomService.createRealtimeCall(accessToken, sdp);
+    return withCors(
+      new Response(answer, {
+        status: 200,
+        headers: {
+          "cache-control": "no-store",
+          "content-type": "application/sdp",
+        },
+      }),
+    );
+  } catch (error) {
+    return errorResponse(toApiError(error), requestId);
+  }
 }
 
 function readBearerToken(header: string | null): string {
