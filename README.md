@@ -59,7 +59,7 @@ pnpm dev:admin
 pnpm --filter @deutschtrainer/classroom dev
 ```
 
-Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it without an API-only `OPENAI_API_KEY` fails fast. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, enable both flags only for that local API process; this remains test evidence, not real-AI acceptance.
+Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it requires an API-only `OPENAI_API_KEY`, at least one validated `AI_PUBLIC_ENABLED_FEATURES` entry, and a non-empty server-only `AI_PUBLIC_ALLOWED_PROFILE_IDS` allowlist. The scoped beta enables only `evaluate_writing,transcribe_audio`. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, configure the master switch, feature list, and allowlist only for that local API process; this remains test evidence, not real-AI acceptance.
 
 The mobile content source is controlled by:
 

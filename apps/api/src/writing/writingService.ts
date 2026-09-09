@@ -84,7 +84,7 @@ export class WritingEvaluationService implements WritingService {
   ): Promise<EvaluateWritingResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
-    this.options.quotaGate.assertEligible(learner);
+    this.options.quotaGate.assertEligible(learner, "evaluate_writing");
 
     const existing = await this.options.repository.findByIdempotency(
       learner.profileId,

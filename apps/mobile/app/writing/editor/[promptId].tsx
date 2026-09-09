@@ -14,12 +14,15 @@ import {
   useWritingWorkspace,
 } from "../../../src/features/writing/useWritingWorkspace";
 import { writingTypeLabel } from "../../../src/features/writing/writingLabels";
+import { resolveAiFeatureAvailability } from "../../../src/features/settings/aiEntitlementPresentation";
+import { useAiEntitlement } from "../../../src/features/settings/useUserSettings";
 
 export default function WritingEditorScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ promptId: string; submissionId?: string }>();
   const workspaceQuery = useWritingWorkspace();
   const submitMutation = useSubmitWriting();
+  const aiEntitlementQuery = useAiEntitlement();
   const [textDe, setTextDe] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [savedFallback, setSavedFallback] = useState(false);
@@ -33,6 +36,12 @@ export default function WritingEditorScreen() {
     (version) => version.id === submission.currentVersionId,
   );
   const wordCount = countWords(textDe);
+  const aiAvailability = resolveAiFeatureAvailability({
+    errorMessage: aiEntitlementQuery.error?.message,
+    featureLabel: "作文 AI 批改",
+    isLoading: aiEntitlementQuery.isLoading,
+    quota: aiEntitlementQuery.data?.quotas.writingEvaluation,
+  });
 
   useEffect(() => {
     if (!initialized && workspaceQuery.data) {
@@ -137,6 +146,7 @@ export default function WritingEditorScreen() {
             </View>
 
             <MessageBanner message={submitMutation.error?.message ?? null} tone="error" />
+            <MessageBanner message={aiAvailability.message} tone={aiAvailability.tone} />
             <MessageBanner
               message={
                 savedFallback ? "這一版已保存，但 AI 尚未完成批改。請保留目前內容並重試。" : null
@@ -145,7 +155,7 @@ export default function WritingEditorScreen() {
             />
             <PrimaryButton
               accessibilityLabel={savedFallback ? "重試作文批改" : "送出作文批改"}
-              disabled={!withinLimit}
+              disabled={!withinLimit || !aiAvailability.canUse}
               loading={submitMutation.isPending}
               onPress={() => void handleSubmit()}
             >

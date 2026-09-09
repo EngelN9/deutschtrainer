@@ -329,7 +329,7 @@ export default function SettingsScreen() {
                   <MessageBanner
                     message={
                       aiEntitlementQuery.data.providerAvailable
-                        ? "平台免費 AI 已啟用；額度以 rolling 24 小時計算。"
+                        ? "部分平台免費 AI 已啟用；額度以 rolling 24 小時計算。"
                         : "平台 AI 尚未開放，或帳號尚未完成 Email 驗證。"
                     }
                     tone="info"
@@ -442,10 +442,14 @@ function AiQuotaCard({
     <View style={[styles.quotaCard, compact ? styles.quotaCardCompact : null]}>
       <Text style={styles.quotaLabel}>{label}</Text>
       <Text style={styles.quotaValue}>
-        剩餘 {quota.remaining} / {quota.limit}
+        {quota.enabled ? `剩餘 ${quota.remaining} / ${quota.limit}` : "此功能尚未開放"}
       </Text>
       <Text style={styles.quotaReset}>
-        {quota.resetsAt ? `${formatQuotaReset(quota.resetsAt)} 起逐次恢復` : "目前沒有待恢復用量"}
+        {quota.enabled
+          ? quota.resetsAt
+            ? `${formatQuotaReset(quota.resetsAt)} 起逐次恢復`
+            : "目前沒有待恢復用量"
+          : "不會消耗平台 AI 額度"}
       </Text>
     </View>
   );

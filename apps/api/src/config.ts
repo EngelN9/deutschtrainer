@@ -1,3 +1,5 @@
+import { aiQuotaFeatures, type AiQuotaFeature } from "./ai-quota/types";
+
 export type AppEnvironment = "local" | "test" | "staging" | "production";
 
 export interface ApiConfig {
@@ -20,6 +22,8 @@ export interface ApiConfig {
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
   publicAiEnabled: boolean;
+  publicAiEnabledFeatures: AiQuotaFeature[];
+  publicAiAllowedProfileIds: string[];
   globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
@@ -61,9 +65,11 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       20,
     ),
     publicAiEnabled: env.AI_PUBLIC_ENABLED === "true",
+    publicAiEnabledFeatures: readAiQuotaFeatures(env.AI_PUBLIC_ENABLED_FEATURES),
+    publicAiAllowedProfileIds: readCommaSeparatedValues(env.AI_PUBLIC_ALLOWED_PROFILE_IDS),
     globalAiDailyProviderCallLimit: readPositiveInteger(
       env.AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT,
-      100,
+      10,
     ),
     learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
@@ -92,6 +98,12 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     (config.appEnv === "local" || config.appEnv === "test") && config.fakeEvaluationMode;
   if (config.publicAiEnabled && !config.openAiApiKey && !localFakeProvider) {
     throw new Error("OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true.");
+  }
+  if (config.publicAiEnabled && config.publicAiEnabledFeatures.length === 0) {
+    throw new Error("AI_PUBLIC_ENABLED_FEATURES is required when AI_PUBLIC_ENABLED=true.");
+  }
+  if (config.publicAiEnabled && config.publicAiAllowedProfileIds.length === 0) {
+    throw new Error("AI_PUBLIC_ALLOWED_PROFILE_IDS is required when AI_PUBLIC_ENABLED=true.");
   }
 
   if (config.classroomEnabled) {
@@ -236,4 +248,17 @@ function readCommaSeparatedValues(value: string | undefined): string[] {
         .filter((entry) => entry.length > 0),
     ),
   ];
+}
+
+function readAiQuotaFeatures(value: string | undefined): AiQuotaFeature[] {
+  const entries = readCommaSeparatedValues(value);
+  const unknown = entries.filter(
+    (entry): entry is string => !aiQuotaFeatures.includes(entry as AiQuotaFeature),
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `AI_PUBLIC_ENABLED_FEATURES contains unsupported values: ${unknown.join(", ")}.`,
+    );
+  }
+  return entries as AiQuotaFeature[];
 }

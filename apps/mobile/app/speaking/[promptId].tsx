@@ -38,6 +38,8 @@ import {
   useTranscribeSpeakingRecording,
 } from "../../src/features/audio-learning/useAudioLearning";
 import { WordComparisonView } from "../../src/features/audio-learning/WordComparisonView";
+import { resolveAiFeatureAvailability } from "../../src/features/settings/aiEntitlementPresentation";
+import { useAiEntitlement } from "../../src/features/settings/useUserSettings";
 
 type PermissionState = "unknown" | "granted" | "denied";
 
@@ -46,6 +48,7 @@ export default function SpeakingPracticeScreen() {
   const workspaceQuery = useAudioLearningWorkspace();
   const transcribeMutation = useTranscribeSpeakingRecording();
   const deleteMutation = useDeleteSpeakingSubmission();
+  const aiEntitlementQuery = useAiEntitlement();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
   const [permission, setPermission] = useState<PermissionState>("unknown");
@@ -58,6 +61,12 @@ export default function SpeakingPracticeScreen() {
     () => workspaceQuery.data?.speakingPrompts.find((entry) => entry.id === promptId),
     [promptId, workspaceQuery.data],
   );
+  const aiAvailability = resolveAiFeatureAvailability({
+    errorMessage: aiEntitlementQuery.error?.message,
+    featureLabel: "錄音 AI 分析",
+    isLoading: aiEntitlementQuery.isLoading,
+    quota: aiEntitlementQuery.data?.quotas.transcription,
+  });
 
   useEffect(() => {
     void getRecordingPermissionsAsync().then((response) => {
@@ -207,6 +216,7 @@ export default function SpeakingPracticeScreen() {
         ) : (
           <>
             <MessageBanner message={errorMessage} tone="error" />
+            <MessageBanner message={aiAvailability.message} tone={aiAvailability.tone} />
             <View style={styles.targetSection}>
               <Text style={styles.targetLabel}>目標句</Text>
               <Text style={styles.target}>{prompt.targetDe}</Text>
@@ -272,7 +282,7 @@ export default function SpeakingPracticeScreen() {
                 {!result ? (
                   <View style={styles.commandRow}>
                     <CommandButton
-                      disabled={transcribeMutation.isPending}
+                      disabled={transcribeMutation.isPending || !aiAvailability.canUse}
                       icon={CloudUpload}
                       label={transcribeMutation.isPending ? "正在分析" : "上傳並分析"}
                       onPress={() => void submitRecording()}

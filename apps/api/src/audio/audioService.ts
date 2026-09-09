@@ -87,7 +87,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
   ): Promise<TextToSpeechResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
-    this.options.quotaGate.assertEligible(learner);
+    this.options.quotaGate.assertEligible(learner, "text_to_speech");
     const asset = await this.options.repository.getListeningAsset(request.listeningAssetId);
     if (!asset) {
       throw new ApiError("NOT_FOUND", "找不到可使用的聽力素材。", 404, false);
@@ -258,7 +258,7 @@ export class AudioLearningService implements AudioLearningServiceContract {
   async transcribe(accessToken: string, request: TranscribeRequest): Promise<TranscribeResponse> {
     const requestId = this.requestId();
     const learner = await this.requireLearner(accessToken);
-    this.options.quotaGate.assertEligible(learner);
+    this.options.quotaGate.assertEligible(learner, "transcribe_audio");
     const prompt = await this.options.repository.getSpeakingPrompt(request.speakingPromptId);
     if (!prompt) {
       throw new ApiError("NOT_FOUND", "找不到可使用的口說題目。", 404, false);

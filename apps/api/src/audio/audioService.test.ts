@@ -63,6 +63,28 @@ describe("audio learning helpers", () => {
 });
 
 describe("AudioLearningService", () => {
+  it("checks the feature-specific eligibility gates for TTS and transcription", async () => {
+    const assertEligible = jest.fn<AiQuotaGate["assertEligible"]>();
+    const quotaGate = createQuotaGate({ assertEligible });
+    const service = createService(createRepository(), new DeterministicAudioProvider(), quotaGate);
+
+    await service.synthesize("valid-token", {
+      listeningAssetId: listeningAsset.id,
+      voice: "marin",
+      idempotencyKey: "phase7-feature-gate-tts",
+    });
+    await service.transcribe("valid-token", {
+      speakingPromptId: speakingPrompt.id,
+      storagePath: `${learner.authUserId}/feature-gate.webm`,
+      mimeType: "audio/webm",
+      durationMs: 4000,
+      idempotencyKey: "phase7-feature-gate-stt",
+    });
+
+    expect(assertEligible).toHaveBeenNthCalledWith(1, learner, "text_to_speech");
+    expect(assertEligible).toHaveBeenNthCalledWith(2, learner, "transcribe_audio");
+  });
+
   it("loads an owner-scoped audio workspace through the repository", async () => {
     const workspace = {
       listeningAssets: [],
@@ -183,19 +205,20 @@ describe("AudioLearningService", () => {
 function createService(
   repository: AudioRepository,
   provider: DeterministicAudioProvider | UnavailableAudioProvider,
+  quotaGate = createQuotaGate(),
 ) {
   return new AudioLearningService({
     repository,
     provider,
     dailyTtsLimit: 20,
     dailyTranscriptionLimit: 10,
-    quotaGate: createQuotaGate(),
+    quotaGate,
     now: () => new Date("2026-07-13T10:00:00.000Z"),
     requestId: () => "phase7-request-test",
   });
 }
 
-function createQuotaGate(): AiQuotaGate {
+function createQuotaGate(overrides: Partial<AiQuotaGate> = {}): AiQuotaGate {
   return {
     assertEligible: () => undefined,
     reserve: async () => ({
@@ -205,6 +228,7 @@ function createQuotaGate(): AiQuotaGate {
     reserveProviderCall: async () => undefined,
     consume: async () => undefined,
     release: async () => undefined,
+    ...overrides,
   };
 }
 

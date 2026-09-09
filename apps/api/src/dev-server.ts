@@ -57,6 +57,8 @@ const config = readApiConfig();
 assertApiDeploymentConfig(config);
 
 const quotaGate = new SupabaseAiQuotaGate(config.supabaseUrl, config.supabaseServiceRoleKey, {
+  allowedProfileIds: new Set(config.publicAiAllowedProfileIds),
+  enabledFeatures: new Set(config.publicAiEnabledFeatures),
   publicEnabled: config.publicAiEnabled,
   globalDailyProviderCallLimit: config.globalAiDailyProviderCallLimit,
 });
@@ -165,6 +167,8 @@ const settingsService = new SettingsService({
   repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
   aiEntitlement: {
+    allowedProfileIds: new Set(config.publicAiAllowedProfileIds),
+    enabledFeatures: new Set(config.publicAiEnabledFeatures),
     providerConfigured:
       provider.configured && writingProvider.configured && audioProvider.configured,
     publicEnabled: config.publicAiEnabled,

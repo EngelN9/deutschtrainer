@@ -98,16 +98,49 @@ describe("SettingsService", () => {
       windowHours: 24,
       quotas: {
         responseEvaluation: {
+          enabled: false,
           limit: 5,
           used: 1,
           remaining: 4,
           resetsAt: "2026-07-16T08:00:00.000Z",
         },
-        writingEvaluation: { limit: 2, used: 0, remaining: 2, resetsAt: null },
-        textToSpeech: { limit: 5, used: 0, remaining: 5, resetsAt: null },
-        transcription: { limit: 2, used: 0, remaining: 2, resetsAt: null },
+        writingEvaluation: {
+          enabled: true,
+          limit: 2,
+          used: 0,
+          remaining: 2,
+          resetsAt: null,
+        },
+        textToSpeech: {
+          enabled: false,
+          limit: 5,
+          used: 0,
+          remaining: 5,
+          resetsAt: null,
+        },
+        transcription: {
+          enabled: true,
+          limit: 2,
+          used: 0,
+          remaining: 2,
+          resetsAt: null,
+        },
       },
     });
+  });
+
+  it("does not expose scoped features to a learner outside the beta allowlist", async () => {
+    const repository = createRepository();
+    repository.authenticate.mockResolvedValue({
+      authUserId: "00000000-0000-4000-8000-000000000099",
+      emailVerified: true,
+      profileId: "00000000-0000-4000-8000-000000000099",
+      role: "learner",
+    });
+    const result = await createService(repository).getAiEntitlement("access-token");
+
+    expect(result.providerAvailable).toBe(false);
+    expect(Object.values(result.quotas).every((quota) => !quota.enabled)).toBe(true);
   });
 });
 
@@ -118,6 +151,8 @@ function createService(repository: SettingsRepository) {
     aiEntitlement: {
       providerConfigured: true,
       publicEnabled: true,
+      enabledFeatures: new Set(["evaluate_writing", "transcribe_audio"]),
+      allowedProfileIds: new Set([profileId]),
       quotas: {
         evaluate_response: 5,
         evaluate_writing: 2,
