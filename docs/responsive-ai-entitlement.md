@@ -26,10 +26,12 @@ replace visual or native-device acceptance.
 
 ## Platform free AI
 
-`AI_PUBLIC_ENABLED` defaults to `false`. A public AI request requires an authenticated active
-`learner` profile and a Supabase Auth user with confirmed Email. Demo sessions never call these
-routes. In staging or production, enabling the switch without an API-only `OPENAI_API_KEY` fails
-at process startup.
+`AI_PUBLIC_ENABLED` defaults to `false` and remains the emergency master switch. An enabled beta
+also requires the requested feature in `AI_PUBLIC_ENABLED_FEATURES`, an authenticated active
+`learner` profile with confirmed Email, and that profile in the server-only
+`AI_PUBLIC_ALLOWED_PROFILE_IDS` allowlist. Demo sessions never call these routes. In staging or
+production, enabling the switch without an API-only `OPENAI_API_KEY`, a validated feature list, or
+a non-empty allowlist fails at process startup.
 
 The rolling 24-hour limits are:
 
@@ -43,14 +45,15 @@ The rolling 24-hour limits are:
 The database atomically reserves `user_id + feature + idempotency_key`. Successful persisted
 results consume a user reservation. Cache hits and idempotent replays do not reserve quota;
 provider or schema failures release the user reservation. Every actual provider attempt is still
-reserved separately and contributes to the default 100 calls per UTC day platform hard limit.
+reserved separately and contributes to the scoped beta's 10 calls per UTC day platform hard limit.
 Account deletion removes the user-linked quota rows but retains provider-call count rows with a
 null reference, so deleting an account cannot reopen the same UTC-day global capacity. These rows
 contain no key or learner content; detailed cost evidence remains in the existing redacted usage log.
 
 `GET /users/me/ai-entitlement` returns only `providerAvailable`, source `platform_free`, a 24-hour
-window and each feature's `limit`, `used`, `remaining` and nullable `resetsAt`. It never returns a
-provider key.
+window and each feature's `enabled`, `limit`, `used`, `remaining` and nullable `resetsAt`. It never
+returns a provider key or the allowlist. During the scoped beta only writing evaluation and audio
+transcription are enabled; general evaluation and text-to-speech remain unavailable.
 
 ## BYOK boundary
 
@@ -64,10 +67,14 @@ directly, and exhaustion of platform quota must never automatically switch to a 
 1. Deploy and visually verify responsive changes while `AI_PUBLIC_ENABLED=false`.
 2. Add the OpenAI Project Key only to the Render API secret store and configure provider billing
    alerts; do not treat alerts as a hard stop.
-3. With fake mode disabled, validate general evaluation, writing, TTS and STT against staging.
-4. Enable the public switch and verify entitlement, cost logs, error envelopes and the 100/day hard
-   limit.
-5. Keep BYOK hidden until its separate security gate passes.
+3. Deploy with fake mode and the master switch disabled, then verify feature and allowlist refusal.
+4. Configure only `evaluate_writing,transcribe_audio`, the approved profile allowlist, and the
+   10-attempt UTC-day cap in Render.
+5. Enable the master switch and validate one real writing evaluation and one real transcription;
+   confirm general evaluation and TTS remain disabled.
+6. Verify entitlement, quota accounting, cost logs and safe error envelopes. Roll back by setting
+   the master switch to `false` on any acceptance failure.
+7. Keep BYOK hidden until its separate security gate passes.
 
 Render free-tier cold starts, real provider quality/cost/latency, KMS-backed BYOK and native Android
 device acceptance remain `BLOCKED` until separately evidenced.

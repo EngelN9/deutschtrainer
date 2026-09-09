@@ -10,11 +10,13 @@ describe("API deployment config", () => {
     expect(config.port).toBe(8787);
     expect(config.corsAllowedOrigins).toEqual(["*"]);
     expect(config.publicAiEnabled).toBe(false);
+    expect(config.publicAiEnabledFeatures).toEqual([]);
+    expect(config.publicAiAllowedProfileIds).toEqual([]);
     expect(config.dailyFreeLimit).toBe(5);
     expect(config.writingDailyFreeLimit).toBe(2);
     expect(config.audioTtsDailyFreeLimit).toBe(5);
     expect(config.audioTranscriptionDailyFreeLimit).toBe(2);
-    expect(config.globalAiDailyProviderCallLimit).toBe(100);
+    expect(config.globalAiDailyProviderCallLimit).toBe(10);
     expect(config.classroomEnabled).toBe(false);
     expect(config.openAiRealtimeModel).toBe("gpt-realtime-mini-2025-12-15");
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
@@ -61,6 +63,8 @@ describe("API deployment config", () => {
       SUPABASE_URL: "https://example.supabase.co",
       SUPABASE_SERVICE_ROLE_KEY: "staging-service-key",
       AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing,transcribe_audio",
+      AI_PUBLIC_ALLOWED_PROFILE_IDS: "profile-a",
     });
 
     expect(() => assertApiDeploymentConfig(config)).toThrow(
@@ -74,9 +78,43 @@ describe("API deployment config", () => {
       SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
       AI_EVALUATION_FAKE_MODE: "true",
       AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing,transcribe_audio",
+      AI_PUBLIC_ALLOWED_PROFILE_IDS: "profile-a",
     });
 
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
+  });
+
+  it("parses a deduplicated scoped AI beta configuration", () => {
+    const config = readApiConfig({
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing, transcribe_audio, evaluate_writing",
+      AI_PUBLIC_ALLOWED_PROFILE_IDS: "profile-a, profile-a, profile-b",
+      AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT: "10",
+    });
+
+    expect(config.publicAiEnabledFeatures).toEqual(["evaluate_writing", "transcribe_audio"]);
+    expect(config.publicAiAllowedProfileIds).toEqual(["profile-a", "profile-b"]);
+    expect(config.globalAiDailyProviderCallLimit).toBe(10);
+  });
+
+  it("rejects unknown public AI features and enabled beta without an allowlist", () => {
+    expect(() =>
+      readApiConfig({
+        SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+        AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing,unknown_feature",
+      }),
+    ).toThrow("AI_PUBLIC_ENABLED_FEATURES");
+
+    const enabledWithoutAllowlist = readApiConfig({
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      OPENAI_API_KEY: "provider-key",
+      AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing,transcribe_audio",
+    });
+    expect(() => assertApiDeploymentConfig(enabledWithoutAllowlist)).toThrow(
+      "AI_PUBLIC_ALLOWED_PROFILE_IDS is required",
+    );
   });
 
   it("fails closed when the classroom is enabled without server-only settings", () => {

@@ -50,6 +50,22 @@ const feedback: AiEvaluationFeedback = {
 };
 
 describe("ResponseEvaluationService", () => {
+  it("checks eligibility for response evaluation", async () => {
+    const assertEligible = jest.fn<AiQuotaGate["assertEligible"]>();
+    const service = createService(
+      createRepository(),
+      createProvider([{ payload: feedback }]),
+      createQuotaGate({ assertEligible }),
+    );
+
+    await service.evaluate("valid-token", request);
+
+    expect(assertEligible).toHaveBeenCalledWith(
+      expect.objectContaining({ profileId: "6684e3c2-2cf5-4721-9009-b24405c981c3" }),
+      "evaluate_response",
+    );
+  });
+
   it("records schema-validated feedback and usage", async () => {
     const usage: UsageLogInput[] = [];
     const recordEvaluation = jest.fn(async () => ({

@@ -64,6 +64,22 @@ const feedback: WritingFeedback = {
 };
 
 describe("WritingEvaluationService", () => {
+  it("checks eligibility for writing evaluation", async () => {
+    const assertEligible = jest.fn<AiQuotaGate["assertEligible"]>();
+    const service = createService(
+      createRepository(),
+      createProvider([{ payload: feedback }]),
+      createQuotaGate({ assertEligible }),
+    );
+
+    await service.evaluate("valid-token", request);
+
+    expect(assertEligible).toHaveBeenCalledWith(
+      expect.objectContaining({ profileId: "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f" }),
+      "evaluate_writing",
+    );
+  });
+
   it("loads an owner-scoped workspace through the repository", async () => {
     const getWorkspace = jest.fn(async () => ({ prompts: [], submissions: [] }));
     const service = createService(
@@ -256,12 +272,16 @@ describe("writing helpers", () => {
   });
 });
 
-function createService(repository: WritingRepository, provider: WritingProvider) {
+function createService(
+  repository: WritingRepository,
+  provider: WritingProvider,
+  quotaGate = createQuotaGate(),
+) {
   return new WritingEvaluationService({
     repository,
     provider,
     dailyLimit: 10,
-    quotaGate: createQuotaGate(),
+    quotaGate,
     inputCostPerMillion: 1,
     outputCostPerMillion: 6,
     now: () => new Date("2026-07-13T05:00:00.000Z"),
@@ -294,7 +314,7 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
   };
 }
 
-function createQuotaGate(): AiQuotaGate {
+function createQuotaGate(overrides: Partial<AiQuotaGate> = {}): AiQuotaGate {
   return {
     assertEligible: () => undefined,
     reserve: async () => ({
@@ -304,6 +324,7 @@ function createQuotaGate(): AiQuotaGate {
     reserveProviderCall: async () => undefined,
     consume: async () => undefined,
     release: async () => undefined,
+    ...overrides,
   };
 }
 

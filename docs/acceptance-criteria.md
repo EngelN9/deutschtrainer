@@ -198,8 +198,8 @@ isolation 仍為 `BLOCKED`。
 ## 13. Phase 11 驗收
 
 - `GET /users/me/settings` 只回傳登入者的 profile、程度、每日目標與通知偏好。
-- `GET /users/me/ai-entitlement` 只回傳平台服務狀態、5/2/5/2 的 rolling 24h
-  used/remaining/resetsAt；不回傳 provider key 或其他使用者資料。
+- `GET /users/me/ai-entitlement` 只回傳平台服務狀態、各功能 enabled 與 5/2/5/2 的
+  rolling 24h used/remaining/resetsAt；不回傳 provider key、allowlist 或其他使用者資料。
 - `PUT /users/me/onboarding` 原子保存 current/target level、每日分鐘、學習目標與 onboarding 狀態。
 - `PUT /users/me/notification-preferences` 驗證 HH:mm、IANA timezone、2-14 天未學習區間與各事件開關。
 - authenticated 不可直接 update profile、insert/update preferences 或 levels，也不可執行兩個 service wrappers。

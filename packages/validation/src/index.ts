@@ -121,6 +121,8 @@ export const apiErrorCodeSchema = z.enum([
   "AI_NOT_CONFIGURED",
   "AI_QUOTA_EXCEEDED",
   "AI_GLOBALLY_DISABLED",
+  "AI_FEATURE_DISABLED",
+  "AI_ACCESS_RESTRICTED",
   "CLASSROOM_DISABLED",
   "CLASSROOM_NOT_CONFIGURED",
   "CLASSROOM_ACCESS_RESTRICTED",
@@ -248,6 +250,7 @@ export const userSettingsResponseSchema = z.object({
 export type UserSettingsResponse = z.infer<typeof userSettingsResponseSchema>;
 
 export const aiEntitlementQuotaSchema = z.object({
+  enabled: z.boolean(),
   limit: z.number().int().positive(),
   used: z.number().int().nonnegative(),
   remaining: z.number().int().nonnegative(),

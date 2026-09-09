@@ -63,7 +63,7 @@ export class ResponseEvaluationService implements EvaluationService {
     if (!learner) {
       throw new ApiError("UNAUTHORIZED", "登入狀態已失效，請重新登入。", 401, false);
     }
-    this.options.quotaGate.assertEligible(learner);
+    this.options.quotaGate.assertEligible(learner, "evaluate_response");
 
     const existing = await this.options.repository.findByIdempotency(
       learner.profileId,

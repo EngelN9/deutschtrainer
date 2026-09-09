@@ -30,8 +30,12 @@ services:
         value: "false"
       - key: AI_PUBLIC_ENABLED
         value: "false"
+      - key: AI_PUBLIC_ENABLED_FEATURES
+        value: evaluate_writing,transcribe_audio
+      - key: AI_PUBLIC_ALLOWED_PROFILE_IDS
+        sync: false
       - key: AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT
-        value: "100"
+        value: "10"
       - key: CLASSROOM_ENABLED
         value: "false"
       - key: CLASSROOM_ALLOWED_PROFILE_IDS

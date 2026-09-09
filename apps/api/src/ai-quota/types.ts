@@ -3,6 +3,13 @@ import type { UserProfile } from "@deutschtrainer/shared-types";
 export type AiQuotaFeature =
   "evaluate_response" | "evaluate_writing" | "text_to_speech" | "transcribe_audio";
 
+export const aiQuotaFeatures: readonly AiQuotaFeature[] = [
+  "evaluate_response",
+  "evaluate_writing",
+  "text_to_speech",
+  "transcribe_audio",
+];
+
 export interface AiQuotaLearner {
   emailVerified: boolean;
   profileId: string;
@@ -15,7 +22,7 @@ export interface AiQuotaReservation {
 }
 
 export interface AiQuotaGate {
-  assertEligible(learner: AiQuotaLearner): void;
+  assertEligible(learner: AiQuotaLearner, feature: AiQuotaFeature): void;
   reserve(input: {
     feature: AiQuotaFeature;
     idempotencyKey: string;
