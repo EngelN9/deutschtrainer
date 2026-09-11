@@ -17,6 +17,7 @@ describe("API deployment config", () => {
     expect(config.audioTtsDailyFreeLimit).toBe(5);
     expect(config.audioTranscriptionDailyFreeLimit).toBe(2);
     expect(config.globalAiDailyProviderCallLimit).toBe(10);
+    expect(config.openAiTimeoutMs).toBe(60_000);
     expect(config.classroomEnabled).toBe(false);
     expect(config.openAiRealtimeModel).toBe("gpt-realtime-mini-2025-12-15");
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
