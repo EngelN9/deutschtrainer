@@ -21,3 +21,5 @@ export const spacingTokens = {
   lg: 24,
   xl: 32,
 } as const;
+
+export * from "./motion";

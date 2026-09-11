@@ -9,6 +9,9 @@ import { findLesson, getLessonExercises } from "../../src/features/courses/cours
 import { useCourseCatalog } from "../../src/features/courses/useCourseCatalog";
 import { useProgressStore } from "../../src/features/progress/useProgressStore";
 import { useLearningRecords } from "../../src/features/learning-records/useLearningRecords";
+import { CelebrationBurst } from "../../src/features/motion/CelebrationBurst";
+import { CountUpText } from "../../src/features/motion/CountUpText";
+import { MotionReveal } from "../../src/features/motion/MotionReveal";
 import { ContentScreen } from "../../src/components/ContentScreen";
 import { PrimaryButton } from "../../src/components/PrimaryButton";
 import { ProgressBar } from "../../src/components/ProgressBar";
@@ -38,6 +41,8 @@ export default function LessonResultScreen() {
     ? Math.round(results.reduce((total, result) => total + result.score, 0) / exercises.length)
     : 0;
   const correctCount = results.filter((result) => result.isCorrect).length;
+  // 80 分是既有的「表現穩定」門檻，慶祝動效沿用同一條線，不另訂一組。
+  const isCelebration = averageScore >= 80;
 
   async function practiceAgain() {
     if (!profile) {
@@ -63,20 +68,25 @@ export default function LessonResultScreen() {
           <StatePanel message="找不到這堂課的結果。" state="empty" title="結果不存在" />
         ) : (
           <>
-            <View style={styles.scoreBand}>
+            <MotionReveal style={styles.scoreBand}>
               <View style={styles.trophy}>
                 <Trophy color="#FFFFFF" size={27} />
               </View>
-              <Text style={styles.score}>{averageScore}</Text>
+              <CountUpText
+                accessibilityLabel={`平均 ${averageScore} 分`}
+                style={styles.score}
+                value={averageScore}
+              />
               <Text style={styles.scoreUnit}>分</Text>
               <Text style={styles.scoreSummary}>
                 {correctCount} / {exercises.length} 題完全正確
               </Text>
-            </View>
+              <CelebrationBurst enabled={isCelebration} />
+            </MotionReveal>
             <ProgressBar
               accessibilityLabel="課堂得分"
               percent={averageScore}
-              tone={averageScore >= 80 ? "success" : "primary"}
+              tone={isCelebration ? "success" : "primary"}
             />
             <View style={styles.resultList}>
               {exercises.map((exercise, index) => {
@@ -108,7 +118,7 @@ export default function LessonResultScreen() {
             <View style={styles.note}>
               <Text style={styles.noteTitle}>下一步</Text>
               <Text style={styles.noteText}>
-                {averageScore >= 80
+                {isCelebration
                   ? "這堂課的表現穩定；系統已依技能狀態安排後續記憶確認。"
                   : "建議查看錯題說明；答錯的技能已加入到期複習。"}
               </Text>

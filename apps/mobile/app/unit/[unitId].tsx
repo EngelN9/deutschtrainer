@@ -11,6 +11,7 @@ import { getLessonCompletionPercent } from "../../src/features/progress/progress
 import { useProgressStore } from "../../src/features/progress/useProgressStore";
 import { ContentScreen } from "../../src/components/ContentScreen";
 import { ProgressBar } from "../../src/components/ProgressBar";
+import { MotionReveal } from "../../src/features/motion/MotionReveal";
 import { StatePanel } from "../../src/components/StatePanel";
 
 export default function UnitScreen() {
@@ -54,41 +55,42 @@ export default function UnitScreen() {
               const completed = Boolean(progress?.completedAt);
 
               return (
-                <Pressable
-                  accessibilityLabel={`開啟第 ${index + 1} 課 ${lesson.titleZhTw}`}
-                  accessibilityRole="button"
-                  key={lesson.id}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/lesson/[lessonId]",
-                      params: { lessonId: lesson.id },
-                    } as Href)
-                  }
-                  style={({ pressed }) => [styles.lessonRow, pressed ? styles.pressed : null]}
-                >
-                  <View style={[styles.index, completed ? styles.completedIndex : null]}>
-                    {completed ? (
-                      <CheckCircle2 color="#FFFFFF" size={20} />
-                    ) : (
-                      <Text style={styles.indexText}>{index + 1}</Text>
-                    )}
-                  </View>
-                  <View style={styles.lessonCopy}>
-                    <Text style={styles.lessonTitle}>{lesson.titleZhTw}</Text>
-                    <View style={styles.metaRow}>
-                      <Clock3 color={colorTokens.mutedText} size={15} />
-                      <Text style={styles.meta}>
-                        {lesson.estimatedMinutes} 分鐘 · {exercises.length} 題 · {percent}%
-                      </Text>
+                <MotionReveal index={index} key={lesson.id}>
+                  <Pressable
+                    accessibilityLabel={`開啟第 ${index + 1} 課 ${lesson.titleZhTw}`}
+                    accessibilityRole="button"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/lesson/[lessonId]",
+                        params: { lessonId: lesson.id },
+                      } as Href)
+                    }
+                    style={({ pressed }) => [styles.lessonRow, pressed ? styles.pressed : null]}
+                  >
+                    <View style={[styles.index, completed ? styles.completedIndex : null]}>
+                      {completed ? (
+                        <CheckCircle2 color="#FFFFFF" size={20} />
+                      ) : (
+                        <Text style={styles.indexText}>{index + 1}</Text>
+                      )}
                     </View>
-                    <ProgressBar
-                      accessibilityLabel={`${lesson.titleZhTw} 進度`}
-                      percent={percent}
-                      tone={completed ? "success" : "primary"}
-                    />
-                  </View>
-                  <ChevronRight color={colorTokens.mutedText} size={20} />
-                </Pressable>
+                    <View style={styles.lessonCopy}>
+                      <Text style={styles.lessonTitle}>{lesson.titleZhTw}</Text>
+                      <View style={styles.metaRow}>
+                        <Clock3 color={colorTokens.mutedText} size={15} />
+                        <Text style={styles.meta}>
+                          {lesson.estimatedMinutes} 分鐘 · {exercises.length} 題 · {percent}%
+                        </Text>
+                      </View>
+                      <ProgressBar
+                        accessibilityLabel={`${lesson.titleZhTw} 進度`}
+                        percent={percent}
+                        tone={completed ? "success" : "primary"}
+                      />
+                    </View>
+                    <ChevronRight color={colorTokens.mutedText} size={20} />
+                  </Pressable>
+                </MotionReveal>
               );
             })}
           </View>

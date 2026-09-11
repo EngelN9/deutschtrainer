@@ -26,6 +26,7 @@ import { ContentScreen } from "../src/components/ContentScreen";
 import { IconButton } from "../src/components/IconButton";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { PrimaryButton } from "../src/components/PrimaryButton";
+import { MotionReveal } from "../src/features/motion/MotionReveal";
 import { ProgressBar } from "../src/components/ProgressBar";
 import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
@@ -262,16 +263,19 @@ export default function HomeScreen() {
           <Text style={styles.overviewTitle}>學習概況</Text>
           <OverviewRow
             icon={BookOpen}
+            index={0}
             label="程度路徑"
             value={`${currentLevel} → ${targetLevel}`}
           />
           <OverviewRow
             icon={RotateCcw}
+            index={1}
             label="到期複習"
             value={analytics ? `${analytics.dueReviewCount} 項` : "同步中"}
           />
           <OverviewRow
             icon={Clock3}
+            index={2}
             label="最近七天"
             value={
               analytics
@@ -315,19 +319,21 @@ function localDateKey(date: Date): string {
 
 function OverviewRow({
   icon: Icon,
+  index,
   label,
   value,
 }: {
   icon: typeof BookOpen;
+  index: number;
   label: string;
   value: string;
 }) {
   return (
-    <View style={styles.overviewRow}>
+    <MotionReveal index={index} style={styles.overviewRow}>
       <Icon color={colorTokens.teal} size={18} />
       <Text style={styles.overviewLabel}>{label}</Text>
       <Text style={styles.overviewValue}>{value}</Text>
-    </View>
+    </MotionReveal>
   );
 }
 
