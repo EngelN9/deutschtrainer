@@ -87,7 +87,7 @@ Safety rules enforced at startup:
 - staging and production require `SUPABASE_URL` to be an absolute HTTPS URL;
 - local/test remain compatible with the local Supabase HTTP stack and deterministic fixtures.
 
-The current `gpt-5.6-luna` evaluation default remains intentional for cost-sensitive, high-volume workloads. Its `$1` input／`$6` output cost metadata per million text tokens matches the current [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-luna). Model quality, latency, and cost still require representative staging evaluation before production rollout.
+The current `gpt-5.6-luna` evaluation default remains intentional for cost-sensitive, high-volume workloads. Its cost metadata is `$0.2` input／`$1.2` output per million text tokens, per the [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-luna) as of 2026-09-11 (it was recorded here as `$1`／`$6` on 2026-07-22). The cost variables must match whichever model `OPENAI_EVALUATION_MODEL` names in the deployment; they are not derived from it. Model quality, latency, and cost still require representative staging evaluation before production rollout.
 
 ## CI gates
 
