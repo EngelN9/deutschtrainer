@@ -20,7 +20,10 @@ import {
 } from "lucide-react-native";
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
-import type { TranscribeResponse } from "@deutschtrainer/validation";
+import {
+  minimumSpeakingRecordingDurationMs,
+  type TranscribeResponse,
+} from "@deutschtrainer/validation";
 import { AuthGate } from "../../src/features/auth/AuthGate";
 import { ContentScreen } from "../../src/components/ContentScreen";
 import { MessageBanner } from "../../src/components/MessageBanner";
@@ -81,7 +84,7 @@ export default function SpeakingPracticeScreen() {
       recordingStarted &&
       !recorderState.isRecording &&
       recorderState.url &&
-      recorderState.durationMillis >= 500
+      recorderState.durationMillis >= minimumSpeakingRecordingDurationMs
     ) {
       setRecorded({ uri: recorderState.url, durationMs: recorderState.durationMillis });
       setRecordingStarted(false);
@@ -124,14 +127,17 @@ export default function SpeakingPracticeScreen() {
       const durationMs = recorderState.durationMillis;
       await recorder.stop();
       const uri = recorder.uri ?? recorderState.url;
-      if (!uri || durationMs < 500) {
-        setLocalError("錄音太短，請至少朗讀半秒後再停止。");
+      setRecordingStarted(false);
+      await setAudioModeAsync({ allowsRecording: false });
+      if (!uri || durationMs < minimumSpeakingRecordingDurationMs) {
+        setRecorded(undefined);
+        setLocalError("錄音太短，請至少朗讀 3 秒後再停止。");
         return;
       }
       setRecorded({ uri, durationMs });
-      setRecordingStarted(false);
-      await setAudioModeAsync({ allowsRecording: false });
     } catch (error) {
+      setRecordingStarted(false);
+      void setAudioModeAsync({ allowsRecording: false });
       setLocalError(error instanceof Error ? error.message : "無法停止錄音。");
     }
   };

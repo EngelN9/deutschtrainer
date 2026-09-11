@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import type { WritingFeedback } from "@deutschtrainer/ai-schemas";
 import type { EvaluateWritingRequest } from "@deutschtrainer/validation";
 import type { AiQuotaGate } from "../ai-quota/types";
-import { UnavailableWritingProvider } from "./openAiWritingProvider";
+import { UnavailableWritingProvider, WritingProviderError } from "./openAiWritingProvider";
 import { WritingEvaluationService, countGermanWords, createWritingDiff } from "./writingService";
 import type {
   ProtectedWritingPrompt,
@@ -188,6 +188,26 @@ describe("WritingEvaluationService", () => {
       "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f",
       preparedVersion(1).versionId,
     );
+  });
+
+  it("does not start a second provider attempt after the request deadline expires", async () => {
+    const evaluate = jest.fn(async (): Promise<ProviderWritingResult> => {
+      throw new WritingProviderError("AI_TIMEOUT", "AI 作文批改逾時。", true);
+    });
+    const provider: WritingProvider = { model: "gpt-test", configured: true, evaluate };
+    const reserveProviderCall = jest.fn<AiQuotaGate["reserveProviderCall"]>(async () => undefined);
+    const service = createService(
+      createRepository(),
+      provider,
+      createQuotaGate({ reserveProviderCall }),
+    );
+
+    const result = await service.evaluate("valid-token", request);
+
+    expect(result.status).toBe("fallback");
+    expect(result.fallbackReason).toBe("AI_TIMEOUT");
+    expect(evaluate).toHaveBeenCalledTimes(1);
+    expect(reserveProviderCall).toHaveBeenCalledTimes(1);
   });
 
   it("requires the trusted full reference version on the second pass", async () => {

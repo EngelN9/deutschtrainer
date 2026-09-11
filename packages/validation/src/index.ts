@@ -1136,6 +1136,8 @@ export const submitDictationResponseSchema = z.object({
 });
 export type SubmitDictationResponse = z.infer<typeof submitDictationResponseSchema>;
 
+export const minimumSpeakingRecordingDurationMs = 3_000;
+
 export const transcribeRequestSchema = z.object({
   speakingPromptId: databaseUuidSchema,
   storagePath: z
@@ -1151,7 +1153,7 @@ export const transcribeRequestSchema = z.object({
     "audio/wav",
     "audio/x-m4a",
   ]),
-  durationMs: z.number().int().min(500).max(120_000),
+  durationMs: z.number().int().min(minimumSpeakingRecordingDurationMs).max(120_000),
   idempotencyKey: z.string().min(12).max(200),
 });
 export type TranscribeRequest = z.infer<typeof transcribeRequestSchema>;

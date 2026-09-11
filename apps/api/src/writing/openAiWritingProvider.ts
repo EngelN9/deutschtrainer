@@ -167,14 +167,19 @@ export class DeterministicWritingProvider implements WritingProvider {
   }
 }
 
-function classifyOpenAiError(error: unknown): WritingProviderError {
+export function classifyOpenAiError(error: unknown): WritingProviderError {
   const status = readNumberProperty(error, "status");
-  const name = readStringProperty(error, "name");
+  const errorSignal = readErrorSignal(error).toLowerCase();
 
   if (status === 429) {
     return new WritingProviderError("RATE_LIMITED", "OpenAI 暫時限制呼叫頻率。", true);
   }
-  if (name.includes("Timeout") || name.includes("Abort")) {
+  if (
+    errorSignal.includes("timeout") ||
+    errorSignal.includes("timed out") ||
+    errorSignal.includes("etimedout") ||
+    errorSignal.includes("abort")
+  ) {
     return new WritingProviderError("AI_TIMEOUT", "AI 作文批改逾時。", true);
   }
   if (status !== undefined && status >= 400 && status < 500) {
@@ -187,18 +192,21 @@ function classifyOpenAiError(error: unknown): WritingProviderError {
   return new WritingProviderError("NETWORK_ERROR", "無法連線至 AI 作文批改服務。", true);
 }
 
+function readErrorSignal(value: unknown, depth = 0): string {
+  if (depth > 3 || typeof value !== "object" || value === null) {
+    return "";
+  }
+  const record = value as Record<string, unknown>;
+  const fields = ["name", "message", "code"]
+    .map((key) => record[key])
+    .filter((entry): entry is string => typeof entry === "string");
+  return [...fields, readErrorSignal(record.cause, depth + 1)].filter(Boolean).join(" ");
+}
+
 function readNumberProperty(value: unknown, key: string): number | undefined {
   if (typeof value !== "object" || value === null || !(key in value)) {
     return undefined;
   }
   const property = (value as Record<string, unknown>)[key];
   return typeof property === "number" ? property : undefined;
-}
-
-function readStringProperty(value: unknown, key: string): string {
-  if (typeof value !== "object" || value === null || !(key in value)) {
-    return "";
-  }
-  const property = (value as Record<string, unknown>)[key];
-  return typeof property === "string" ? property : "";
 }

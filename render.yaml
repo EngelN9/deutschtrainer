@@ -63,7 +63,7 @@ services:
       - key: OPENAI_TRANSCRIPTION_MODEL
         value: whisper-1
       - key: OPENAI_TIMEOUT_MS
-        value: "20000"
+        value: "60000"
       - key: OPENAI_INPUT_COST_PER_MILLION
         value: "1"
       - key: OPENAI_OUTPUT_COST_PER_MILLION

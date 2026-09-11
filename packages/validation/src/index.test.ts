@@ -395,6 +395,18 @@ describe("validation schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects recordings that are too short for reliable speaking feedback", () => {
+    const result = transcribeRequestSchema.safeParse({
+      speakingPromptId: "ced48daf-53ab-d040-93ea-85190838c379",
+      storagePath: "8ea3db72-9cf2-4d4a-8590-9ab53105f86f/recording.webm",
+      mimeType: "audio/webm",
+      durationMs: 2_000,
+      idempotencyKey: "phase7-speaking-duration-test",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("rejects empty dictation submissions before protected scoring", () => {
     const result = submitDictationRequestSchema.safeParse({
       listeningAssetId: "ced48daf-53ab-d040-93ea-85190838c379",

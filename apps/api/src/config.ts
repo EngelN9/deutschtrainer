@@ -50,7 +50,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     openAiModel: env.OPENAI_EVALUATION_MODEL?.trim() || "gpt-5.6-luna",
     openAiTtsModel: env.OPENAI_TTS_MODEL?.trim() || "gpt-4o-mini-tts",
     openAiTranscriptionModel: env.OPENAI_TRANSCRIPTION_MODEL?.trim() || "whisper-1",
-    openAiTimeoutMs: readPositiveInteger(env.OPENAI_TIMEOUT_MS, 20_000),
+    openAiTimeoutMs: readPositiveInteger(env.OPENAI_TIMEOUT_MS, 60_000),
     inputCostPerMillion: readNonNegativeNumber(env.OPENAI_INPUT_COST_PER_MILLION, 1),
     outputCostPerMillion: readNonNegativeNumber(env.OPENAI_OUTPUT_COST_PER_MILLION, 6),
     dailyFreeLimit: readPositiveInteger(env.AI_DAILY_FREE_LIMIT, 5),

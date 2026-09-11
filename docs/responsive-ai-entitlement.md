@@ -55,6 +55,13 @@ window and each feature's `enabled`, `limit`, `used`, `remaining` and nullable `
 returns a provider key or the allowlist. During the scoped beta only writing evaluation and audio
 transcription are enabled; general evaluation and text-to-speech remain unavailable.
 
+Structured writing evaluation uses a 60-second provider request deadline. Timeout-shaped SDK
+errors, including nested connection timeout causes, are reported through the stable `AI_TIMEOUT`
+fallback instead of a generic network error. A deadline expiry is not retried inside the same HTTP
+request, preventing a single browser submission from waiting through two full deadlines. Speaking
+recordings shorter than three seconds are rejected locally and by the API contract before upload
+and quota reservation; the learner keeps the screen state and can record again.
+
 ## BYOK boundary
 
 Personal provider keys are intentionally absent from the current API, database and UI. They may be

@@ -288,7 +288,7 @@ export class WritingEvaluationService implements WritingService {
           logicalRequest: prepared.created && providerAttempt === 1,
           errorCode: providerError.code,
         });
-        if (!providerError.retryable) {
+        if (!providerError.retryable || providerError.code === "AI_TIMEOUT") {
           break;
         }
         continue;
