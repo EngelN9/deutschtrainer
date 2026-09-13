@@ -3,11 +3,13 @@ import type {
   ForgotPasswordRequest,
   SignInRequest,
   SignUpRequest,
+  UpdatePasswordRequest,
 } from "@deutschtrainer/validation";
 import {
   forgotPasswordRequestSchema,
   signInRequestSchema,
   signUpRequestSchema,
+  updatePasswordRequestSchema,
 } from "@deutschtrainer/validation";
 import { supabase } from "../../lib/supabase";
 
@@ -81,7 +83,51 @@ export async function signInAnonymousGuest(): Promise<AuthResult> {
 
 export async function sendPasswordReset(input: ForgotPasswordRequest): Promise<void> {
   const parsed = forgotPasswordRequestSchema.parse(input);
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.email);
+  const redirectTo = resetPasswordRedirectUrl();
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.email,
+    redirectTo ? { redirectTo } : undefined,
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * Where the recovery mail should land. Built from the running origin rather than a configured URL
+ * so preview deploys and localhost each point at themselves; every origin still has to be on the
+ * Supabase project's redirect allowlist. Native has no origin, and `undefined` makes Supabase fall
+ * back to the project Site URL.
+ */
+function resetPasswordRedirectUrl(): string | undefined {
+  if (typeof document === "undefined" || typeof window === "undefined") {
+    return undefined;
+  }
+  return new URL("/reset-password", window.location.origin).toString();
+}
+
+export async function updatePassword(input: UpdatePasswordRequest): Promise<void> {
+  const parsed = updatePasswordRequestSchema.parse(input);
+  const { error } = await supabase.auth.updateUser({ password: parsed.password });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * Turns the anonymous trial account into a real one in place. `updateUser` keeps the same
+ * `auth.users` row, so the profile and every learning record keyed off it survive — which is why
+ * this, and not sign-up, is the path offered to a guest.
+ */
+export async function upgradeGuestToAccount(input: SignUpRequest): Promise<void> {
+  const parsed = signUpRequestSchema.parse(input);
+  const { error } = await supabase.auth.updateUser({
+    data: { display_name: parsed.displayName },
+    email: parsed.email,
+    password: parsed.password,
+  });
 
   if (error) {
     throw new Error(error.message);

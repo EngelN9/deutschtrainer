@@ -5,6 +5,7 @@ import type {
   OnboardingRequest,
   SignInRequest,
   SignUpRequest,
+  UpdatePasswordRequest,
 } from "@deutschtrainer/validation";
 import { create } from "zustand";
 import {
@@ -16,6 +17,8 @@ import {
   signOutCurrentUser,
   signUpWithPassword,
   subscribeToAuthChanges,
+  updatePassword as updatePasswordRequest,
+  upgradeGuestToAccount as upgradeGuestToAccountRequest,
 } from "./authService";
 import { toUserFacingError } from "../../lib/userFacingErrors";
 import { useLearningSetupStore } from "../../state/useLearningSetupStore";
@@ -52,6 +55,8 @@ interface AuthState {
   signUp: (input: SignUpRequest) => Promise<void>;
   startDemo: () => Promise<void>;
   startGuestTrial: () => Promise<void>;
+  updatePassword: (input: UpdatePasswordRequest) => Promise<boolean>;
+  upgradeGuestToAccount: (input: SignUpRequest) => Promise<boolean>;
 }
 
 let unsubscribeFromAuth: (() => void) | null = null;
@@ -256,6 +261,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session: null,
         status: "unauthenticated",
       });
+    }
+  },
+
+  updatePassword: async (input) => {
+    set({ errorMessage: null, noticeMessage: null });
+
+    try {
+      await updatePasswordRequest(input);
+      set({ noticeMessage: "密碼已更新。" });
+      return true;
+    } catch (error) {
+      set({ errorMessage: toUserFacingError(error) });
+      return false;
+    }
+  },
+
+  upgradeGuestToAccount: async (input) => {
+    set({ errorMessage: null, noticeMessage: null });
+
+    try {
+      await upgradeGuestToAccountRequest(input);
+      // Supabase applies the password immediately but holds the email address until the
+      // confirmation link is opened, and the session stays anonymous until then. Saying so is the
+      // difference between a guest who finishes the upgrade and one who thinks they already have.
+      set({
+        noticeMessage: "確認信已寄出。開啟信中的連結後，帳號就會完成綁定，學習紀錄會一併保留。",
+      });
+      return true;
+    } catch (error) {
+      set({ errorMessage: toUserFacingError(error) });
+      return false;
     }
   },
 
