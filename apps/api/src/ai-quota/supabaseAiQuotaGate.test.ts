@@ -56,10 +56,31 @@ describe("SupabaseAiQuotaGate eligibility", () => {
       ),
     ).toMatchObject({ code: "AI_ACCESS_RESTRICTED", status: 403 });
   });
+
+  it("admits every verified learner only after the explicit verified-learner switch", () => {
+    const gate = createGate({ accessMode: "verified_learners" });
+
+    expect(() =>
+      gate.assertEligible(
+        { ...verifiedLearner, profileId: "00000000-0000-4000-8000-000000000099" },
+        "evaluate_writing",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      gate.assertEligible({ ...verifiedLearner, emailVerified: false }, "evaluate_writing"),
+    ).toThrow();
+  });
 });
 
-function createGate({ publicEnabled = true }: { publicEnabled?: boolean } = {}) {
+function createGate({
+  accessMode = "allowlist",
+  publicEnabled = true,
+}: {
+  accessMode?: "allowlist" | "verified_learners";
+  publicEnabled?: boolean;
+} = {}) {
   return new SupabaseAiQuotaGate("http://127.0.0.1:54321", "test-service-role", {
+    accessMode,
     publicEnabled,
     enabledFeatures: new Set(["evaluate_writing", "transcribe_audio"]),
     allowedProfileIds: new Set([verifiedLearner.profileId]),

@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { PublicDocument } from "../../src/components/PublicDocument";
+
+export const metadata: Metadata = {
+  title: "服務條款",
+  description: "DeutschTrainer AI 的服務範圍、使用者責任，以及離線與 AI 功能限制。",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

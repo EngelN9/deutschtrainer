@@ -17,6 +17,7 @@ function createFixture(
   overrides: {
     enabled?: boolean;
     expiredCallIds?: string[];
+    accessMode?: "allowlist" | "verified_learners";
     learner?: Awaited<ReturnType<ClassroomAuthenticator["authenticate"]>>;
     providerConfigured?: boolean;
     salt?: string;
@@ -60,6 +61,7 @@ function createFixture(
     ),
   };
   const service = new ClassroomService({
+    accessMode: overrides.accessMode ?? "allowlist",
     allowedProfileIds: new Set([allowedLearner.profileId]),
     authenticator,
     dailySessionLimit: 2,
@@ -109,6 +111,17 @@ describe("ClassroomService", () => {
     ).rejects.toMatchObject({
       code,
     });
+  });
+
+  it("admits a verified learner outside the former allowlist only in verified-learner mode", async () => {
+    const learner = { ...allowedLearner, profileId: "profile-newly-verified" };
+
+    await expect(
+      createFixture({ accessMode: "verified_learners", learner }).service.createRealtimeCall(
+        "token",
+        "v=0",
+      ),
+    ).resolves.toBe("v=0\r\nanswer");
   });
 
   it("sends only an HMAC safety identifier and SDP to the provider", async () => {

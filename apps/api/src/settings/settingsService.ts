@@ -6,6 +6,7 @@ import type {
   UserSettingsResponse,
 } from "@deutschtrainer/validation";
 import type { AiQuotaFeature } from "../ai-quota/types";
+import type { PublicAccessMode } from "../config";
 import { ApiError } from "../errors";
 import { PrivateRequestRateLimiter } from "../privateRequestRateLimiter";
 import type {
@@ -20,6 +21,7 @@ interface SettingsServiceOptions {
   rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
   aiEntitlement: {
+    accessMode: PublicAccessMode;
     allowedProfileIds: ReadonlySet<string>;
     enabledFeatures: ReadonlySet<AiQuotaFeature>;
     providerConfigured: boolean;
@@ -54,7 +56,8 @@ export class SettingsService implements SettingsServiceContract {
       this.options.aiEntitlement.providerConfigured &&
       learner.emailVerified &&
       learner.role === "learner" &&
-      this.options.aiEntitlement.allowedProfileIds.has(learner.profileId);
+      (this.options.aiEntitlement.accessMode === "verified_learners" ||
+        this.options.aiEntitlement.allowedProfileIds.has(learner.profileId));
     const quota = (feature: AiQuotaFeature) => {
       const featureRows = rows.filter((row) => row.feature === feature);
       const limit = this.options.aiEntitlement.quotas[feature];

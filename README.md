@@ -59,7 +59,7 @@ pnpm dev:admin
 pnpm --filter @deutschtrainer/classroom dev
 ```
 
-Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it requires an API-only `OPENAI_API_KEY`, at least one validated `AI_PUBLIC_ENABLED_FEATURES` entry, and a non-empty server-only `AI_PUBLIC_ALLOWED_PROFILE_IDS` allowlist. The scoped beta enables only `evaluate_writing,transcribe_audio`. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, configure the master switch, feature list, and allowlist only for that local API process; this remains test evidence, not real-AI acceptance.
+Fill the root `.env`, `apps/mobile/.env`, and `apps/admin/.env.local` with values reported by `supabase status --output env`. The service-role key and OpenAI key belong only in the root `.env`; never place either key in an `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variable. `AI_PUBLIC_ENABLED` defaults to `false`; enabling it requires an API-only `OPENAI_API_KEY` and at least one validated `AI_PUBLIC_ENABLED_FEATURES` entry. `AI_PUBLIC_ACCESS_MODE=allowlist` (the default) also requires a non-empty server-only `AI_PUBLIC_ALLOWED_PROFILE_IDS`; the intentional `verified_learners` mode admits only confirmed-email learner profiles, never anonymous sessions. The scoped beta enables only `evaluate_writing,transcribe_audio`. `AI_EVALUATION_FAKE_MODE=true` enables deterministic local fixtures and must never be used in staging or production. To exercise learner AI endpoints locally with deterministic fixtures, configure the master switch, feature list, and access mode only for that local API process; this remains test evidence, not real-AI acceptance.
 
 The mobile content source is controlled by:
 
@@ -112,8 +112,8 @@ built into the learner web service's own static output at `/classroom-app/` and 
 - [deutschtrainer-engeln9-site](https://deutschtrainer-engeln9-site.onrender.com): Next.js public information site and role-gated `/admin`;
 - [deutschtrainer-engeln9-web](https://deutschtrainer-engeln9-web.onrender.com): Expo Web learner preview with SPA route rewrites.
   The classroom is hidden from the navigation until `EXPO_PUBLIC_CLASSROOM_ENABLED=true`, and the
-  API refuses it entirely until `CLASSROOM_ENABLED=true`; neither is set, so there is no connected
-  classroom evidence yet.
+  API refuses it entirely until `CLASSROOM_ENABLED=true`. The Blueprint defaults are fail-closed;
+  they are not evidence of an existing Render dashboard's live environment or acceptance status.
 
 [Deploy to Render](https://render.com/deploy?repo=https://github.com/EngelN9/deutschtrainer)
 
@@ -128,10 +128,10 @@ publication is part of this deployment. `/health` exposes `aiConfigured` and `ai
 without exposing credentials; both provider configuration and the public switch must be true before
 real learner AI acceptance begins.
 
-The classroom uses the same Supabase account system but a different browser origin, so its
-`localStorage` session cannot be shared directly with the learner Web app. The first classroom visit
-requires an independent login. `CLASSROOM_ENABLED` defaults to `false`; repository-local simulator
-results do not count as real Realtime AI, latency, cost, or German-pedagogy evidence.
+The classroom is built into the learner Web origin and can use the same signed-in Supabase session.
+`CLASSROOM_ENABLED` defaults to `false`; repository-local simulator results do not count as real
+Realtime AI, latency, cost, or German-pedagogy evidence. See `docs/public-launch.md` for the custom
+domain, Supabase redirect, search, and verified-beta handoff sequence.
 
 The learner App uses width-based responsive breakpoints rather than device names: compact below
 600 px, medium from 600–1023 px, and wide from 1024 px. The public site and Admin console provide

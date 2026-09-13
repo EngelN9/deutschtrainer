@@ -30,6 +30,10 @@ services:
         value: "false"
       - key: AI_PUBLIC_ENABLED
         value: "false"
+      # Fail closed until signup anti-abuse and real-provider acceptance support an intentional
+      # switch to verified_learners. Anonymous sessions are never eligible in either mode.
+      - key: AI_PUBLIC_ACCESS_MODE
+        value: allowlist
       - key: AI_PUBLIC_ENABLED_FEATURES
         value: evaluate_writing,transcribe_audio
       - key: AI_PUBLIC_ALLOWED_PROFILE_IDS
@@ -38,6 +42,8 @@ services:
         value: "10"
       - key: CLASSROOM_ENABLED
         value: "false"
+      - key: CLASSROOM_ACCESS_MODE
+        value: allowlist
       - key: CLASSROOM_ALLOWED_PROFILE_IDS
         sync: false
       # Server-enforced session budget. The browser countdown is UX only and a modified client can
@@ -47,7 +53,7 @@ services:
       - key: CLASSROOM_MAX_SESSION_SECONDS
         value: "300"
       - key: CLASSROOM_DAILY_SESSION_LIMIT
-        value: "2"
+        value: "1"
       - key: CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT
         value: "3"
       - key: CLASSROOM_SWEEP_INTERVAL_MS
@@ -104,6 +110,9 @@ services:
         sync: false
       - key: NEXT_PUBLIC_LEARNER_WEB_URL
         value: https://deutschtrainer-engeln9-web.onrender.com
+      # Change only after Render verifies the custom public domain and its DNS/TLS are live.
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://deutschtrainer-engeln9-site.onrender.com
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -147,6 +156,11 @@ services:
         source: /*
         destination: /index.html
     headers:
+      # The learner shell (including /classroom) is authenticated application UI, not a search
+      # landing page. Search users should reach the public site instead.
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex, follow
       - path: /*
         name: X-Content-Type-Options
         value: nosniff

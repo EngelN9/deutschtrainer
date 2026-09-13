@@ -5,6 +5,7 @@ import type {
   UserSettingsResponse,
 } from "@deutschtrainer/validation";
 import { SettingsService } from "./settingsService";
+import type { AiQuotaFeature } from "../ai-quota/types";
 import type { SettingsRepository } from "./types";
 
 const profileId = "00000000-0000-4000-8000-000000000001";
@@ -142,25 +143,54 @@ describe("SettingsService", () => {
     expect(result.providerAvailable).toBe(false);
     expect(Object.values(result.quotas).every((quota) => !quota.enabled)).toBe(true);
   });
+
+  it("exposes configured features to any verified learner only in verified-learner mode", async () => {
+    const repository = createRepository();
+    repository.authenticate.mockResolvedValue({
+      authUserId: "00000000-0000-4000-8000-000000000099",
+      emailVerified: true,
+      profileId: "00000000-0000-4000-8000-000000000099",
+      role: "learner",
+    });
+    const service = new SettingsService({
+      repository,
+      now: () => new Date("2026-07-15T09:00:00.000Z"),
+      aiEntitlement: {
+        ...createAiEntitlement(),
+        accessMode: "verified_learners",
+      },
+    });
+
+    const result = await service.getAiEntitlement("access-token");
+
+    expect(result.providerAvailable).toBe(true);
+    expect(result.quotas.writingEvaluation.enabled).toBe(true);
+    expect(result.quotas.transcription.enabled).toBe(true);
+  });
 });
 
 function createService(repository: SettingsRepository) {
   return new SettingsService({
     repository,
     now: () => new Date("2026-07-15T09:00:00.000Z"),
-    aiEntitlement: {
-      providerConfigured: true,
-      publicEnabled: true,
-      enabledFeatures: new Set(["evaluate_writing", "transcribe_audio"]),
-      allowedProfileIds: new Set([profileId]),
-      quotas: {
-        evaluate_response: 5,
-        evaluate_writing: 2,
-        text_to_speech: 5,
-        transcribe_audio: 2,
-      },
-    },
+    aiEntitlement: createAiEntitlement(),
   });
+}
+
+function createAiEntitlement() {
+  return {
+    accessMode: "allowlist" as const,
+    providerConfigured: true,
+    publicEnabled: true,
+    enabledFeatures: new Set<AiQuotaFeature>(["evaluate_writing", "transcribe_audio"]),
+    allowedProfileIds: new Set([profileId]),
+    quotas: {
+      evaluate_response: 5,
+      evaluate_writing: 2,
+      text_to_speech: 5,
+      transcribe_audio: 2,
+    },
+  };
 }
 
 function createRepository(): jest.Mocked<SettingsRepository> {

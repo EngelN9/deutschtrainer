@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicDocument } from "../../src/components/PublicDocument";
+
+export const metadata: Metadata = {
+  title: "支援",
+  description: "DeutschTrainer AI 的登入、同步、課程與帳號問題回報準備指南。",
+  alternates: { canonical: "/support" },
+};
 
 export default function SupportPage() {
   return (

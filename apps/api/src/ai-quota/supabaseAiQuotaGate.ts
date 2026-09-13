@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { PublicAccessMode } from "../config";
 import { ApiError } from "../errors";
 import type { AiQuotaFeature, AiQuotaGate, AiQuotaLearner, AiQuotaReservation } from "./types";
 
@@ -16,6 +17,7 @@ const providerCallResultSchema = z.object({
 });
 
 interface SupabaseAiQuotaGateOptions {
+  accessMode: PublicAccessMode;
   allowedProfileIds: ReadonlySet<string>;
   enabledFeatures: ReadonlySet<AiQuotaFeature>;
   globalDailyProviderCallLimit: number;
@@ -48,7 +50,10 @@ export class SupabaseAiQuotaGate implements AiQuotaGate {
     if (!learner.emailVerified) {
       throw new ApiError("FORBIDDEN", "請先完成 Email 驗證後再使用 AI 功能。", 403, false);
     }
-    if (!this.options.allowedProfileIds.has(learner.profileId)) {
+    if (
+      this.options.accessMode === "allowlist" &&
+      !this.options.allowedProfileIds.has(learner.profileId)
+    ) {
       throw new ApiError("AI_ACCESS_RESTRICTED", "這項 AI 功能目前只開放給測試帳號。", 403, false);
     }
   }

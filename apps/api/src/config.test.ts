@@ -10,6 +10,7 @@ describe("API deployment config", () => {
     expect(config.port).toBe(8787);
     expect(config.corsAllowedOrigins).toEqual(["*"]);
     expect(config.publicAiEnabled).toBe(false);
+    expect(config.publicAiAccessMode).toBe("allowlist");
     expect(config.publicAiEnabledFeatures).toEqual([]);
     expect(config.publicAiAllowedProfileIds).toEqual([]);
     expect(config.dailyFreeLimit).toBe(5);
@@ -19,6 +20,7 @@ describe("API deployment config", () => {
     expect(config.globalAiDailyProviderCallLimit).toBe(10);
     expect(config.openAiTimeoutMs).toBe(60_000);
     expect(config.classroomEnabled).toBe(false);
+    expect(config.classroomAccessMode).toBe("allowlist");
     expect(config.openAiRealtimeModel).toBe("gpt-realtime-mini-2025-12-15");
     expect(() => assertApiDeploymentConfig(config)).not.toThrow();
   });
@@ -116,6 +118,41 @@ describe("API deployment config", () => {
     expect(() => assertApiDeploymentConfig(enabledWithoutAllowlist)).toThrow(
       "AI_PUBLIC_ALLOWED_PROFILE_IDS is required",
     );
+  });
+
+  it("requires profile lists only in allowlist mode and rejects unknown access modes", () => {
+    const verifiedLearnerAi = readApiConfig({
+      APP_ENV: "local",
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      AI_EVALUATION_FAKE_MODE: "true",
+      AI_PUBLIC_ENABLED: "true",
+      AI_PUBLIC_ACCESS_MODE: "verified_learners",
+      AI_PUBLIC_ENABLED_FEATURES: "evaluate_writing",
+    });
+    expect(() => assertApiDeploymentConfig(verifiedLearnerAi)).not.toThrow();
+
+    const verifiedLearnerClassroom = readApiConfig({
+      APP_ENV: "local",
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+      OPENAI_API_KEY: "provider-key",
+      CLASSROOM_ENABLED: "true",
+      CLASSROOM_ACCESS_MODE: "verified_learners",
+      OPENAI_SAFETY_IDENTIFIER_SALT: "server-only-salt",
+    });
+    expect(() => assertApiDeploymentConfig(verifiedLearnerClassroom)).not.toThrow();
+
+    expect(() =>
+      readApiConfig({
+        SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+        AI_PUBLIC_ACCESS_MODE: "everyone",
+      }),
+    ).toThrow("AI_PUBLIC_ACCESS_MODE must be allowlist or verified_learners");
+    expect(() =>
+      readApiConfig({
+        SUPABASE_SERVICE_ROLE_KEY: "local-service-key",
+        CLASSROOM_ACCESS_MODE: "everyone",
+      }),
+    ).toThrow("CLASSROOM_ACCESS_MODE must be allowlist or verified_learners");
   });
 
   it("fails closed when the classroom is enabled without server-only settings", () => {
