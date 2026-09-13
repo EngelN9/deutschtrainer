@@ -7,6 +7,7 @@ import type {
   TranscribeRequest,
 } from "@deutschtrainer/validation";
 import { useAuthStore } from "../auth/useAuthStore";
+import { aiEntitlementQueryKey } from "../settings/useUserSettings";
 import {
   deleteSpeakingSubmission,
   getAudioLearningWorkspace,
@@ -64,6 +65,7 @@ export function useTranscribeSpeakingRecording() {
     mutationFn: (request: TranscribeRequest) => transcribeSpeakingRecording(request),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: audioLearningQueryKey(profile?.id) });
+      await queryClient.invalidateQueries({ queryKey: aiEntitlementQueryKey(profile?.id) });
     },
   });
 }

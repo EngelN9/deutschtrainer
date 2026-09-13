@@ -19,6 +19,11 @@ const server = spawn(process.execPath, ["dist/server.mjs"], {
     SUPABASE_SERVICE_ROLE_KEY: "bundle-smoke-service-key",
     OPENAI_API_KEY: "",
     AI_EVALUATION_FAKE_MODE: "false",
+    // The server loads a repository .env after startup. Pin every provider-dependent feature off
+    // so this no-key bundle smoke is deterministic even when a developer's local classroom is on.
+    CLASSROOM_ENABLED: "false",
+    CLASSROOM_ALLOWED_PROFILE_IDS: "",
+    OPENAI_SAFETY_IDENTIFIER_SALT: "",
   },
   stdio: ["ignore", "pipe", "pipe"],
 });

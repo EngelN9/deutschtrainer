@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { EvaluateWritingRequest, UserSettingsResponse } from "@deutschtrainer/validation";
 import { useAuthStore } from "../auth/useAuthStore";
 import { presentLearningNotification } from "../notifications/notificationRuntime";
-import { userSettingsQueryKey } from "../settings/useUserSettings";
+import { aiEntitlementQueryKey, userSettingsQueryKey } from "../settings/useUserSettings";
 import { deleteWritingSubmission, getWritingWorkspace, submitWriting } from "./writingRepository";
 
 export function useWritingWorkspace({ enabled = true }: { enabled?: boolean } = {}) {
@@ -38,6 +38,7 @@ export function useSubmitWriting() {
         }).catch(() => undefined);
       }
       await queryClient.invalidateQueries({ queryKey: writingWorkspaceQueryKey(profile?.id) });
+      await queryClient.invalidateQueries({ queryKey: aiEntitlementQueryKey(profile?.id) });
     },
   });
 }

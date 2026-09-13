@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import type { WritingFeedback } from "@deutschtrainer/ai-schemas";
 import type { EvaluateWritingRequest } from "@deutschtrainer/validation";
 import type { AiQuotaGate } from "../ai-quota/types";
-import { UnavailableWritingProvider } from "./openAiWritingProvider";
+import { UnavailableWritingProvider, WritingProviderError } from "./openAiWritingProvider";
 import { WritingEvaluationService, countGermanWords, createWritingDiff } from "./writingService";
 import type {
   ProtectedWritingPrompt,
@@ -64,6 +64,22 @@ const feedback: WritingFeedback = {
 };
 
 describe("WritingEvaluationService", () => {
+  it("checks eligibility for writing evaluation", async () => {
+    const assertEligible = jest.fn<AiQuotaGate["assertEligible"]>();
+    const service = createService(
+      createRepository(),
+      createProvider([{ payload: feedback }]),
+      createQuotaGate({ assertEligible }),
+    );
+
+    await service.evaluate("valid-token", request);
+
+    expect(assertEligible).toHaveBeenCalledWith(
+      expect.objectContaining({ profileId: "6ff91bf7-37d7-4f24-8682-8ee5d3020a5f" }),
+      "evaluate_writing",
+    );
+  });
+
   it("loads an owner-scoped workspace through the repository", async () => {
     const getWorkspace = jest.fn(async () => ({ prompts: [], submissions: [] }));
     const service = createService(
@@ -174,6 +190,26 @@ describe("WritingEvaluationService", () => {
     );
   });
 
+  it("does not start a second provider attempt after the request deadline expires", async () => {
+    const evaluate = jest.fn(async (): Promise<ProviderWritingResult> => {
+      throw new WritingProviderError("AI_TIMEOUT", "AI 作文批改逾時。", true);
+    });
+    const provider: WritingProvider = { model: "gpt-test", configured: true, evaluate };
+    const reserveProviderCall = jest.fn<AiQuotaGate["reserveProviderCall"]>(async () => undefined);
+    const service = createService(
+      createRepository(),
+      provider,
+      createQuotaGate({ reserveProviderCall }),
+    );
+
+    const result = await service.evaluate("valid-token", request);
+
+    expect(result.status).toBe("fallback");
+    expect(result.fallbackReason).toBe("AI_TIMEOUT");
+    expect(evaluate).toHaveBeenCalledTimes(1);
+    expect(reserveProviderCall).toHaveBeenCalledTimes(1);
+  });
+
   it("requires the trusted full reference version on the second pass", async () => {
     const rewrittenRequest: EvaluateWritingRequest = {
       ...request,
@@ -256,12 +292,16 @@ describe("writing helpers", () => {
   });
 });
 
-function createService(repository: WritingRepository, provider: WritingProvider) {
+function createService(
+  repository: WritingRepository,
+  provider: WritingProvider,
+  quotaGate = createQuotaGate(),
+) {
   return new WritingEvaluationService({
     repository,
     provider,
     dailyLimit: 10,
-    quotaGate: createQuotaGate(),
+    quotaGate,
     inputCostPerMillion: 1,
     outputCostPerMillion: 6,
     now: () => new Date("2026-07-13T05:00:00.000Z"),
@@ -294,7 +334,7 @@ function createRepository(overrides: Partial<WritingRepository> = {}): WritingRe
   };
 }
 
-function createQuotaGate(): AiQuotaGate {
+function createQuotaGate(overrides: Partial<AiQuotaGate> = {}): AiQuotaGate {
   return {
     assertEligible: () => undefined,
     reserve: async () => ({
@@ -304,6 +344,7 @@ function createQuotaGate(): AiQuotaGate {
     reserveProviderCall: async () => undefined,
     consume: async () => undefined,
     release: async () => undefined,
+    ...overrides,
   };
 }
 

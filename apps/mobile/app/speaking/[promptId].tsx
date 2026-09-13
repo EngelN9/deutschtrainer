@@ -20,7 +20,10 @@ import {
 } from "lucide-react-native";
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
-import type { TranscribeResponse } from "@deutschtrainer/validation";
+import {
+  minimumSpeakingRecordingDurationMs,
+  type TranscribeResponse,
+} from "@deutschtrainer/validation";
 import { AuthGate } from "../../src/features/auth/AuthGate";
 import { ContentScreen } from "../../src/components/ContentScreen";
 import { MessageBanner } from "../../src/components/MessageBanner";
@@ -38,6 +41,8 @@ import {
   useTranscribeSpeakingRecording,
 } from "../../src/features/audio-learning/useAudioLearning";
 import { WordComparisonView } from "../../src/features/audio-learning/WordComparisonView";
+import { resolveAiFeatureAvailability } from "../../src/features/settings/aiEntitlementPresentation";
+import { useAiEntitlement } from "../../src/features/settings/useUserSettings";
 
 type PermissionState = "unknown" | "granted" | "denied";
 
@@ -46,6 +51,7 @@ export default function SpeakingPracticeScreen() {
   const workspaceQuery = useAudioLearningWorkspace();
   const transcribeMutation = useTranscribeSpeakingRecording();
   const deleteMutation = useDeleteSpeakingSubmission();
+  const aiEntitlementQuery = useAiEntitlement();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
   const [permission, setPermission] = useState<PermissionState>("unknown");
@@ -58,6 +64,12 @@ export default function SpeakingPracticeScreen() {
     () => workspaceQuery.data?.speakingPrompts.find((entry) => entry.id === promptId),
     [promptId, workspaceQuery.data],
   );
+  const aiAvailability = resolveAiFeatureAvailability({
+    errorMessage: aiEntitlementQuery.error?.message,
+    featureLabel: "錄音 AI 分析",
+    isLoading: aiEntitlementQuery.isLoading,
+    quota: aiEntitlementQuery.data?.quotas.transcription,
+  });
 
   useEffect(() => {
     void getRecordingPermissionsAsync().then((response) => {
@@ -72,7 +84,7 @@ export default function SpeakingPracticeScreen() {
       recordingStarted &&
       !recorderState.isRecording &&
       recorderState.url &&
-      recorderState.durationMillis >= 500
+      recorderState.durationMillis >= minimumSpeakingRecordingDurationMs
     ) {
       setRecorded({ uri: recorderState.url, durationMs: recorderState.durationMillis });
       setRecordingStarted(false);
@@ -115,14 +127,17 @@ export default function SpeakingPracticeScreen() {
       const durationMs = recorderState.durationMillis;
       await recorder.stop();
       const uri = recorder.uri ?? recorderState.url;
-      if (!uri || durationMs < 500) {
-        setLocalError("錄音太短，請至少朗讀半秒後再停止。");
+      setRecordingStarted(false);
+      await setAudioModeAsync({ allowsRecording: false });
+      if (!uri || durationMs < minimumSpeakingRecordingDurationMs) {
+        setRecorded(undefined);
+        setLocalError("錄音太短，請至少朗讀 3 秒後再停止。");
         return;
       }
       setRecorded({ uri, durationMs });
-      setRecordingStarted(false);
-      await setAudioModeAsync({ allowsRecording: false });
     } catch (error) {
+      setRecordingStarted(false);
+      void setAudioModeAsync({ allowsRecording: false });
       setLocalError(error instanceof Error ? error.message : "無法停止錄音。");
     }
   };
@@ -207,6 +222,7 @@ export default function SpeakingPracticeScreen() {
         ) : (
           <>
             <MessageBanner message={errorMessage} tone="error" />
+            <MessageBanner message={aiAvailability.message} tone={aiAvailability.tone} />
             <View style={styles.targetSection}>
               <Text style={styles.targetLabel}>目標句</Text>
               <Text style={styles.target}>{prompt.targetDe}</Text>
@@ -272,7 +288,7 @@ export default function SpeakingPracticeScreen() {
                 {!result ? (
                   <View style={styles.commandRow}>
                     <CommandButton
-                      disabled={transcribeMutation.isPending}
+                      disabled={transcribeMutation.isPending || !aiAvailability.canUse}
                       icon={CloudUpload}
                       label={transcribeMutation.isPending ? "正在分析" : "上傳並分析"}
                       onPress={() => void submitRecording()}

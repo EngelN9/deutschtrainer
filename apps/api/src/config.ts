@@ -1,3 +1,5 @@
+import { aiQuotaFeatures, type AiQuotaFeature } from "./ai-quota/types";
+
 export type AppEnvironment = "local" | "test" | "staging" | "production";
 
 export interface ApiConfig {
@@ -20,9 +22,19 @@ export interface ApiConfig {
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
   publicAiEnabled: boolean;
+  publicAiEnabledFeatures: AiQuotaFeature[];
+  publicAiAllowedProfileIds: string[];
   globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
+  classroomEnabled: boolean;
+  classroomAllowedProfileIds: string[];
+  classroomMaxSessionSeconds: number;
+  classroomDailySessionLimit: number;
+  classroomGlobalDailySessionLimit: number;
+  classroomSweepIntervalMs: number;
+  openAiRealtimeModel: string;
+  openAiSafetyIdentifierSalt: string;
 }
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -38,9 +50,9 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     openAiModel: env.OPENAI_EVALUATION_MODEL?.trim() || "gpt-5.6-luna",
     openAiTtsModel: env.OPENAI_TTS_MODEL?.trim() || "gpt-4o-mini-tts",
     openAiTranscriptionModel: env.OPENAI_TRANSCRIPTION_MODEL?.trim() || "whisper-1",
-    openAiTimeoutMs: readPositiveInteger(env.OPENAI_TIMEOUT_MS, 20_000),
-    inputCostPerMillion: readNonNegativeNumber(env.OPENAI_INPUT_COST_PER_MILLION, 1),
-    outputCostPerMillion: readNonNegativeNumber(env.OPENAI_OUTPUT_COST_PER_MILLION, 6),
+    openAiTimeoutMs: readPositiveInteger(env.OPENAI_TIMEOUT_MS, 60_000),
+    inputCostPerMillion: readNonNegativeNumber(env.OPENAI_INPUT_COST_PER_MILLION, 0.2),
+    outputCostPerMillion: readNonNegativeNumber(env.OPENAI_OUTPUT_COST_PER_MILLION, 1.2),
     dailyFreeLimit: readPositiveInteger(env.AI_DAILY_FREE_LIMIT, 5),
     writingDailyFreeLimit: readPositiveInteger(env.AI_WRITING_DAILY_FREE_LIMIT, 2),
     audioTtsDailyFreeLimit: readPositiveInteger(env.AI_AUDIO_TTS_DAILY_FREE_LIMIT, 5),
@@ -53,12 +65,27 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       20,
     ),
     publicAiEnabled: env.AI_PUBLIC_ENABLED === "true",
+    publicAiEnabledFeatures: readAiQuotaFeatures(env.AI_PUBLIC_ENABLED_FEATURES),
+    publicAiAllowedProfileIds: readCommaSeparatedValues(env.AI_PUBLIC_ALLOWED_PROFILE_IDS),
     globalAiDailyProviderCallLimit: readPositiveInteger(
       env.AI_GLOBAL_DAILY_PROVIDER_CALL_LIMIT,
-      100,
+      10,
     ),
     learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
+    classroomEnabled: env.CLASSROOM_ENABLED === "true",
+    classroomAllowedProfileIds: readCommaSeparatedValues(env.CLASSROOM_ALLOWED_PROFILE_IDS),
+    // 15 minutes: long enough for a real lesson, and realtime cost grows superlinearly with
+    // session length because the conversation is replayed as input on every turn.
+    classroomMaxSessionSeconds: readPositiveInteger(env.CLASSROOM_MAX_SESSION_SECONDS, 900),
+    classroomDailySessionLimit: readPositiveInteger(env.CLASSROOM_DAILY_SESSION_LIMIT, 2),
+    classroomGlobalDailySessionLimit: readPositiveInteger(
+      env.CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT,
+      3,
+    ),
+    classroomSweepIntervalMs: readPositiveInteger(env.CLASSROOM_SWEEP_INTERVAL_MS, 30_000),
+    openAiRealtimeModel: env.OPENAI_REALTIME_MODEL?.trim() || "gpt-realtime-mini-2025-12-15",
+    openAiSafetyIdentifierSalt: cleanSecret(env.OPENAI_SAFETY_IDENTIFIER_SALT),
   };
 }
 
@@ -71,6 +98,24 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     (config.appEnv === "local" || config.appEnv === "test") && config.fakeEvaluationMode;
   if (config.publicAiEnabled && !config.openAiApiKey && !localFakeProvider) {
     throw new Error("OPENAI_API_KEY is required when AI_PUBLIC_ENABLED=true.");
+  }
+  if (config.publicAiEnabled && config.publicAiEnabledFeatures.length === 0) {
+    throw new Error("AI_PUBLIC_ENABLED_FEATURES is required when AI_PUBLIC_ENABLED=true.");
+  }
+  if (config.publicAiEnabled && config.publicAiAllowedProfileIds.length === 0) {
+    throw new Error("AI_PUBLIC_ALLOWED_PROFILE_IDS is required when AI_PUBLIC_ENABLED=true.");
+  }
+
+  if (config.classroomEnabled) {
+    if (!config.openAiApiKey) {
+      throw new Error("OPENAI_API_KEY is required when CLASSROOM_ENABLED=true.");
+    }
+    if (config.classroomAllowedProfileIds.length === 0) {
+      throw new Error("CLASSROOM_ALLOWED_PROFILE_IDS is required when CLASSROOM_ENABLED=true.");
+    }
+    if (!config.openAiSafetyIdentifierSalt) {
+      throw new Error("OPENAI_SAFETY_IDENTIFIER_SALT is required when CLASSROOM_ENABLED=true.");
+    }
   }
 
   if (config.appEnv === "local" || config.appEnv === "test") {
@@ -192,4 +237,28 @@ function readPositiveInteger(value: string | undefined, fallback: number): numbe
 function readNonNegativeNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function readCommaSeparatedValues(value: string | undefined): string[] {
+  return [
+    ...new Set(
+      (value ?? "")
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0),
+    ),
+  ];
+}
+
+function readAiQuotaFeatures(value: string | undefined): AiQuotaFeature[] {
+  const entries = readCommaSeparatedValues(value);
+  const unknown = entries.filter(
+    (entry): entry is string => !aiQuotaFeatures.includes(entry as AiQuotaFeature),
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `AI_PUBLIC_ENABLED_FEATURES contains unsupported values: ${unknown.join(", ")}.`,
+    );
+  }
+  return entries as AiQuotaFeature[];
 }

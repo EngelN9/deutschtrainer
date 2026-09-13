@@ -121,6 +121,13 @@ export const apiErrorCodeSchema = z.enum([
   "AI_NOT_CONFIGURED",
   "AI_QUOTA_EXCEEDED",
   "AI_GLOBALLY_DISABLED",
+  "AI_FEATURE_DISABLED",
+  "AI_ACCESS_RESTRICTED",
+  "CLASSROOM_DISABLED",
+  "CLASSROOM_NOT_CONFIGURED",
+  "CLASSROOM_ACCESS_RESTRICTED",
+  "CLASSROOM_SESSION_LIMIT",
+  "CLASSROOM_PROVIDER_ERROR",
   "CONFLICT",
   "AUDIO_UPLOAD_FAILED",
   "CONTENT_NOT_PUBLISHED",
@@ -243,6 +250,7 @@ export const userSettingsResponseSchema = z.object({
 export type UserSettingsResponse = z.infer<typeof userSettingsResponseSchema>;
 
 export const aiEntitlementQuotaSchema = z.object({
+  enabled: z.boolean(),
   limit: z.number().int().positive(),
   used: z.number().int().nonnegative(),
   remaining: z.number().int().nonnegative(),
@@ -1128,6 +1136,8 @@ export const submitDictationResponseSchema = z.object({
 });
 export type SubmitDictationResponse = z.infer<typeof submitDictationResponseSchema>;
 
+export const minimumSpeakingRecordingDurationMs = 3_000;
+
 export const transcribeRequestSchema = z.object({
   speakingPromptId: databaseUuidSchema,
   storagePath: z
@@ -1143,7 +1153,7 @@ export const transcribeRequestSchema = z.object({
     "audio/wav",
     "audio/x-m4a",
   ]),
-  durationMs: z.number().int().min(500).max(120_000),
+  durationMs: z.number().int().min(minimumSpeakingRecordingDurationMs).max(120_000),
   idempotencyKey: z.string().min(12).max(200),
 });
 export type TranscribeRequest = z.infer<typeof transcribeRequestSchema>;
@@ -1239,3 +1249,111 @@ export const sendConversationMessageRequestSchema = z.object({
   messageDe: z.string().min(1).max(2000),
   idempotencyKey: z.string().min(12),
 });
+
+export const CLASSROOM_TOOL_SCHEMA_VERSION = "1.0.0";
+
+const classroomOperationIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9_-]+$/);
+
+const classroomElementIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9_-]+$/);
+
+const classroomBoardTextSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .refine((value) => !/<\/?[A-Za-z][^>]*>/u.test(value), {
+    message: "白板文字不得包含 HTML。",
+  });
+
+// The model supplies only `operationId`. The owning turn is transport metadata: the client reads
+// it from the Realtime event's `response_id` and supplies it to the reducer alongside the payload.
+// The model cannot know a server-generated `resp_...` id, so asking it for one guaranteed that
+// every real operation was rejected as SUPERSEDED_TURN.
+const classroomOperationBaseSchema = z.object({
+  operationId: classroomOperationIdSchema,
+});
+
+export const classroomWriteLineOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("write_line"),
+    elementId: classroomElementIdSchema,
+    textDe: classroomBoardTextSchema,
+    textZhTw: classroomBoardTextSchema.max(300).optional(),
+  })
+  .strict();
+
+export const classroomHighlightSpanOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("highlight_span"),
+    targetElementId: classroomElementIdSchema,
+    overlayElementId: classroomElementIdSchema,
+    from: z.number().int().nonnegative().max(10_000),
+    to: z.number().int().positive().max(10_000),
+    color: z.enum(["warn", "error", "focus"]),
+    labelZhTw: classroomBoardTextSchema.max(120).optional(),
+  })
+  .strict()
+  .refine((operation) => operation.from < operation.to, {
+    message: "標記結束位置必須大於開始位置。",
+    path: ["to"],
+  });
+
+export const classroomAnnotateOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("annotate"),
+    targetElementId: classroomElementIdSchema,
+    elementId: classroomElementIdSchema,
+    textZhTw: classroomBoardTextSchema.max(300),
+    position: z.enum(["above", "below", "right"]),
+  })
+  .strict();
+
+export const classroomReplaceTextOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("replace_text"),
+    targetElementId: classroomElementIdSchema,
+    newTextDe: classroomBoardTextSchema,
+  })
+  .strict();
+
+// A structural table: case endings, conjugations, a wrong/correct contrast, or the Feldermodell
+// columns German word order is normally taught with. Every bound is deliberate - this is untrusted
+// model output rendered straight onto the board, so an oversized grid must be rejected, not drawn.
+export const classroomTableCellSchema = z
+  .object({
+    textDe: classroomBoardTextSchema.max(120).optional(),
+    textZhTw: classroomBoardTextSchema.max(120).optional(),
+    emphasis: z.enum(["correct", "incorrect"]).optional(),
+  })
+  .strict();
+
+export const classroomWriteTableOperationSchema = classroomOperationBaseSchema
+  .extend({
+    type: z.literal("write_table"),
+    elementId: classroomElementIdSchema,
+    captionZhTw: classroomBoardTextSchema.max(120).optional(),
+    headers: z.array(classroomBoardTextSchema.max(60)).min(1).max(5),
+    rows: z.array(z.array(classroomTableCellSchema).min(1).max(5)).min(1).max(8),
+  })
+  .strict()
+  .refine((operation) => operation.rows.every((row) => row.length === operation.headers.length), {
+    message: "每一列的欄位數必須與標題列相同。",
+    path: ["rows"],
+  });
+
+export const classroomToolOperationSchema = z.discriminatedUnion("type", [
+  classroomWriteLineOperationSchema,
+  classroomHighlightSpanOperationSchema,
+  classroomAnnotateOperationSchema,
+  classroomReplaceTextOperationSchema,
+  classroomWriteTableOperationSchema,
+]);
+export type ClassroomToolOperation = z.infer<typeof classroomToolOperationSchema>;

@@ -16,6 +16,8 @@ const providerCallResultSchema = z.object({
 });
 
 interface SupabaseAiQuotaGateOptions {
+  allowedProfileIds: ReadonlySet<string>;
+  enabledFeatures: ReadonlySet<AiQuotaFeature>;
   globalDailyProviderCallLimit: number;
   publicEnabled: boolean;
 }
@@ -33,15 +35,21 @@ export class SupabaseAiQuotaGate implements AiQuotaGate {
     });
   }
 
-  assertEligible(learner: AiQuotaLearner): void {
+  assertEligible(learner: AiQuotaLearner, feature: AiQuotaFeature): void {
     if (!this.options.publicEnabled) {
       throw new ApiError("AI_GLOBALLY_DISABLED", "公開 AI 服務目前尚未啟用。", 503, false);
+    }
+    if (!this.options.enabledFeatures.has(feature)) {
+      throw new ApiError("AI_FEATURE_DISABLED", "這項 AI 功能目前尚未開放。", 503, false);
     }
     if (learner.role !== "learner") {
       throw new ApiError("FORBIDDEN", "免費 AI 額度僅供有效學習者帳號使用。", 403, false);
     }
     if (!learner.emailVerified) {
       throw new ApiError("FORBIDDEN", "請先完成 Email 驗證後再使用 AI 功能。", 403, false);
+    }
+    if (!this.options.allowedProfileIds.has(learner.profileId)) {
+      throw new ApiError("AI_ACCESS_RESTRICTED", "這項 AI 功能目前只開放給測試帳號。", 403, false);
     }
   }
 

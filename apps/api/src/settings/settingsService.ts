@@ -20,6 +20,8 @@ interface SettingsServiceOptions {
   rateLimiter?: PrivateRequestRateLimiter;
   now?: () => Date;
   aiEntitlement: {
+    allowedProfileIds: ReadonlySet<string>;
+    enabledFeatures: ReadonlySet<AiQuotaFeature>;
     providerConfigured: boolean;
     publicEnabled: boolean;
     quotas: Record<AiQuotaFeature, number>;
@@ -47,12 +49,19 @@ export class SettingsService implements SettingsServiceContract {
     const now = this.now();
     const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const rows = await this.options.repository.listAiQuotaUsage(learner.profileId, since);
+    const learnerEligible =
+      this.options.aiEntitlement.publicEnabled &&
+      this.options.aiEntitlement.providerConfigured &&
+      learner.emailVerified &&
+      learner.role === "learner" &&
+      this.options.aiEntitlement.allowedProfileIds.has(learner.profileId);
     const quota = (feature: AiQuotaFeature) => {
       const featureRows = rows.filter((row) => row.feature === feature);
       const limit = this.options.aiEntitlement.quotas[feature];
       const used = featureRows.length;
       const oldest = featureRows[0]?.reservedAt;
       return {
+        enabled: learnerEligible && this.options.aiEntitlement.enabledFeatures.has(feature),
         limit,
         used,
         remaining: Math.max(0, limit - used),
@@ -63,11 +72,7 @@ export class SettingsService implements SettingsServiceContract {
     };
 
     return {
-      providerAvailable:
-        this.options.aiEntitlement.publicEnabled &&
-        this.options.aiEntitlement.providerConfigured &&
-        learner.emailVerified &&
-        learner.role === "learner",
+      providerAvailable: learnerEligible && this.options.aiEntitlement.enabledFeatures.size > 0,
       source: "platform_free",
       windowHours: 24,
       quotas: {

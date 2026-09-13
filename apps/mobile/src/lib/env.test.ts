@@ -50,3 +50,27 @@ describe("guest trial availability", () => {
     expect(env.guestTrialEnabled).toBe(true);
   });
 });
+
+describe("classroom navigation availability", () => {
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it("stays off when unset, so a deploy never advertises the classroom by accident", async () => {
+    const env = await loadMobileEnv({ EXPO_PUBLIC_CLASSROOM_ENABLED: undefined });
+
+    expect(env.classroomEnabled).toBe(false);
+  });
+
+  it("treats any value other than the exact opt-in as off", async () => {
+    const env = await loadMobileEnv({ EXPO_PUBLIC_CLASSROOM_ENABLED: "1" });
+
+    expect(env.classroomEnabled).toBe(false);
+  });
+
+  it("turns on only for the explicit opt-in", async () => {
+    const env = await loadMobileEnv({ EXPO_PUBLIC_CLASSROOM_ENABLED: "true" });
+
+    expect(env.classroomEnabled).toBe(true);
+  });
+});

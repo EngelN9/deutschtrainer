@@ -15,12 +15,16 @@ export function useAiEntitlement() {
   const profile = useAuthStore((state) => state.profile);
   const authMode = useAuthStore((state) => state.authMode);
   return useQuery<AiEntitlementResponse>({
-    queryKey: ["ai-entitlement", profile?.id],
+    queryKey: aiEntitlementQueryKey(profile?.id),
     queryFn: getAiEntitlement,
     enabled: Boolean(profile) && authMode === "supabase",
     staleTime: 15 * 1000,
     retry: 1,
   });
+}
+
+export function aiEntitlementQueryKey(profileId?: string) {
+  return ["ai-entitlement", profileId] as const;
 }
 
 export function useUserSettings() {
