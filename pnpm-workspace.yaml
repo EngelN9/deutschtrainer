@@ -4,13 +4,12 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
-# expo@57.0.15 declares expo-file-system ~57.0.5, so bumping the direct dependency to the
-# version `expo install --check` expects left two copies installed and failed Expo Doctor.
-# 57.0.6 satisfies expo's own range, so pinning one version dedupes without breaking it.
+# Expo SDK packages declare overlapping patch ranges (for example, expo@57.0.15
+# declares expo-file-system ~57.0.5 and expo-linking@57.0.10 declares
+# expo-constants ~57.0.18). Pin one compatible patch version for each aligned
+# package so direct and transitive declarations dedupe for Expo Doctor.
 overrides:
-  expo-constants: 57.0.15
-  expo-file-system: 57.0.6
-minimumReleaseAgeExclude:
-  - expo-constants@57.0.15
-  - expo-file-system@57.0.6
-  - expo-linking@57.0.9
+  expo-audio: 57.0.5
+  expo-constants: 57.0.18
+  expo-file-system: 57.0.7
+  expo-linking: 57.0.10
