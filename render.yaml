@@ -65,9 +65,9 @@ services:
       - key: OPENAI_TIMEOUT_MS
         value: "60000"
       - key: OPENAI_INPUT_COST_PER_MILLION
-        value: "1"
+        value: "0.2"
       - key: OPENAI_OUTPUT_COST_PER_MILLION
-        value: "6"
+        value: "1.2"
       - key: AI_DAILY_FREE_LIMIT
         value: "5"
       - key: AI_WRITING_DAILY_FREE_LIMIT
