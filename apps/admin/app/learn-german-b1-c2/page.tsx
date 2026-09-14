@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LearningLoop } from "../../src/components/LearningLoop";
 import { PublicDocument } from "../../src/components/PublicDocument";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function LearnGermanB1C2Page() {
           AI 或即時服務的練習仍必須連線。
         </p>
       </section>
+      <LearningLoop />
       <section>
         <h2>開始使用</h2>
         <p>先從目前程度與學習目標開始，再以可重複的練習建立長期節奏。</p>

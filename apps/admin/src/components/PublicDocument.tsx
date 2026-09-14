@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { PublicHeader } from "./PublicHeader";
-import { PublicFooter } from "./PublicFooter";
+import { PublicShell } from "./PublicShell";
 
 export function PublicDocument({
   title,
@@ -14,20 +13,15 @@ export function PublicDocument({
   children: ReactNode;
 }) {
   return (
-    <div className="public-page-container">
-      <PublicHeader />
-      <main className="public-shell public-document-shell">
-        <article className="public-document">
-          <div className="public-document-header">
-            <span className="public-eyebrow">{category}</span>
-            <h1>{title}</h1>
-            <p className="public-lead">{lead}</p>
-          </div>
-          <div className="public-document-body">{children}</div>
-        </article>
-      </main>
-      <PublicFooter />
-    </div>
+    <PublicShell className="public-document-shell">
+      <article className="public-document">
+        <header className="public-document-header">
+          <p className="public-eyebrow">{category}</p>
+          <h1>{title}</h1>
+          <p className="public-lead">{lead}</p>
+        </header>
+        <div className="public-document-body">{children}</div>
+      </article>
+    </PublicShell>
   );
 }
-

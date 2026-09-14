@@ -7,6 +7,7 @@ module.exports = {
     "^@deutschtrainer/grading$": "<rootDir>/packages/grading/src/index.ts",
     "^@deutschtrainer/learning-engine$": "<rootDir>/packages/learning-engine/src/index.ts",
     "^@deutschtrainer/shared-types$": "<rootDir>/packages/shared-types/src/index.ts",
+    "^@deutschtrainer/ui/css-tokens$": "<rootDir>/packages/ui/src/cssTokens.ts",
     "^@deutschtrainer/ui$": "<rootDir>/packages/ui/src/index.ts",
     "^@deutschtrainer/validation$": "<rootDir>/packages/validation/src/index.ts",
   },
@@ -16,7 +17,7 @@ module.exports = {
   preset: "ts-jest",
   roots: ["<rootDir>/apps", "<rootDir>/packages"],
   testEnvironment: "node",
-  testMatch: ["**/*.test.ts"],
+  testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
