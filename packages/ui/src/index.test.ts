@@ -3,6 +3,7 @@ import {
   colorTokens,
   elevationTokens,
   motionTokens,
+  nativeElevationTokens,
   radiusTokens,
   spacingTokens,
   typographyTokens,
@@ -17,7 +18,7 @@ function getLuminance(hex: string): number {
   const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
   const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
 
-  const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
@@ -102,6 +103,25 @@ describe("@deutschtrainer/ui design tokens", () => {
 
     it("defines a visible high-contrast focus ring token", () => {
       expect(colorTokens.focusRing).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(
+        getContrastRatio(colorTokens.focusRing, colorTokens.background),
+      ).toBeGreaterThanOrEqual(3);
+      expect(getContrastRatio(colorTokens.focusRing, colorTokens.surface)).toBeGreaterThanOrEqual(
+        3,
+      );
+      expect(
+        getContrastRatio(colorTokens.focusRingOnStrong, colorTokens.primary),
+      ).toBeGreaterThanOrEqual(3);
+    });
+
+    it("keeps semantic labels readable on their soft backgrounds", () => {
+      expect(getContrastRatio(colorTokens.aiDark, colorTokens.aiSoft)).toBeGreaterThanOrEqual(4.5);
+      expect(
+        getContrastRatio(colorTokens.offlineDark, colorTokens.offlineSoft),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        getContrastRatio(colorTokens.restrictedDark, colorTokens.restrictedSoft),
+      ).toBeGreaterThanOrEqual(4.5);
     });
   });
 
@@ -120,6 +140,9 @@ describe("@deutschtrainer/ui design tokens", () => {
       expect(typographyTokens.fontFamily.sans).toContain("Noto Sans TC");
       expect(typographyTokens.fontFamily.serif).toContain("Noto Serif TC");
       expect(typographyTokens.fontFamily.mono).toContain("monospace");
+      expect(typographyTokens.nativeFontFamily.sans).toBe("System");
+      expect(typographyTokens.nativeFontFamily.serif).toBe("serif");
+      expect(typographyTokens.nativeFontFamily.mono).toBe("monospace");
     });
 
     it("defines positive spacing and radius steps", () => {
@@ -142,6 +165,26 @@ describe("@deutschtrainer/ui design tokens", () => {
       expect(elevationTokens.raised).toContain("rgba");
       expect(elevationTokens.card).toContain("rgba");
       expect(elevationTokens.floating).toContain("rgba");
+    });
+
+    it("defines React Native-compatible elevation tokens", () => {
+      expect(nativeElevationTokens.none.elevation).toBe(0);
+      expect(nativeElevationTokens.none.shadowOpacity).toBe(0);
+
+      const elevatedTokens = [
+        nativeElevationTokens.raised,
+        nativeElevationTokens.card,
+        nativeElevationTokens.floating,
+      ];
+
+      elevatedTokens.forEach((token) => {
+        expect(token.elevation).toBeGreaterThan(0);
+        expect(token.shadowColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+        expect(token.shadowOffset.width).toBe(0);
+        expect(token.shadowOffset.height).toBeGreaterThan(0);
+        expect(token.shadowOpacity).toBeGreaterThan(0);
+        expect(token.shadowRadius).toBeGreaterThan(0);
+      });
     });
 
     it("defines motion timings in milliseconds", () => {

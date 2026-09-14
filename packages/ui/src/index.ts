@@ -11,7 +11,8 @@ export const colorTokens = {
   primary: "#175CD3",
   primaryDark: "#174AA5",
   primarySoft: "#EAF2FF",
-  focusRing: "#84ADFF",
+  focusRing: "#175CD3",
+  focusRingOnStrong: "#FFFFFF",
 
   // Borders and dividers
   border: "#D7DFEA",
@@ -65,6 +66,11 @@ export const typographyTokens = {
     serif: "'Source Serif 4', Georgia, 'Noto Serif TC', Cambria, serif",
     mono: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
   },
+  nativeFontFamily: {
+    sans: "System",
+    serif: "serif",
+    mono: "monospace",
+  },
 } as const;
 
 export const spacingTokens = {
@@ -93,6 +99,37 @@ export const elevationTokens = {
   floating: "0 18px 44px rgba(23, 35, 60, 0.14)",
 } as const;
 
+export const nativeElevationTokens = {
+  none: {
+    elevation: 0,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+  },
+  raised: {
+    elevation: 1,
+    shadowColor: "#17233C",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+  },
+  card: {
+    elevation: 4,
+    shadowColor: "#17233C",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+  },
+  floating: {
+    elevation: 8,
+    shadowColor: "#17233C",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 22,
+  },
+} as const;
+
 export const motionTokens = {
   fast: 120,
   standard: 180,
@@ -110,5 +147,6 @@ export type TypographyTokens = typeof typographyTokens;
 export type SpacingTokens = typeof spacingTokens;
 export type RadiusTokens = typeof radiusTokens;
 export type ElevationTokens = typeof elevationTokens;
+export type NativeElevationTokens = typeof nativeElevationTokens;
 export type MotionTokens = typeof motionTokens;
 export type AccessibilityTokens = typeof accessibilityTokens;
