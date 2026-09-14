@@ -1,37 +1,33 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { PublicHeader } from "./PublicHeader";
+import { PublicFooter } from "./PublicFooter";
 
 export function PublicDocument({
   title,
   lead,
+  category = "DeutschTrainer 平台資訊",
   children,
 }: {
   title: string;
   lead: string;
+  category?: string;
   children: ReactNode;
 }) {
   return (
-    <main className="public-shell public-document-shell">
-      <nav className="public-nav" aria-label="公開網站導覽">
-        <Link className="public-brand" href="/">
-          <span className="brand-mark small" aria-hidden="true">
-            DT
-          </span>
-          DeutschTrainer
-        </Link>
-        <div>
-          <Link href="/status">狀態</Link>
-          <Link href="/support">支援</Link>
-          <Link href="/privacy">隱私</Link>
-          <Link href="/terms">服務條款</Link>
-        </div>
-      </nav>
-      <article className="public-document">
-        <p className="public-eyebrow">DeutschTrainer</p>
-        <h1>{title}</h1>
-        <p className="public-lead">{lead}</p>
-        {children}
-      </article>
-    </main>
+    <div className="public-page-container">
+      <PublicHeader />
+      <main className="public-shell public-document-shell">
+        <article className="public-document">
+          <div className="public-document-header">
+            <span className="public-eyebrow">{category}</span>
+            <h1>{title}</h1>
+            <p className="public-lead">{lead}</p>
+          </div>
+          <div className="public-document-body">{children}</div>
+        </article>
+      </main>
+      <PublicFooter />
+    </div>
   );
 }
+

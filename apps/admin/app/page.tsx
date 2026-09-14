@@ -54,30 +54,72 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-grid" aria-label="主題頁面">
+      {/* Learning Loop visual */}
+      <section className="public-learning-loop" aria-label="學習循環">
+        <h2 className="public-eyebrow">建立長期德語能力</h2>
+        <p className="public-lead">
+          透過固定題練習、間隔複習與錯誤分析，形成持續的學習循環。
+        </p>
+        <div className="learning-loop-visual">
+          {/* TODO: add SVG or image */}
+        </div>
+      </section>
+
+      {/* Core pillars grid */}
+      <section className="public-pillar-grid" aria-label="核心支柱">
         <article>
-          <h2>AI 德語家教</h2>
-          <p>了解 AI 寫作與口說相關功能的資料邊界、帳號資格與公開測試限制。</p>
-          <Link className="inline-action-link" href="/ai-tutor">
-            前往 AI 德語家教介紹
-          </Link>
+          <h2>內容品質</h2>
+          <p>CEFR B1–C2，繁體中文說明與審核答案。</p>
         </article>
         <article>
-          <h2>Virtual Classroom</h2>
-          <p>了解即時虛擬教室的使用資格、時長上限與測試階段狀態。</p>
-          <Link className="inline-action-link" href="/virtual-classroom">
-            前往虛擬教室介紹
-          </Link>
+          <h2>AI 助教</h2>
+          <p>AI 寫作、口說、聽力輔助，符合測試限制。</p>
         </article>
         <article>
-          <h2>德語 B1–C2 路徑</h2>
-          <p>探索適合中高階學習者的文法、輸出與間隔複習安排。</p>
-          <Link className="inline-action-link" href="/learn-german-b1-c2">
-            前往 B1–C2 學習介紹
-          </Link>
+          <h2>離線支援</h2>
+          <p>下載課程與固定題，隨時練習。</p>
         </article>
       </section>
 
+      {/* Feature availability matrix */}
+      <section className="public-feature-matrix" aria-label="功能可用性">
+        <h2 className="public-eyebrow">功能可用性概況</h2>
+        <table className="feature-matrix">
+          <thead>
+            <tr>
+              <th>功能</th>
+              <th>離線</th>
+              <th>連線</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>固定題練習</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>AI 寫作/口說</td>
+              <td>❌</td>
+              <td>✅ (Beta)</td>
+            </tr>
+            <tr>
+              <td>課程下載</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      {/* Trust‑boundary band */}
+      <section className="public-trust-band" aria-label="安全與隱私">
+        <p>
+          所有 AI 功能均受嚴格測試與配額限制，離線功能不依賴雲端。
+        </p>
+      </section>
+
+      {/* Existing product principles (retain) */}
       <section className="public-grid" aria-label="產品原則">
         <article>
           <h2>分級內容</h2>
