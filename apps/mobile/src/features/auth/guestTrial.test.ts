@@ -21,6 +21,8 @@ jest.mock("./authService", () => ({
   signOutCurrentUser: jest.fn(),
   signUpWithPassword: jest.fn(),
   subscribeToAuthChanges: jest.fn(() => () => undefined),
+  updatePassword: jest.fn(),
+  upgradeGuestToAccount: jest.fn(),
 }));
 
 jest.mock("../onboarding/onboardingRepository", () => ({
@@ -35,10 +37,16 @@ jest.mock("../profile/profileRepository", () => ({
 
 type SignInMock = jest.Mock<() => Promise<{ session: Session | null }>>;
 type SettingsMock = jest.Mock<() => Promise<UserSettingsResponse>>;
+type UpdatePasswordMock = jest.Mock<(input: { password: string }) => Promise<void>>;
+type UpgradeGuestMock = jest.Mock<
+  (input: { displayName: string; email: string; password: string }) => Promise<void>
+>;
 
-const { signInAnonymousGuest } = jest.requireMock<{ signInAnonymousGuest: SignInMock }>(
-  "./authService",
-);
+const { signInAnonymousGuest, updatePassword, upgradeGuestToAccount } = jest.requireMock<{
+  signInAnonymousGuest: SignInMock;
+  updatePassword: UpdatePasswordMock;
+  upgradeGuestToAccount: UpgradeGuestMock;
+}>("./authService");
 const { completeOnboarding } = jest.requireMock<{ completeOnboarding: SettingsMock }>(
   "../onboarding/onboardingRepository",
 );
@@ -124,5 +132,45 @@ describe("startGuestTrial", () => {
     expect(state.session).toBeNull();
     expect(state.status).toBe("unauthenticated");
     expect(state.errorMessage).not.toBeNull();
+  });
+});
+
+describe("guest account actions", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useAuthStore.setState({
+      errorMessage: null,
+      noticeMessage: null,
+      status: "authenticated",
+    });
+  });
+
+  it("keeps the existing user and explains that email confirmation finishes a guest upgrade", async () => {
+    upgradeGuestToAccount.mockResolvedValue(undefined);
+
+    const completed = await useAuthStore.getState().upgradeGuestToAccount({
+      displayName: "林小明",
+      email: "learner@example.com",
+      password: "secure-password",
+    });
+
+    expect(completed).toBe(true);
+    expect(upgradeGuestToAccount).toHaveBeenCalledWith({
+      displayName: "林小明",
+      email: "learner@example.com",
+      password: "secure-password",
+    });
+    expect(useAuthStore.getState().noticeMessage).toContain("確認信已寄出");
+  });
+
+  it("does not navigate after a failed password update", async () => {
+    updatePassword.mockRejectedValue(new Error("Recovery session expired"));
+
+    const completed = await useAuthStore.getState().updatePassword({
+      password: "secure-password",
+    });
+
+    expect(completed).toBe(false);
+    expect(useAuthStore.getState().errorMessage).not.toBeNull();
   });
 });
