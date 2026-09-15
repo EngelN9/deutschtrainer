@@ -1,156 +1,120 @@
 import type { Href } from "expo-router";
 import { usePathname, useRouter } from "expo-router";
-import {
-  BarChart3,
-  BookOpen,
-  FilePenLine,
-  Headphones,
-  Home,
-  Library,
-  Presentation,
-  RotateCcw,
-} from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { BookOpen, FilePenLine, Home, Presentation, RotateCcw } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from "@deutschtrainer/ui";
 import { useAuthStore } from "../features/auth/useAuthStore";
 import { mobileEnv } from "../lib/env";
-import { useResponsiveLayout } from "../layout/useResponsiveLayout";
+import {
+  findActiveGroup,
+  getNavigationGroups,
+  type NavigationGroupId,
+} from "../navigation/navigationPolicy";
 
-const items: Array<{
-  href: Href;
-  icon: typeof Home;
-  label: string;
-  path: string;
-}> = [
-  { href: "/home", icon: Home, label: "首頁", path: "/home" },
-  { href: "/courses", icon: BookOpen, label: "課程", path: "/courses" },
-  { href: "/knowledge" as Href, icon: Library, label: "知識", path: "/knowledge" },
-  { href: "/writing" as Href, icon: FilePenLine, label: "寫作", path: "/writing" },
-  { href: "/audio-training" as Href, icon: Headphones, label: "聽說", path: "/audio-training" },
-  { href: "/reviews" as Href, icon: RotateCcw, label: "複習", path: "/reviews" },
-  { href: "/classroom" as Href, icon: Presentation, label: "教室", path: "/classroom" },
-  { href: "/analytics" as Href, icon: BarChart3, label: "分析", path: "/analytics" },
-];
+const icons: Record<NavigationGroupId, typeof Home> = {
+  today: Home,
+  learn: BookOpen,
+  practice: FilePenLine,
+  classroom: Presentation,
+  progress: RotateCcw,
+};
+
+export function useMainNavigation() {
+  const pathname = usePathname();
+  const authMode = useAuthStore((state) => state.authMode);
+  // The classroom route stays reachable by URL while the flag is off; the flag only decides
+  // whether it is advertised. The API allowlists real learner profiles either way.
+  const groups = getNavigationGroups(authMode, mobileEnv.classroomEnabled);
+  return { activeGroup: findActiveGroup(groups, pathname), groups, pathname };
+}
 
 export function MainNavigation({ layout = "bar" }: { layout?: "bar" | "rail" }) {
-  const pathname = usePathname();
   const router = useRouter();
-  const authMode = useAuthStore((state) => state.authMode);
-  const { isCompact } = useResponsiveLayout();
-  // The classroom route stays reachable by URL while the flag is off; this only decides whether it
-  // is advertised. Demo mode never sees it — the API allowlists real learner profiles.
-  const availableItems = mobileEnv.classroomEnabled
-    ? items
-    : items.filter((item) => item.path !== "/classroom");
-  const visibleItems =
-    authMode === "demo"
-      ? availableItems.filter((item) => ["/home", "/courses", "/reviews"].includes(item.path))
-      : availableItems;
+  const { activeGroup, groups } = useMainNavigation();
+  const isRail = layout === "rail";
 
-  const navigation = (
+  return (
     <View
       accessibilityRole="tablist"
-      style={[styles.navigation, layout === "rail" ? styles.railNavigation : styles.barNavigation]}
+      style={[styles.navigation, isRail ? styles.railNavigation : styles.barNavigation]}
     >
-      {visibleItems.map((item) => {
-        const active = pathname === item.path;
-        const Icon = item.icon;
+      {groups.map((group) => {
+        const active = group.id === activeGroup?.id;
+        const Icon = icons[group.id];
 
         return (
           <Pressable
-            accessibilityLabel={item.label}
+            accessibilityLabel={group.label}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            key={item.path}
-            onPress={() => router.replace(item.href)}
+            // react-native-web 0.21 no longer maps accessibilityState.selected to aria-selected.
+            aria-selected={active}
+            key={group.id}
+            // navigate returns to a page already in the stack instead of piling up tab visits, so
+            // the back button keeps working without an ever-growing history.
+            onPress={() => router.navigate(group.sections[0].path as Href)}
             style={({ pressed }) => [
               styles.item,
-              layout === "rail" ? styles.railItem : styles.barItem,
+              isRail ? styles.railItem : styles.barItem,
               active ? styles.activeItem : null,
               pressed ? styles.pressed : null,
             ]}
           >
-            <Icon color={active ? colorTokens.primary : colorTokens.mutedText} size={20} />
-            <Text style={[styles.label, active ? styles.activeLabel : null]}>{item.label}</Text>
+            <Icon
+              color={active ? colorTokens.primary : colorTokens.mutedText}
+              size={20}
+              strokeWidth={2}
+            />
+            <Text style={[styles.label, active ? styles.activeLabel : null]}>{group.label}</Text>
           </Pressable>
         );
       })}
     </View>
   );
-
-  if (layout === "bar" && isCompact) {
-    return (
-      <ScrollView
-        contentContainerStyle={styles.compactScrollContent}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.compactScroll}
-      >
-        {navigation}
-      </ScrollView>
-    );
-  }
-
-  return navigation;
 }
 
 const styles = StyleSheet.create({
   activeItem: {
-    backgroundColor: "#E8F0FE",
+    backgroundColor: colorTokens.primarySoft,
   },
   activeLabel: {
     color: colorTokens.primary,
   },
+  barItem: {
+    flex: 1,
+  },
+  barNavigation: {
+    flexDirection: "row",
+  },
   item: {
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     gap: spacingTokens.xs,
     justifyContent: "center",
-    minHeight: 58,
-    minWidth: 0,
+    minHeight: 56,
     paddingHorizontal: spacingTokens.xs,
   },
   label: {
     color: colorTokens.mutedText,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: typographyTokens.caption.fontSize,
+    fontWeight: typographyTokens.caption.fontWeight,
+    lineHeight: typographyTokens.caption.lineHeight,
   },
   navigation: {
-    backgroundColor: colorTokens.surface,
-    borderColor: colorTokens.border,
-    borderRadius: 8,
-    borderWidth: 1,
     gap: spacingTokens.xs,
-    padding: spacingTokens.xs,
-  },
-  barItem: {
-    flex: 1,
-    minWidth: 64,
-  },
-  barNavigation: {
-    flexDirection: "row",
-    minWidth: "100%",
-  },
-  compactScroll: {
-    flexGrow: 0,
     width: "100%",
-  },
-  compactScrollContent: {
-    minWidth: "100%",
   },
   pressed: {
     opacity: 0.72,
   },
   railItem: {
-    alignItems: "flex-start",
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "flex-start",
     minHeight: 48,
     paddingHorizontal: spacingTokens.md,
-    width: "100%",
   },
   railNavigation: {
     flexDirection: "column",
-    width: "100%",
   },
 });
