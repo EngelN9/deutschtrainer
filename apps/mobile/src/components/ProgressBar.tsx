@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.success,
   },
   track: {
-    backgroundColor: "#DDE3EA",
+    backgroundColor: colorTokens.border,
     borderRadius: 3,
     height: 6,
     overflow: "hidden",

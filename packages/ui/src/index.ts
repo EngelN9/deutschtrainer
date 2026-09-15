@@ -17,6 +17,7 @@ export const colorTokens = {
   // Borders and dividers
   border: "#D7DFEA",
   borderStrong: "#B8C4D6",
+  borderInput: "#7A8599",
   subtle: "#F1F4F8",
 
   // Editorial & German language anchors
@@ -53,10 +54,10 @@ export const colorTokens = {
 } as const;
 
 export const typographyTokens = {
-  display: { fontSize: 36, lineHeight: 44, fontWeight: "800", letterSpacing: -0.5 },
-  title: { fontSize: 30, lineHeight: 38, fontWeight: "800", letterSpacing: -0.3 },
-  heading: { fontSize: 22, lineHeight: 29, fontWeight: "800", letterSpacing: -0.2 },
-  subheading: { fontSize: 18, lineHeight: 25, fontWeight: "800", letterSpacing: 0 },
+  display: { fontSize: 36, lineHeight: 44, fontWeight: "700", letterSpacing: -0.5 },
+  title: { fontSize: 30, lineHeight: 38, fontWeight: "700", letterSpacing: -0.3 },
+  heading: { fontSize: 22, lineHeight: 29, fontWeight: "700", letterSpacing: -0.2 },
+  subheading: { fontSize: 18, lineHeight: 25, fontWeight: "700", letterSpacing: 0 },
   body: { fontSize: 16, lineHeight: 24, fontWeight: "400", letterSpacing: 0 },
   bodySmall: { fontSize: 14, lineHeight: 21, fontWeight: "400", letterSpacing: 0 },
   label: { fontSize: 14, lineHeight: 20, fontWeight: "700", letterSpacing: 0.1 },

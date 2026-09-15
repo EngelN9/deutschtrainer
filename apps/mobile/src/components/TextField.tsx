@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from "@deutschtrainer/ui";
 
 interface TextFieldProps {
   accessibilityLabel: string;
@@ -48,16 +48,16 @@ export function TextField({
 const styles = StyleSheet.create({
   error: {
     color: colorTokens.danger,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: typographyTokens.bodySmall.fontSize,
+    lineHeight: typographyTokens.bodySmall.lineHeight,
   },
   input: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CBD5E1",
-    borderRadius: 8,
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.borderInput,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     color: colorTokens.text,
-    fontSize: 16,
+    fontSize: typographyTokens.body.fontSize,
     minHeight: 48,
     paddingHorizontal: spacingTokens.md,
     paddingVertical: spacingTokens.sm,
@@ -67,8 +67,9 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colorTokens.text,
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: typographyTokens.label.fontSize,
+    fontWeight: typographyTokens.label.fontWeight,
+    lineHeight: typographyTokens.label.lineHeight,
   },
   wrapper: {
     gap: spacingTokens.xs,

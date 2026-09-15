@@ -1,7 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import { Platform } from "react-native";
 import { NotificationCoordinator } from "../src/features/notifications/NotificationCoordinator";
 import { OfflineCoordinator } from "../src/features/offline/OfflineCoordinator";
+import { installWebGlobalStyles } from "../src/lib/webGlobalStyles";
+
+if (Platform.OS === "web") {
+  installWebGlobalStyles();
+}
 
 const queryClient = new QueryClient();
 

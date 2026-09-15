@@ -1,6 +1,7 @@
 import { AlertCircle, Inbox } from "lucide-react-native";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
+import { AppText } from "./AppText";
 import { PrimaryButton } from "./PrimaryButton";
 
 interface StatePanelProps {
@@ -16,12 +17,16 @@ export function StatePanel({ message, onRetry, state, title }: StatePanelProps) 
       {state === "loading" ? (
         <ActivityIndicator accessibilityLabel={title} color={colorTokens.primary} size="large" />
       ) : state === "error" ? (
-        <AlertCircle color={colorTokens.danger} size={28} />
+        <AlertCircle color={colorTokens.danger} size={24} strokeWidth={2} />
       ) : (
-        <Inbox color={colorTokens.mutedText} size={28} />
+        <Inbox color={colorTokens.mutedText} size={24} strokeWidth={2} />
       )}
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <AppText headingLevel={2} style={styles.centered} variant="subheading">
+        {title}
+      </AppText>
+      <AppText style={styles.centered} tone="muted" variant="bodySmall">
+        {message}
+      </AppText>
       {state === "error" && onRetry ? (
         <View style={styles.retry}>
           <PrimaryButton accessibilityLabel="重新載入" onPress={onRetry} variant="secondary">
@@ -34,17 +39,14 @@ export function StatePanel({ message, onRetry, state, title }: StatePanelProps) 
 }
 
 const styles = StyleSheet.create({
-  message: {
-    color: colorTokens.mutedText,
-    fontSize: 15,
-    lineHeight: 22,
+  centered: {
     textAlign: "center",
   },
   panel: {
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     gap: spacingTokens.sm,
     minHeight: 220,
@@ -54,10 +56,5 @@ const styles = StyleSheet.create({
   retry: {
     marginTop: spacingTokens.sm,
     minWidth: 160,
-  },
-  title: {
-    color: colorTokens.text,
-    fontSize: 18,
-    fontWeight: "800",
   },
 });
