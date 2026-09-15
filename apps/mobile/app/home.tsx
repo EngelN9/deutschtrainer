@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Settings,
   Target,
+  UserPlus,
 } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
@@ -37,9 +38,9 @@ export default function HomeScreen() {
   const noticeMessage = useAuthStore((state) => state.noticeMessage);
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
-  // A guest has no email or password, so signing out strands the account permanently and
-  // their progress becomes unreachable. Until the upgrade-to-an-account flow exists, don't
-  // offer an action whose only outcome is silent, irreversible data loss.
+  // A guest has no email or password, so signing out strands the account permanently and their
+  // progress becomes unreachable. They get /upgrade-account instead — the one action that turns
+  // the trial into something they can come back to.
   const isGuestSession = useAuthStore((state) => state.session?.user.is_anonymous === true);
   const currentLevel = useLearningSetupStore((state) => state.currentLevel);
   const targetLevel = useLearningSetupStore((state) => state.targetLevel);
@@ -131,7 +132,13 @@ export default function HomeScreen() {
               icon={Settings}
               onPress={() => router.push("/settings" as Href)}
             />
-            {isGuestSession ? null : (
+            {isGuestSession ? (
+              <IconButton
+                accessibilityLabel="建立帳號保留進度"
+                icon={UserPlus}
+                onPress={() => router.push("/upgrade-account" as Href)}
+              />
+            ) : (
               <IconButton
                 accessibilityLabel="登出帳號"
                 icon={LogOut}

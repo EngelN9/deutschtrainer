@@ -164,6 +164,11 @@ export const forgotPasswordRequestSchema = z.object({
 });
 export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>;
 
+export const updatePasswordRequestSchema = z.object({
+  password: passwordSchema,
+});
+export type UpdatePasswordRequest = z.infer<typeof updatePasswordRequestSchema>;
+
 export const learningGoalSchema = z.enum([
   "exam_preparation",
   "work",
