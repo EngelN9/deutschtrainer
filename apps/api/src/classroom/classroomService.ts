@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import type { PublicAccessMode } from "../config";
 import { ApiError } from "../errors";
 import type {
   ClassroomAuthenticator,
@@ -10,6 +11,7 @@ import type {
 } from "./types";
 
 interface ClassroomServiceOptions {
+  accessMode: PublicAccessMode;
   allowedProfileIds: ReadonlySet<string>;
   authenticator: ClassroomAuthenticator;
   dailySessionLimit: number;
@@ -123,7 +125,10 @@ export class ClassroomService implements ClassroomServiceContract {
     if (!learner.emailVerified) {
       throw new ApiError("FORBIDDEN", "請先完成 Email 驗證後再使用即時教室。", 403, false);
     }
-    if (!this.options.allowedProfileIds.has(learner.profileId)) {
+    if (
+      this.options.accessMode === "allowlist" &&
+      !this.options.allowedProfileIds.has(learner.profileId)
+    ) {
       throw new ApiError(
         "CLASSROOM_ACCESS_RESTRICTED",
         "即時教室目前只開放給內部測試帳號。",

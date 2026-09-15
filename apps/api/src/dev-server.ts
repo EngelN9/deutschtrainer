@@ -57,6 +57,7 @@ const config = readApiConfig();
 assertApiDeploymentConfig(config);
 
 const quotaGate = new SupabaseAiQuotaGate(config.supabaseUrl, config.supabaseServiceRoleKey, {
+  accessMode: config.publicAiAccessMode,
   allowedProfileIds: new Set(config.publicAiAllowedProfileIds),
   enabledFeatures: new Set(config.publicAiEnabledFeatures),
   publicEnabled: config.publicAiEnabled,
@@ -167,6 +168,7 @@ const settingsService = new SettingsService({
   repository: new SupabaseSettingsRepository(config.supabaseUrl, config.supabaseServiceRoleKey),
   rateLimiter: privateRequestRateLimiter,
   aiEntitlement: {
+    accessMode: config.publicAiAccessMode,
     allowedProfileIds: new Set(config.publicAiAllowedProfileIds),
     enabledFeatures: new Set(config.publicAiEnabledFeatures),
     providerConfigured:
@@ -188,6 +190,7 @@ const classroomProvider = config.openAiApiKey
     })
   : new UnavailableRealtimeProvider();
 const classroomService = new ClassroomService({
+  accessMode: config.classroomAccessMode,
   allowedProfileIds: new Set(config.classroomAllowedProfileIds),
   authenticator: new SupabaseClassroomAuthenticator(
     config.supabaseUrl,
@@ -219,7 +222,8 @@ const handlerDependencies = {
     contentGenerationProvider.configured,
   classroomConfigured:
     classroomProvider.configured &&
-    config.classroomAllowedProfileIds.length > 0 &&
+    (config.classroomAccessMode === "verified_learners" ||
+      config.classroomAllowedProfileIds.length > 0) &&
     Boolean(config.openAiSafetyIdentifierSalt),
   classroomEnabled: config.classroomEnabled,
 };

@@ -24,6 +24,7 @@ const MARKER = "data-dt-head";
 
 const HEAD_TAGS = `
     <meta ${MARKER} name="description" content="${DESCRIPTION}" />
+    <meta ${MARKER} name="robots" content="noindex,follow" />
     <meta ${MARKER} name="theme-color" content="${THEME_COLOR}" />
     <meta ${MARKER} property="og:type" content="website" />
     <meta ${MARKER} property="og:site_name" content="DeutschTrainer" />

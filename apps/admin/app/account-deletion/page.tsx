@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { PublicDocument } from "../../src/components/PublicDocument";
+
+export const metadata: Metadata = {
+  title: "帳號與資料刪除",
+  description: "了解 DeutschTrainer AI 帳號、學習資料、作文與錄音的刪除範圍與限制。",
+  alternates: { canonical: "/account-deletion" },
+};
 
 export default function AccountDeletionPage() {
   return (

@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicDocument } from "../../src/components/PublicDocument";
+
+export const metadata: Metadata = {
+  title: "隱私說明",
+  description: "DeutschTrainer AI 的帳號、學習紀錄、作文、錄音與 AI 回饋資料處理原則。",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

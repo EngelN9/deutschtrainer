@@ -55,9 +55,10 @@
 - Mobile 只允許 `EXPO_PUBLIC_SUPABASE_URL`、`EXPO_PUBLIC_SUPABASE_ANON_KEY` 與 `EXPO_PUBLIC_API_BASE_URL`。
 - CI secrets 不輸出到 logs。
 - `AI_PUBLIC_ENABLED` 是 server-only emergency switch；staging/production 啟用時若缺少
-  `OPENAI_API_KEY`、有效的 `AI_PUBLIC_ENABLED_FEATURES` 或非空的
-  `AI_PUBLIC_ALLOWED_PROFILE_IDS`，API 必須在啟動時 fail fast。功能清單與 allowlist 只由
-  backend 執行；健康檢查只回傳 boolean 狀態，不回傳 key 或 allowlist。
+  `OPENAI_API_KEY` 或有效的 `AI_PUBLIC_ENABLED_FEATURES`，API 必須在啟動時 fail fast。
+  `AI_PUBLIC_ACCESS_MODE=allowlist`（預設）還需要非空的 `AI_PUBLIC_ALLOWED_PROFILE_IDS`；
+  `verified_learners` 仍只允許已驗證 Email 的 learner，絕不允許 anonymous session。功能清單、
+  access mode 與 allowlist 只由 backend 執行；健康檢查只回傳 boolean 狀態，不回傳 key 或 allowlist。
 - BYOK 尚未實作。完成 KMS-backed envelope encryption、threat model、刪除與備份驗證前，
   Mobile、Admin、API contract 與資料庫都不得接受或保存使用者 OpenAI Key。
 - staging／production 的 `CORS_ALLOWED_ORIGINS` 必須是精確 HTTPS origin allowlist；API 不得

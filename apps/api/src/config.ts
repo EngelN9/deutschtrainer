@@ -1,6 +1,7 @@
 import { aiQuotaFeatures, type AiQuotaFeature } from "./ai-quota/types";
 
 export type AppEnvironment = "local" | "test" | "staging" | "production";
+export type PublicAccessMode = "allowlist" | "verified_learners";
 
 export interface ApiConfig {
   appEnv: AppEnvironment;
@@ -22,12 +23,14 @@ export interface ApiConfig {
   audioTranscriptionDailyFreeLimit: number;
   contentGenerationDailyFreeLimit: number;
   publicAiEnabled: boolean;
+  publicAiAccessMode: PublicAccessMode;
   publicAiEnabledFeatures: AiQuotaFeature[];
   publicAiAllowedProfileIds: string[];
   globalAiDailyProviderCallLimit: number;
   learningApiRequestsPerMinute: number;
   fakeEvaluationMode: boolean;
   classroomEnabled: boolean;
+  classroomAccessMode: PublicAccessMode;
   classroomAllowedProfileIds: string[];
   classroomMaxSessionSeconds: number;
   classroomDailySessionLimit: number;
@@ -65,6 +68,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       20,
     ),
     publicAiEnabled: env.AI_PUBLIC_ENABLED === "true",
+    publicAiAccessMode: readPublicAccessMode(env.AI_PUBLIC_ACCESS_MODE, "AI_PUBLIC_ACCESS_MODE"),
     publicAiEnabledFeatures: readAiQuotaFeatures(env.AI_PUBLIC_ENABLED_FEATURES),
     publicAiAllowedProfileIds: readCommaSeparatedValues(env.AI_PUBLIC_ALLOWED_PROFILE_IDS),
     globalAiDailyProviderCallLimit: readPositiveInteger(
@@ -74,11 +78,12 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     learningApiRequestsPerMinute: readPositiveInteger(env.LEARNING_API_REQUESTS_PER_MINUTE, 60),
     fakeEvaluationMode: env.AI_EVALUATION_FAKE_MODE === "true",
     classroomEnabled: env.CLASSROOM_ENABLED === "true",
+    classroomAccessMode: readPublicAccessMode(env.CLASSROOM_ACCESS_MODE, "CLASSROOM_ACCESS_MODE"),
     classroomAllowedProfileIds: readCommaSeparatedValues(env.CLASSROOM_ALLOWED_PROFILE_IDS),
-    // 15 minutes: long enough for a real lesson, and realtime cost grows superlinearly with
-    // session length because the conversation is replayed as input on every turn.
-    classroomMaxSessionSeconds: readPositiveInteger(env.CLASSROOM_MAX_SESSION_SECONDS, 900),
-    classroomDailySessionLimit: readPositiveInteger(env.CLASSROOM_DAILY_SESSION_LIMIT, 2),
+    // A five-minute trial bounds realtime cost. The conversation is replayed as input on every
+    // turn, so longer calls grow cost faster than their wall-clock duration suggests.
+    classroomMaxSessionSeconds: readPositiveInteger(env.CLASSROOM_MAX_SESSION_SECONDS, 300),
+    classroomDailySessionLimit: readPositiveInteger(env.CLASSROOM_DAILY_SESSION_LIMIT, 1),
     classroomGlobalDailySessionLimit: readPositiveInteger(
       env.CLASSROOM_GLOBAL_DAILY_SESSION_LIMIT,
       3,
@@ -102,7 +107,11 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
   if (config.publicAiEnabled && config.publicAiEnabledFeatures.length === 0) {
     throw new Error("AI_PUBLIC_ENABLED_FEATURES is required when AI_PUBLIC_ENABLED=true.");
   }
-  if (config.publicAiEnabled && config.publicAiAllowedProfileIds.length === 0) {
+  if (
+    config.publicAiEnabled &&
+    config.publicAiAccessMode === "allowlist" &&
+    config.publicAiAllowedProfileIds.length === 0
+  ) {
     throw new Error("AI_PUBLIC_ALLOWED_PROFILE_IDS is required when AI_PUBLIC_ENABLED=true.");
   }
 
@@ -110,7 +119,10 @@ export function assertApiDeploymentConfig(config: ApiConfig): void {
     if (!config.openAiApiKey) {
       throw new Error("OPENAI_API_KEY is required when CLASSROOM_ENABLED=true.");
     }
-    if (config.classroomAllowedProfileIds.length === 0) {
+    if (
+      config.classroomAccessMode === "allowlist" &&
+      config.classroomAllowedProfileIds.length === 0
+    ) {
       throw new Error("CLASSROOM_ALLOWED_PROFILE_IDS is required when CLASSROOM_ENABLED=true.");
     }
     if (!config.openAiSafetyIdentifierSalt) {
@@ -178,6 +190,14 @@ function readAppEnvironment(value: string | undefined): AppEnvironment {
     return normalized;
   }
   throw new Error("APP_ENV must be one of local, test, staging, or production.");
+}
+
+function readPublicAccessMode(value: string | undefined, variableName: string): PublicAccessMode {
+  const normalized = value?.trim() || "allowlist";
+  if (normalized === "allowlist" || normalized === "verified_learners") {
+    return normalized;
+  }
+  throw new Error(`${variableName} must be allowlist or verified_learners.`);
 }
 
 function readCorsAllowedOrigins(value: string | undefined, appEnv: AppEnvironment): string[] {

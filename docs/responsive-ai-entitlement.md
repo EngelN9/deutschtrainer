@@ -27,11 +27,13 @@ replace visual or native-device acceptance.
 ## Platform free AI
 
 `AI_PUBLIC_ENABLED` defaults to `false` and remains the emergency master switch. An enabled beta
-also requires the requested feature in `AI_PUBLIC_ENABLED_FEATURES`, an authenticated active
-`learner` profile with confirmed Email, and that profile in the server-only
-`AI_PUBLIC_ALLOWED_PROFILE_IDS` allowlist. Demo sessions never call these routes. In staging or
+also requires the requested feature in `AI_PUBLIC_ENABLED_FEATURES` and an authenticated active
+`learner` profile with confirmed Email; demo and anonymous sessions never call these routes.
+`AI_PUBLIC_ACCESS_MODE=allowlist` is the default and requires the profile in the server-only
+`AI_PUBLIC_ALLOWED_PROFILE_IDS` list. The only broader option is the intentional
+`verified_learners` mode, which still requires role `learner` and confirmed Email. In staging or
 production, enabling the switch without an API-only `OPENAI_API_KEY`, a validated feature list, or
-a non-empty allowlist fails at process startup.
+the required allowlist for `allowlist` mode fails at process startup.
 
 The rolling 24-hour limits are:
 
@@ -76,12 +78,14 @@ directly, and exhaustion of platform quota must never automatically switch to a 
    alerts; do not treat alerts as a hard stop.
 3. Deploy with fake mode and the master switch disabled, then verify feature and allowlist refusal.
 4. Configure only `evaluate_writing,transcribe_audio`, the approved profile allowlist, and the
-   10-attempt UTC-day cap in Render.
+   10-attempt UTC-day cap in Render. Keep `AI_PUBLIC_ACCESS_MODE=allowlist` until signup abuse
+   protection, a real writing acceptance and a real transcription acceptance have passed.
 5. Enable the master switch and validate one real writing evaluation and one real transcription;
    confirm general evaluation and TTS remain disabled.
 6. Verify entitlement, quota accounting, cost logs and safe error envelopes. Roll back by setting
    the master switch to `false` on any acceptance failure.
-7. Keep BYOK hidden until its separate security gate passes.
+7. Switch to `verified_learners` only after the preceding checks and a two-user quota/isolation
+   acceptance pass; keep BYOK hidden until its separate security gate passes.
 
 Render free-tier cold starts, real provider quality/cost/latency, KMS-backed BYOK and native Android
 device acceptance remain `BLOCKED` until separately evidenced.
