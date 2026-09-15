@@ -8,6 +8,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./css-tokens": {
+      "types": "./src/cssTokens.ts",
+      "default": "./src/cssTokens.ts"
     }
   },
   "scripts": {

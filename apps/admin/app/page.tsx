@@ -1,97 +1,78 @@
+import { ArrowRight, CircleDot } from "lucide-react";
 import Link from "next/link";
+import { FeatureMatrix, defaultFeatures } from "../src/components/FeatureMatrix";
+import { LearningLoop } from "../src/components/LearningLoop";
+import { PillarGrid } from "../src/components/PillarGrid";
+import { PublicShell } from "../src/components/PublicShell";
+import { TrustBand } from "../src/components/TrustBand";
+import { getLearnerWebUrl } from "../src/lib/learnerWebUrl";
 
 export const metadata = {
   alternates: { canonical: "/" },
 };
 
 export default function HomePage() {
-  const learnerWebUrl =
-    process.env.NEXT_PUBLIC_LEARNER_WEB_URL?.trim() ||
-    "https://deutschtrainer-engeln9-web.onrender.com";
+  const learnerWebUrl = getLearnerWebUrl();
 
   return (
-    <main className="public-shell">
-      <nav className="public-nav" aria-label="主要導覽">
-        <Link className="public-brand" href="/">
-          <span className="brand-mark small" aria-hidden="true">
-            DT
-          </span>
-          DeutschTrainer
-        </Link>
-        <div>
-          <Link href="/support">支援</Link>
-          <Link href="/privacy">隱私</Link>
-          <Link href="/terms">服務條款</Link>
-        </div>
-      </nav>
-
-      <section className="public-hero">
+    <PublicShell>
+      <section className="public-hero" aria-labelledby="public-home-title">
         <p className="public-eyebrow">B1–C2 · 繁體中文德語自學</p>
-        <h1>以有脈絡的練習，建立可以長期保留的德語能力。</h1>
-        <p>
-          DeutschTrainer AI 是給繁體中文使用者的德語 B1–C2
-          學習平台。透過固定題練習、學習進度、間隔複習與錯誤分析建立長期能力；部分功能需要網路連線與已啟用的服務。
+        <h1 id="public-home-title">讓每一次德語練習，都累積成下一次的進步。</h1>
+        <p className="public-hero-lead">
+          DeutschTrainer AI
+          將固定題、寫作練習、錯誤分析與間隔複習整理成清楚路徑，協助繁體中文學習者建立可長期保留的進階德語能力。
         </p>
         <div className="public-actions">
-          <a className="button button-primary" href={learnerWebUrl}>
-            開始使用 Web 版
+          <a className="button button-primary public-primary-cta" href={learnerWebUrl}>
+            <span>開始使用 Web 版</span>
+            <ArrowRight size={17} aria-hidden="true" />
           </a>
-          <Link className="button button-secondary" href="/support">
-            取得支援
-          </Link>
-          <Link className="button button-secondary" href="/ai-tutor">
-            AI 德語家教
-          </Link>
-          <Link className="button button-secondary" href="/virtual-classroom">
-            虛擬教室
-          </Link>
-          <Link className="button button-secondary" href="/status">
-            目前狀態
-          </Link>
-          <Link className="button button-secondary" href="/account-deletion">
-            帳號與資料刪除
+          <Link className="button button-secondary" href="/learn-german-b1-c2">
+            探索 B1–C2 學習路徑
           </Link>
         </div>
+        <ul className="public-hero-meta" aria-label="產品重點">
+          <li>
+            <CircleDot size={15} aria-hidden="true" />
+            匿名即可試用固定題
+          </li>
+          <li>
+            <CircleDot size={15} aria-hidden="true" />
+            AI 與教室需要已驗證帳號
+          </li>
+          <li>
+            <CircleDot size={15} aria-hidden="true" />
+            公開受限測試
+          </li>
+        </ul>
       </section>
 
-      <section className="public-grid" aria-label="主題頁面">
-        <article>
-          <h2>AI 德語家教</h2>
-          <p>了解 AI 寫作與口說相關功能的資料邊界、帳號資格與公開測試限制。</p>
-          <Link className="inline-action-link" href="/ai-tutor">
-            前往 AI 德語家教介紹
-          </Link>
-        </article>
-        <article>
-          <h2>Virtual Classroom</h2>
-          <p>了解即時虛擬教室的使用資格、時長上限與測試階段狀態。</p>
-          <Link className="inline-action-link" href="/virtual-classroom">
-            前往虛擬教室介紹
-          </Link>
-        </article>
-        <article>
-          <h2>德語 B1–C2 路徑</h2>
-          <p>探索適合中高階學習者的文法、輸出與間隔複習安排。</p>
-          <Link className="inline-action-link" href="/learn-german-b1-c2">
-            前往 B1–C2 學習介紹
-          </Link>
-        </article>
-      </section>
+      <PillarGrid />
+      <LearningLoop />
+      <FeatureMatrix features={defaultFeatures} />
+      <TrustBand variant="beta" />
 
-      <section className="public-grid" aria-label="產品原則">
-        <article>
-          <h2>分級內容</h2>
-          <p>以 CEFR B1–C2 組織課程，搭配繁體中文說明與經審核的答案解析。</p>
-        </article>
-        <article>
-          <h2>可追蹤的複習</h2>
-          <p>依正式提交結果更新熟練度、錯誤紀錄與複習排程。</p>
-        </article>
-        <article>
-          <h2>清楚的功能邊界</h2>
-          <p>離線固定題與需連線的 AI 功能分開呈現，不以模擬結果冒充正式服務。</p>
-        </article>
+      <section className="public-section public-principles" aria-labelledby="principles-title">
+        <div className="public-section-heading compact">
+          <p className="public-eyebrow">產品承諾</p>
+          <h2 id="principles-title">功能邊界與學習紀錄，都應該說得明白。</h2>
+        </div>
+        <div className="public-grid">
+          <article>
+            <h3>內容狀態不混淆</h3>
+            <p>只有完成審核與發布流程的教材，才會被描述為正式學習內容。</p>
+          </article>
+          <article>
+            <h3>進度來自正式提交</h3>
+            <p>熟練度、錯誤紀錄與複習排程依伺服器確認的作答結果更新。</p>
+          </article>
+          <article>
+            <h3>限制直接告訴你</h3>
+            <p>離線、AI、帳號與測試階段的限制清楚呈現，不以模擬結果冒充正式服務。</p>
+          </article>
+        </div>
       </section>
-    </main>
+    </PublicShell>
   );
 }

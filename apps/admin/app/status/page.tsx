@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicDocument } from "../../src/components/PublicDocument";
+import { getLearnerWebUrl } from "../../src/lib/learnerWebUrl";
 import {
   formatMergedDate,
   readRepositoryActivity,
@@ -10,9 +11,7 @@ import {
 // Live enough to be useful, cached enough to stay inside GitHub's unauthenticated rate limit.
 export const revalidate = 300;
 
-const learnerWebUrl =
-  process.env.NEXT_PUBLIC_LEARNER_WEB_URL?.trim() ||
-  "https://deutschtrainer-engeln9-web.onrender.com";
+const learnerWebUrl = getLearnerWebUrl();
 
 const SERVICE_LABEL: Record<ServiceState, string> = {
   ok: "運作中",
@@ -61,7 +60,10 @@ export default async function StatusPage() {
           <li>每日學習提醒通知</li>
           <li>離線下載課程</li>
         </ul>
-        <p>AI 批改目前全域關閉，練習與複習不受影響。</p>
+        <p>
+          AI 與虛擬教室屬於受限測試功能；實際可用性取決於 Email
+          驗證、伺服器功能開關、個人額度與平台每日上限。
+        </p>
       </section>
 
       <section>
