@@ -19,6 +19,7 @@ export function LevelSelector({ onChange, value }: LevelSelectorProps) {
             accessibilityLabel={`德語 ${level}`}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
+            aria-selected={active}
             key={level}
             onPress={() => onChange(level)}
             style={({ pressed }) => [

@@ -7,7 +7,8 @@ import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
 import { AppText } from "./AppText";
 import { IconButton } from "./IconButton";
-import { MainNavigation } from "./MainNavigation";
+import { MainNavigation, useMainNavigation } from "./MainNavigation";
+import { SectionTabs } from "./SectionTabs";
 
 interface ContentScreenProps extends PropsWithChildren {
   action?: ReactNode;
@@ -31,6 +32,7 @@ export function ContentScreen({
 }: ContentScreenProps) {
   const router = useRouter();
   const { isCompact, isMedium, isWide } = useResponsiveLayout();
+  const { activeGroup, pathname } = useMainNavigation();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -78,6 +80,11 @@ export function ContentScreen({
               </AppText>
               {description ? <AppText tone="muted">{description}</AppText> : null}
             </View>
+            {showMainNavigation && activeGroup ? (
+              <View style={styles.sectionTabs}>
+                <SectionTabs activePath={pathname} sections={activeGroup.sections} />
+              </View>
+            ) : null}
             <View style={styles.body}>{children}</View>
           </View>
         </ScrollView>
@@ -141,6 +148,9 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     padding: spacingTokens.md,
     width: 184,
+  },
+  sectionTabs: {
+    marginBottom: spacingTokens.lg,
   },
   shell: {
     flex: 1,
