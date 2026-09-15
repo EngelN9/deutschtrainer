@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import { colorTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens } from "@deutschtrainer/ui";
 
 interface IconProps {
   color?: string;
@@ -38,7 +38,7 @@ export function IconButton({
         pressed ? styles.pressed : null,
       ]}
     >
-      <Icon color={color} size={21} strokeWidth={2.2} />
+      <Icon color={color} size={20} strokeWidth={2} />
     </Pressable>
   );
 }
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     height: 44,
     justifyContent: "center",

@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 
 interface PrimaryButtonProps extends PropsWithChildren {
   accessibilityLabel: string;
@@ -34,7 +34,9 @@ export function PrimaryButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "secondary" ? colorTokens.primary : "#FFFFFF"} />
+        <ActivityIndicator
+          color={variant === "secondary" ? colorTokens.primary : colorTokens.onStrong}
+        />
       ) : (
         <Text style={[styles.text, variant === "secondary" ? styles.secondaryText : null]}>
           {children}
@@ -47,7 +49,7 @@ export function PrimaryButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     minHeight: 48,
     justifyContent: "center",
@@ -69,14 +71,14 @@ const styles = StyleSheet.create({
     borderColor: colorTokens.primary,
   },
   secondary: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CBD5E1",
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.borderInput,
   },
   secondaryText: {
     color: colorTokens.primary,
   },
   text: {
-    color: "#FFFFFF",
+    color: colorTokens.onStrong,
     fontSize: 16,
     fontWeight: "700",
   },

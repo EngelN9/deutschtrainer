@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.text,
   },
   activeText: {
-    color: "#FFFFFF",
+    color: colorTokens.onStrong,
   },
   control: {
     backgroundColor: colorTokens.subtle,

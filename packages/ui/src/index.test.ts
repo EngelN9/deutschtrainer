@@ -123,6 +123,31 @@ describe("@deutschtrainer/ui design tokens", () => {
         getContrastRatio(colorTokens.restrictedDark, colorTokens.restrictedSoft),
       ).toBeGreaterThanOrEqual(4.5);
     });
+
+    it("gives form-field boundaries 3:1 against every surface they sit on", () => {
+      for (const surface of [
+        colorTokens.background,
+        colorTokens.surface,
+        colorTokens.surfaceMuted,
+        colorTokens.subtle,
+      ]) {
+        expect(getContrastRatio(colorTokens.borderInput, surface)).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it("keeps status text readable on its own soft tint", () => {
+      const pairs: Array<[string, string]> = [
+        [colorTokens.primary, colorTokens.primarySoft],
+        [colorTokens.success, colorTokens.successSoft],
+        [colorTokens.warning, colorTokens.warningSoft],
+        [colorTokens.danger, colorTokens.dangerSoft],
+        [colorTokens.offline, colorTokens.offlineSoft],
+        [colorTokens.ai, colorTokens.aiSoft],
+      ];
+      for (const [text, tint] of pairs) {
+        expect(getContrastRatio(text, tint)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
   });
 
   describe("Typography and Layout scales", () => {

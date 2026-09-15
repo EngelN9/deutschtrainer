@@ -1,5 +1,6 @@
-import { StyleSheet, Text } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { AlertCircle, Info } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from "@deutschtrainer/ui";
 
 interface MessageBannerProps {
   message: string | null;
@@ -11,32 +12,41 @@ export function MessageBanner({ message, tone }: MessageBannerProps) {
     return null;
   }
 
+  const isError = tone === "error";
+  // The icon carries the meaning alongside the tint, so it never rests on colour alone.
+  const Icon = isError ? AlertCircle : Info;
+  const color = isError ? colorTokens.danger : colorTokens.primary;
+
   return (
-    <Text
-      accessibilityRole={tone === "error" ? "alert" : "text"}
-      style={[styles.banner, tone === "error" ? styles.error : styles.info]}
+    <View
+      accessibilityRole={isError ? "alert" : undefined}
+      style={[styles.banner, isError ? styles.error : styles.info]}
     >
-      {message}
-    </Text>
+      <Icon color={color} size={20} strokeWidth={2} />
+      <Text style={[styles.text, { color }]}>{message}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   banner: {
-    borderRadius: 8,
+    alignItems: "flex-start",
+    borderColor: colorTokens.border,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
-    fontSize: 14,
-    lineHeight: 20,
+    flexDirection: "row",
+    gap: spacingTokens.sm,
     padding: spacingTokens.md,
   },
   error: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#FCA5A5",
-    color: colorTokens.danger,
+    backgroundColor: colorTokens.dangerSoft,
   },
   info: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#93C5FD",
-    color: colorTokens.primary,
+    backgroundColor: colorTokens.primarySoft,
+  },
+  text: {
+    flex: 1,
+    fontSize: typographyTokens.bodySmall.fontSize,
+    lineHeight: typographyTokens.bodySmall.lineHeight,
   },
 });

@@ -1,7 +1,8 @@
 import type { PropsWithChildren } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { AppText } from "./AppText";
 
 interface AppScreenProps extends PropsWithChildren {
   description?: string;
@@ -14,9 +15,15 @@ export function AppScreen({ children, description, eyebrow, title }: AppScreenPr
     <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
       <StatusBar style="dark" />
       <View style={styles.header}>
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-        <Text style={styles.title}>{title}</Text>
-        {description ? <Text style={styles.description}>{description}</Text> : null}
+        {eyebrow ? (
+          <AppText tone="teal" variant="label">
+            {eyebrow}
+          </AppText>
+        ) : null}
+        <AppText headingLevel={1} variant="title">
+          {title}
+        </AppText>
+        {description ? <AppText tone="muted">{description}</AppText> : null}
       </View>
       <View style={styles.body}>{children}</View>
     </ScrollView>
@@ -32,16 +39,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacingTokens.lg,
   },
-  description: {
-    color: colorTokens.mutedText,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  eyebrow: {
-    color: colorTokens.primary,
-    fontSize: 13,
-    fontWeight: "700",
-  },
   header: {
     gap: spacingTokens.sm,
     marginBottom: spacingTokens.xl,
@@ -49,11 +46,5 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: colorTokens.background,
     flex: 1,
-  },
-  title: {
-    color: colorTokens.text,
-    fontSize: 30,
-    fontWeight: "800",
-    lineHeight: 38,
   },
 });

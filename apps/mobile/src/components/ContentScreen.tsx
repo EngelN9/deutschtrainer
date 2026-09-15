@@ -2,9 +2,11 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
+import { AppText } from "./AppText";
+import { IconButton } from "./IconButton";
 import { MainNavigation } from "./MainNavigation";
 
 interface ContentScreenProps extends PropsWithChildren {
@@ -55,23 +57,26 @@ export function ContentScreen({
           >
             <View style={styles.topRow}>
               {showBack ? (
-                <Pressable
+                <IconButton
                   accessibilityLabel="返回上一頁"
-                  accessibilityRole="button"
+                  icon={ArrowLeft}
                   onPress={onBack ?? router.back}
-                  style={({ pressed }) => [styles.iconButton, pressed ? styles.pressed : null]}
-                >
-                  <ArrowLeft color={colorTokens.text} size={22} strokeWidth={2.2} />
-                </Pressable>
+                />
               ) : (
                 <View style={styles.iconSpacer} />
               )}
               <View style={styles.topAction}>{action}</View>
             </View>
             <View style={styles.header}>
-              {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-              <Text style={styles.title}>{title}</Text>
-              {description ? <Text style={styles.description}>{description}</Text> : null}
+              {eyebrow ? (
+                <AppText tone="teal" variant="label">
+                  {eyebrow}
+                </AppText>
+              ) : null}
+              <AppText headingLevel={1} variant="title">
+                {title}
+              </AppText>
+              {description ? <AppText tone="muted">{description}</AppText> : null}
             </View>
             <View style={styles.body}>{children}</View>
           </View>
@@ -99,36 +104,13 @@ const styles = StyleSheet.create({
     padding: spacingTokens.md,
     paddingBottom: spacingTokens.lg,
   },
-  description: {
-    color: colorTokens.mutedText,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  eyebrow: {
-    color: colorTokens.teal,
-    fontSize: 13,
-    fontWeight: "800",
-  },
   header: {
     gap: spacingTokens.sm,
     marginBottom: spacingTokens.lg,
   },
-  iconButton: {
-    alignItems: "center",
-    backgroundColor: colorTokens.surface,
-    borderColor: colorTokens.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
   iconSpacer: {
     height: 44,
     width: 44,
-  },
-  pressed: {
-    opacity: 0.72,
   },
   safeArea: {
     backgroundColor: colorTokens.background,
@@ -162,12 +144,6 @@ const styles = StyleSheet.create({
   },
   shell: {
     flex: 1,
-  },
-  title: {
-    color: colorTokens.text,
-    fontSize: 30,
-    fontWeight: "800",
-    lineHeight: 38,
   },
   topAction: {
     alignItems: "flex-end",
