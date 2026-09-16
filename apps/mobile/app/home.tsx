@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import {
@@ -7,47 +8,48 @@ import {
   LogOut,
   RotateCcw,
   Settings,
-  Target,
   UserPlus,
 } from "lucide-react-native";
-import { StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { StyleSheet, View } from "react-native";
 import { calculateLearningAnalytics } from "@deutschtrainer/learning-engine";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
+import { AppText } from "../src/components/AppText";
+import { ContentScreen } from "../src/components/ContentScreen";
+import { IconButton } from "../src/components/IconButton";
+import { MessageBanner } from "../src/components/MessageBanner";
+import { NextStepCard } from "../src/components/NextStepCard";
+import { PrimaryButton } from "../src/components/PrimaryButton";
+import { ProgressBar } from "../src/components/ProgressBar";
+import { StatePanel } from "../src/components/StatePanel";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { getLessonExercises } from "../src/features/courses/courseRepository";
 import { useCourseCatalog } from "../src/features/courses/useCourseCatalog";
+import { selectHomeRecommendation } from "../src/features/learner-ui/homeRecommendation";
+import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
+import { useConnectivityStore } from "../src/features/offline/connectivityStore";
+import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
 import { getLessonCompletionPercent } from "../src/features/progress/progressModel";
 import { useProgressStore } from "../src/features/progress/useProgressStore";
-import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
-import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 import { useUserSettings } from "../src/features/settings/useUserSettings";
-import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
-import { ContentScreen } from "../src/components/ContentScreen";
-import { IconButton } from "../src/components/IconButton";
-import { MessageBanner } from "../src/components/MessageBanner";
-import { PrimaryButton } from "../src/components/PrimaryButton";
-import { ProgressBar } from "../src/components/ProgressBar";
-import { StatePanel } from "../src/components/StatePanel";
 import { useWritingWorkspace } from "../src/features/writing/useWritingWorkspace";
+import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const errorMessage = useAuthStore((state) => state.errorMessage);
   const authMode = useAuthStore((state) => state.authMode);
+  const errorMessage = useAuthStore((state) => state.errorMessage);
   const noticeMessage = useAuthStore((state) => state.noticeMessage);
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
-  // A guest has no email or password, so signing out strands the account permanently and their
-  // progress becomes unreachable. They get /upgrade-account instead — the one action that turns
-  // the trial into something they can come back to.
   const isGuestSession = useAuthStore((state) => state.session?.user.is_anonymous === true);
   const currentLevel = useLearningSetupStore((state) => state.currentLevel);
   const targetLevel = useLearningSetupStore((state) => state.targetLevel);
   const catalogQuery = useCourseCatalog();
-  const learningRecordsQuery = useLearningRecords();
+  const recordsQuery = useLearningRecords();
   const settingsQuery = useUserSettings();
   const writingQuery = useWritingWorkspace({ enabled: authMode === "supabase" });
+  const connectivityStatus = useConnectivityStore((state) => state.status);
   const userProgress = useProgressStore((state) =>
     profile ? state.byUserId[profile.id] : undefined,
   );
@@ -55,71 +57,80 @@ export default function HomeScreen() {
     catalogQuery.data?.courses.flatMap((course) => course.units.flatMap((unit) => unit.lessons)) ??
     [];
   const preferredLessons = allLessons.filter((lesson) => lesson.level === currentLevel);
-  const learningRecords = learningRecordsQuery.data;
+  const learningRecords = recordsQuery.data;
   const analytics = learningRecords ? calculateLearningAnalytics(learningRecords) : undefined;
   const continueLesson =
     preferredLessons.find((lesson) => {
-      const remoteProgress = learningRecords?.lessonProgress.find(
-        (progress) => progress.lessonId === lesson.id,
-      );
-      return remoteProgress
-        ? remoteProgress.status !== "completed"
+      const remote = learningRecords?.lessonProgress.find((item) => item.lessonId === lesson.id);
+      return remote
+        ? remote.status !== "completed"
         : !userProgress?.lessons[lesson.id]?.completedAt;
     }) ??
     preferredLessons[0] ??
     allLessons[0];
   const exercises = continueLesson ? getLessonExercises(continueLesson) : [];
-  const lessonProgress = continueLesson ? userProgress?.lessons[continueLesson.id] : undefined;
-  const syncedLessonProgress = continueLesson
-    ? learningRecords?.lessonProgress.find((progress) => progress.lessonId === continueLesson.id)
+  const localLessonProgress = continueLesson ? userProgress?.lessons[continueLesson.id] : undefined;
+  const remoteLessonProgress = continueLesson
+    ? learningRecords?.lessonProgress.find((item) => item.lessonId === continueLesson.id)
     : undefined;
-  const percent = syncedLessonProgress
-    ? Math.round(syncedLessonProgress.completionPercent)
-    : getLessonCompletionPercent(lessonProgress, exercises.length);
-  const today = localDateKey(new Date());
-  const completedToday =
-    learningRecords?.attempts.filter(
-      (attempt) => localDateKey(new Date(attempt.submittedAt)) === today,
-    ).length ?? 0;
-  const weakestSkill = learningRecords
-    ? [...learningRecords.mastery].sort((left, right) => left.masteryScore - right.masteryScore)[0]
-    : undefined;
-  const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
+  const lessonPercent = remoteLessonProgress
+    ? Math.round(remoteLessonProgress.completionPercent)
+    : getLessonCompletionPercent(localLessonProgress, exercises.length);
   const pendingWriting = [...(writingQuery.data?.submissions ?? [])]
     .filter((submission) => submission.status === "revision_requested")
-    .sort(
-      (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime(),
-    )[0];
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0];
   const pendingWritingPrompt = writingQuery.data?.prompts.find(
     (prompt) => prompt.id === pendingWriting?.promptId,
   );
   const recommendedWritingPrompt = writingQuery.data?.prompts.find(
     (prompt) => prompt.level === currentLevel,
   );
+  const recommendation = selectHomeRecommendation({
+    authMode,
+    continueLesson,
+    pendingWriting,
+    pendingWritingPrompt,
+    recommendedWritingPrompt,
+    writingState:
+      connectivityStatus === "offline"
+        ? "offline"
+        : writingQuery.isError
+          ? "failed"
+          : writingQuery.isLoading
+            ? "loading"
+            : writingQuery.isStale
+              ? "stale"
+              : "ready",
+  });
+  const weeklyMinutes =
+    analytics?.dailyActivity.reduce((total, day) => total + day.learningMinutes, 0) ?? 0;
+  const weeklyAttempts =
+    analytics?.dailyActivity.reduce((total, day) => total + day.attemptCount, 0) ?? 0;
+  const dailyMinutes = settingsQuery.data?.learning.dailyMinutes ?? 20;
 
-  function openOutputTraining() {
-    if (pendingWriting) {
+  function openLesson(lessonId: string) {
+    router.push({ pathname: "/lesson/[lessonId]", params: { lessonId } } as Href);
+  }
+
+  function openRecommendation() {
+    if (recommendation.kind === "writing_revision") {
       router.push({
         pathname: "/writing/[submissionId]",
-        params: { submissionId: pendingWriting.id },
-      } as unknown as Href);
-      return;
-    }
-    if (recommendedWritingPrompt) {
+        params: { submissionId: recommendation.submission.id },
+      } as Href);
+    } else if (recommendation.kind === "writing_prompt") {
       router.push({
         pathname: "/writing/editor/[promptId]",
-        params: { promptId: recommendedWritingPrompt.id },
-      } as unknown as Href);
-      return;
+        params: { promptId: recommendation.prompt.id },
+      } as Href);
+    } else if (recommendation.kind === "lesson") {
+      openLesson(recommendation.lesson.id);
     }
-    router.push("/writing" as Href);
   }
 
   async function handleSignOut() {
     await signOut();
-    if (useAuthStore.getState().authMode === null) {
-      router.replace("/welcome");
-    }
+    if (useAuthStore.getState().authMode === null) router.replace("/welcome");
   }
 
   return (
@@ -148,8 +159,8 @@ export default function HomeScreen() {
             )}
           </View>
         }
-        description="寫一段、看見最值得修的三個問題，再重寫確認自己真的進步。"
-        eyebrow="今日輸出訓練"
+        description={`先完成最值得做的一步，再決定是否繼續。今日目標約 ${dailyMinutes} 分鐘。`}
+        eyebrow="今日學習"
         showMainNavigation
         title={`你好，${profile?.displayName || "學習者"}`}
       >
@@ -158,149 +169,131 @@ export default function HomeScreen() {
         <MessageBanner
           message={
             authMode === "demo"
-              ? "離線 Demo：課程、固定題與學習進度可用，資料只保存在這台裝置；AI 寫作、聽說與雲端同步尚未開放。"
+              ? "離線 Demo：資料只保存在這台裝置；AI、教室與雲端同步未開放。"
               : null
           }
           tone="info"
         />
-        <MessageBanner message={learningRecordsQuery.error?.message ?? null} tone="error" />
+        <MessageBanner
+          message={
+            isGuestSession
+              ? "訪客進度目前保存在匿名帳號中；完成 Email 確認前仍適用訪客限制。"
+              : null
+          }
+          tone="info"
+        />
+        <MessageBanner message={recordsQuery.error?.message ?? null} tone="error" />
         <MessageBanner
           message={authMode === "supabase" ? (writingQuery.error?.message ?? null) : null}
           tone="error"
         />
         <OfflineStatusBand />
-        <View style={styles.goalBand}>
-          <View style={styles.goalIcon}>
-            <Target color="#FFFFFF" size={23} strokeWidth={2.4} />
-          </View>
-          <View style={styles.goalCopy}>
-            <Text style={styles.goalLabel}>
-              {authMode === "demo" ? "今日目標" : "今天只完成一個循環"}
-            </Text>
-            <Text style={styles.goalValue}>
-              {authMode === "demo" ? "完成 1 堂課" : "寫一稿 · 修 3 個重點 · 重寫"} · 約{" "}
-              {dailyMinutes} 分鐘
-            </Text>
-            <Text style={styles.goalMeta}>
-              {authMode === "demo"
-                ? `今天已完成 ${completedToday} 題`
-                : `${currentLevel} 輸出，朝 ${targetLevel} 前進`}
-            </Text>
-          </View>
-        </View>
-        {authMode === "supabase" ? (
-          <View style={styles.outputCard}>
-            <View style={styles.outputHeading}>
-              <View style={styles.outputIcon}>
-                <FilePenLine color="#FFFFFF" size={23} />
-              </View>
-              <View style={styles.outputCopy}>
-                <Text style={styles.outputEyebrow}>
-                  {pendingWriting ? "下一步 · 根據回饋重寫" : "今天先做這件事"}
-                </Text>
-                <Text style={styles.outputTitle}>
-                  {pendingWritingPrompt?.titleZhTw ??
-                    recommendedWritingPrompt?.titleZhTw ??
-                    "完成一次德文輸出訓練"}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.outputDescription}>
-              {pendingWriting
-                ? "回到上一稿的三個優先問題，完成重寫後直接比較第一版與最新版。"
-                : "不必先逛完所有功能。寫出第一稿後，系統只先呈現最重要的三個修改重點。"}
-            </Text>
-            <PrimaryButton
-              accessibilityLabel={pendingWriting ? "繼續德文輸出訓練" : "開始一次德文輸出訓練"}
-              loading={writingQuery.isLoading}
-              onPress={openOutputTraining}
-            >
-              {pendingWriting ? "繼續輸出訓練" : "開始一次德文輸出訓練"}
-            </PrimaryButton>
-          </View>
-        ) : null}
+
         {catalogQuery.isLoading ? (
-          <StatePanel message="正在尋找最適合繼續的課堂..." state="loading" title="準備今日課程" />
-        ) : catalogQuery.isError ? (
-          <StatePanel
-            message={catalogQuery.error.message}
-            onRetry={() => void catalogQuery.refetch()}
-            state="error"
-            title="無法載入課程"
-          />
-        ) : continueLesson ? (
-          <View style={styles.continueSection}>
-            <View style={styles.sectionHeading}>
-              <View>
-                <Text style={styles.sectionEyebrow}>
-                  {authMode === "demo" ? "建議繼續" : "搭配練習"}
-                </Text>
-                <Text style={styles.lessonTitle}>{continueLesson.titleZhTw}</Text>
-              </View>
-              <View style={styles.levelBadge}>
-                <Text style={styles.levelText}>{continueLesson.level}</Text>
-              </View>
-            </View>
-            <View style={styles.lessonMetaRow}>
-              <Clock3 color={colorTokens.mutedText} size={16} />
-              <Text style={styles.lessonMeta}>
-                {continueLesson.estimatedMinutes} 分鐘 · {exercises.length} 題
-              </Text>
-              <Text style={styles.lessonPercent}>{percent}%</Text>
-            </View>
-            <ProgressBar accessibilityLabel="建議課堂進度" percent={percent} />
-            <PrimaryButton
-              accessibilityLabel="繼續建議課堂"
-              onPress={() =>
-                router.push({
-                  pathname: "/lesson/[lessonId]",
-                  params: { lessonId: continueLesson.id },
-                } as Href)
-              }
-              variant={authMode === "demo" ? "primary" : "secondary"}
-            >
-              {percent > 0 ? "繼續課堂" : "查看課堂"}
-            </PrimaryButton>
-          </View>
+          <StatePanel message="正在整理最適合你的下一步..." state="loading" title="準備今日建議" />
+        ) : recommendation.kind === "empty" ? (
+          <StatePanel message="目前沒有可開始的已發布活動。" state="empty" title="暫無建議" />
         ) : (
-          <StatePanel message="目前沒有可用的已發布課程。" state="empty" title="尚無課程" />
-        )}
-        <View style={styles.overview}>
-          <Text style={styles.overviewTitle}>學習概況</Text>
-          <OverviewRow
-            icon={BookOpen}
-            label="程度路徑"
-            value={`${currentLevel} → ${targetLevel}`}
-          />
-          <OverviewRow
-            icon={RotateCcw}
-            label="到期複習"
-            value={analytics ? `${analytics.dueReviewCount} 項` : "同步中"}
-          />
-          <OverviewRow
-            icon={Clock3}
-            label="最近七天"
-            value={
-              analytics
-                ? `${analytics.dailyActivity.reduce((sum, day) => sum + day.learningMinutes, 0)} 分鐘`
-                : "同步中"
+          <NextStepCard
+            accessibilityLabel={
+              recommendation.kind === "writing_revision"
+                ? "繼續德文重寫"
+                : recommendation.kind === "writing_prompt"
+                  ? "開始德文寫作"
+                  : "開始建議課堂"
+            }
+            actionLabel={
+              recommendation.kind === "writing_revision"
+                ? "繼續重寫"
+                : recommendation.kind === "writing_prompt"
+                  ? "開始寫作"
+                  : lessonPercent > 0
+                    ? "繼續課堂"
+                    : "開始課堂"
+            }
+            description={
+              recommendation.kind === "writing_revision"
+                ? "回到上一稿，先處理最重要的修改重點，再比較新版。"
+                : recommendation.kind === "writing_prompt"
+                  ? "完成一篇短文；回饋會先呈現最值得修正的重點。"
+                  : "依目前程度繼續固定課程，不需要先瀏覽所有功能。"
+            }
+            eyebrow={
+              recommendation.kind === "writing_revision"
+                ? "下一步 · 根據回饋重寫"
+                : "今天先做這件事"
+            }
+            icon={recommendation.kind === "lesson" ? BookOpen : FilePenLine}
+            meta={
+              recommendation.kind === "lesson"
+                ? `${recommendation.lesson.level} · ${recommendation.lesson.estimatedMinutes} 分鐘 · ${exercises.length} 題`
+                : `${currentLevel} 輸出 · 朝 ${targetLevel} 前進`
+            }
+            onPress={openRecommendation}
+            title={
+              recommendation.kind === "writing_revision"
+                ? (recommendation.prompt?.titleZhTw ?? "完成德文重寫")
+                : recommendation.kind === "writing_prompt"
+                  ? recommendation.prompt.titleZhTw
+                  : recommendation.lesson.titleZhTw
             }
           />
-          <Text style={styles.overviewNote}>
-            {weakestSkill
-              ? `目前優先加強：${learningRecords?.skillNames[weakestSkill.skillId] ?? "相關技能"}（${Math.round(weakestSkill.masteryScore)} 分）。`
-              : "完成第一題後，系統會開始辨識弱項技能。"}
-          </Text>
-        </View>
-        {analytics && analytics.dueReviewCount > 0 ? (
+        )}
+
+        {continueLesson && recommendation.kind !== "lesson" ? (
+          <SectionCard eyebrow="搭配課程" title={continueLesson.titleZhTw}>
+            <View style={styles.metaRow}>
+              <Clock3 color={colorTokens.mutedText} size={18} />
+              <AppText tone="muted" variant="bodySmall">
+                {continueLesson.level} · {continueLesson.estimatedMinutes} 分鐘 · {exercises.length}{" "}
+                題
+              </AppText>
+              <AppText style={styles.percent} tone="primary" variant="label">
+                {lessonPercent}%
+              </AppText>
+            </View>
+            <ProgressBar accessibilityLabel="搭配課堂進度" percent={lessonPercent} />
+            <PrimaryButton
+              accessibilityLabel="繼續搭配課堂"
+              onPress={() => openLesson(continueLesson.id)}
+              variant="secondary"
+            >
+              {lessonPercent > 0 ? "繼續課堂" : "查看課堂"}
+            </PrimaryButton>
+          </SectionCard>
+        ) : null}
+
+        <SectionCard eyebrow="間隔複習" title="到期複習">
+          <View style={styles.summaryRow}>
+            <RotateCcw color={colorTokens.accent} size={22} />
+            <AppText style={styles.summaryValue} variant="heading">
+              {analytics?.dueReviewCount ?? 0}
+            </AppText>
+            <AppText tone="muted">項需要再次確認</AppText>
+          </View>
           <PrimaryButton
-            accessibilityLabel="開始今日到期複習"
+            accessibilityLabel="查看今日複習"
             onPress={() => router.push("/reviews" as Href)}
             variant="secondary"
           >
-            開始今日複習
+            {analytics?.dueReviewCount ? "開始今日複習" : "查看複習安排"}
           </PrimaryButton>
-        ) : null}
+        </SectionCard>
+
+        <SectionCard eyebrow="最近七天" title="學習進度">
+          <View style={styles.weekGrid}>
+            <SummaryMetric icon={Clock3} label="學習時間" value={`${weeklyMinutes} 分鐘`} />
+            <SummaryMetric icon={BookOpen} label="完成作答" value={`${weeklyAttempts} 題`} />
+          </View>
+          <PrimaryButton
+            accessibilityLabel="查看完整學習分析"
+            onPress={() => router.push("/analytics" as Href)}
+            variant="secondary"
+          >
+            查看完整分析
+          </PrimaryButton>
+        </SectionCard>
+
         <PrimaryButton
           accessibilityLabel="開啟完整課程地圖"
           onPress={() => router.push("/courses")}
@@ -313,198 +306,77 @@ export default function HomeScreen() {
   );
 }
 
-function localDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function SectionCard({
+  children,
+  eyebrow,
+  title,
+}: {
+  children: ReactNode;
+  eyebrow: string;
+  title: string;
+}) {
+  return (
+    <View style={styles.sectionCard}>
+      <View style={styles.sectionHeading}>
+        <AppText tone="teal" variant="label">
+          {eyebrow}
+        </AppText>
+        <AppText headingLevel={2} variant="subheading">
+          {title}
+        </AppText>
+      </View>
+      {children}
+    </View>
+  );
 }
 
-function OverviewRow({
+function SummaryMetric({
   icon: Icon,
   label,
   value,
 }: {
-  icon: typeof BookOpen;
+  icon: typeof Clock3;
   label: string;
   value: string;
 }) {
   return (
-    <View style={styles.overviewRow}>
-      <Icon color={colorTokens.teal} size={18} />
-      <Text style={styles.overviewLabel}>{label}</Text>
-      <Text style={styles.overviewValue}>{value}</Text>
+    <View style={styles.metric}>
+      <Icon color={colorTokens.teal} size={20} />
+      <AppText variant="heading">{value}</AppText>
+      <AppText tone="muted" variant="bodySmall">
+        {label}
+      </AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  continueSection: {
-    backgroundColor: colorTokens.surface,
-    borderColor: colorTokens.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: spacingTokens.md,
-    padding: spacingTokens.lg,
-  },
-  goalBand: {
-    alignItems: "center",
-    backgroundColor: "#113B36",
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: spacingTokens.md,
+  headerActions: { flexDirection: "row", gap: spacingTokens.sm },
+  metaRow: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: spacingTokens.sm },
+  metric: {
+    backgroundColor: colorTokens.surfaceMuted,
+    borderRadius: radiusTokens.sm,
+    flex: 1,
+    gap: spacingTokens.xs,
+    minWidth: 136,
     padding: spacingTokens.md,
   },
-  goalCopy: {
-    flex: 1,
-    gap: spacingTokens.xs,
-  },
-  goalIcon: {
-    alignItems: "center",
-    backgroundColor: colorTokens.teal,
-    borderRadius: 8,
-    height: 46,
-    justifyContent: "center",
-    width: 46,
-  },
-  goalLabel: {
-    color: "#BFE3DC",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  goalMeta: {
-    color: "#D7ECE8",
-    fontSize: 13,
-  },
-  goalValue: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "800",
-    lineHeight: 23,
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: spacingTokens.sm,
-  },
-  lessonMeta: {
-    color: colorTokens.mutedText,
-    flex: 1,
-    fontSize: 14,
-  },
-  lessonMetaRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacingTokens.sm,
-  },
-  lessonPercent: {
-    color: colorTokens.primary,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  lessonTitle: {
-    color: colorTokens.text,
-    fontSize: 20,
-    fontWeight: "800",
-    lineHeight: 27,
-    marginTop: spacingTokens.xs,
-  },
-  levelBadge: {
-    alignItems: "center",
-    backgroundColor: colorTokens.primary,
-    borderRadius: 6,
-    height: 34,
-    justifyContent: "center",
-    width: 42,
-  },
-  levelText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  overview: {
-    borderBottomColor: colorTokens.border,
-    borderBottomWidth: 1,
-    borderTopColor: colorTokens.border,
-    borderTopWidth: 1,
-    gap: spacingTokens.md,
-    paddingVertical: spacingTokens.lg,
-  },
-  overviewLabel: {
-    color: colorTokens.mutedText,
-    flex: 1,
-    fontSize: 14,
-  },
-  overviewNote: {
-    color: colorTokens.mutedText,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  overviewRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacingTokens.sm,
-  },
-  overviewTitle: {
-    color: colorTokens.text,
-    fontSize: 17,
-    fontWeight: "800",
-  },
-  overviewValue: {
-    color: colorTokens.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  outputCard: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
-    borderRadius: 8,
+  percent: { marginLeft: "auto" },
+  sectionCard: {
+    backgroundColor: colorTokens.surface,
+    borderColor: colorTokens.border,
+    borderRadius: radiusTokens.md,
     borderWidth: 1,
     gap: spacingTokens.md,
     padding: spacingTokens.lg,
   },
-  outputCopy: {
-    flex: 1,
-    gap: spacingTokens.xs,
-    minWidth: 0,
-  },
-  outputDescription: {
-    color: colorTokens.text,
-    fontSize: 15,
-    lineHeight: 23,
-  },
-  outputEyebrow: {
-    color: colorTokens.teal,
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  outputHeading: {
+  sectionHeading: { gap: spacingTokens.xs },
+  summaryRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacingTokens.md,
+    flexWrap: "wrap",
+    gap: spacingTokens.sm,
   },
-  outputIcon: {
-    alignItems: "center",
-    backgroundColor: colorTokens.primary,
-    borderRadius: 8,
-    height: 48,
-    justifyContent: "center",
-    width: 48,
-  },
-  outputTitle: {
-    color: colorTokens.text,
-    fontSize: 20,
-    fontWeight: "900",
-    lineHeight: 27,
-  },
-  sectionEyebrow: {
-    color: colorTokens.teal,
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  sectionHeading: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: spacingTokens.md,
-    justifyContent: "space-between",
-  },
+  summaryValue: { color: colorTokens.accent },
+  weekGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacingTokens.md },
 });
