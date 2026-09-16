@@ -7,6 +7,25 @@ publicly reachable, but this does not claim that monitoring, backups, restore dr
 private-request limiting, real AI, paid capacity, or rollback rehearsal have been configured.
 Until provider-backed evidence exists, those items remain `BLOCKED`.
 
+## Connected accounts
+
+Provider responsibilities and move triggers are in
+[ADR 0002](decisions/0002-hosting-responsibility-boundaries.md). What each account should contain:
+
+| Provider   | Expected contents                                                       | Declared in   |
+| ---------- | ----------------------------------------------------------------------- | ------------- |
+| Render     | The three services above                                                | `render.yaml` |
+| Supabase   | One project; migrations; `listening-audio` and `speaking-audio` buckets | `supabase/`   |
+| OpenAI     | API key used only by the Render API service                             | `render.yaml` |
+| Cloudflare | Nothing. R2 not enabled                                                 | this table    |
+| Vercel     | Nothing. The repository is not imported                                 | this table    |
+
+Claude and ChatGPT are both connected to Cloudflare and Vercel. Either may read any account.
+Creating or deleting a resource, or changing an environment variable, happens only on an explicit
+maintainer request in that session, together with a pull request that updates `render.yaml` or this
+table. A resource found in an account but not listed here is drift: record who created it, then
+either add it here or remove it.
+
 ## Runtime health and request tracing
 
 - `GET /health` is the container health endpoint.
