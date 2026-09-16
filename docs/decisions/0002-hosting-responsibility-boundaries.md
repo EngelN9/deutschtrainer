@@ -15,8 +15,8 @@ not match the current system:
   Admin console in one app (`deutschtrainer-engeln9-site`), and the learner web
   (`deutschtrainer-engeln9-web`, Expo static export that also ships `apps/classroom`).
 - **The learner web is the product.** The beta is web-only; `apps/admin` is not the primary target.
-- **No domain is owned.** `deutschtrainer.com` is parked and listed for sale. The API's
-  `CORS_ALLOWED_ORIGINS` names the `onrender.com` origins.
+- **No custom domain is planned.** Services are addressed by their Render hostnames
+  (`*.onrender.com`), and the API's `CORS_ALLOWED_ORIGINS` names those origins.
 - **Media already has a security model.** Audio lives in Supabase Storage (`listening-audio`,
   `speaking-audio`) with owner-scoped paths, RLS, signed URLs and account-deletion cleanup
   (`apps/api/src/audio/supabaseAudioRepository.ts`). Moving it means re-implementing that model.
@@ -31,29 +31,32 @@ and each move is its own change backed by measured data.
 | Capability                                  | Primary now                     | Possible target         | Trigger to move                                                               |
 | ------------------------------------------- | ------------------------------- | ----------------------- | ----------------------------------------------------------------------------- |
 | Learner web (Expo static + classroom)       | Render static                   | —                       | —                                                                             |
-| Public site + Admin (Next.js)               | Render web service              | Vercel                  | Render cold starts measurably hurt the public site, or Render is abandoned    |
+| Public site + Admin (Next.js)               | Render web service              | Vercel                  | Render cold starts measurably hurt the public site, or Render is abandoned; the site then gets a `*.vercel.app` origin |
 | Node.js API                                 | Render                          | —                       | A separate ADR; Cloudflare Workers is not a drop-in runtime                   |
 | PostgreSQL, Auth, RLS, structured data      | Supabase                        | —                       | —                                                                             |
 | Media objects                               | Supabase Storage                | Cloudflare R2           | Storage or egress cost exceeds the Supabase plan allowance                    |
 | Media metadata, ownership, lifecycle        | Supabase                        | —                       | —                                                                             |
-| Domain and DNS                              | None (`onrender.com` hostnames) | Cloudflare DNS          | A domain is bought, before beta invites go out                                |
+| Domain and DNS                              | Render-provided hostnames | —          | — (buying a domain needs its own ADR)                                |
 | AI inference, STT, TTS, realtime            | OpenAI, called only by the API  | —                       | —                                                                             |
 
 Rules that hold regardless of provider:
 
 - OpenAI and Supabase service-role credentials stay server-side. The API authorizes, validates,
   enforces quotas and records usage before every provider call.
-- No second CDN or proxy layer in front of a host that already provides one. If Cloudflare DNS
-  fronts Vercel or Render, records are DNS-only by default.
+- No second CDN or proxy layer in front of a host that already provides one.
 - If media moves to R2, Supabase keeps the metadata row, owner-scoped object keys are preserved, and
-  account deletion must still remove the object.
-- Hostnames are chosen once a domain is owned; none are reserved by this ADR.
+  account deletion must still remove the object. R2 needs no custom domain: the API issues presigned
+  URLs, as it issues Supabase signed URLs today.
+- No custom domain. Render hostnames are the public addresses; renaming a Render service changes a
+  public URL.
 
 ## Consequences
 
 - No infrastructure work is required now; effort stays on validating the beta.
 - One billing surface (Render) plus Supabase and OpenAI until a trigger fires.
-- Free-tier Render limits remain accepted for staging and the beta: cold starts and no custom domain.
-- Buying a domain changes `CORS_ALLOWED_ORIGINS`, `NEXT_PUBLIC_LEARNER_WEB_URL`, Supabase Auth
-  redirect URLs and the `EXPO_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` values together.
+- Free-tier Render limits remain accepted for staging and the beta: cold starts.
+- Renaming a Render service, or moving the site to Vercel, changes a public origin, so
+  `CORS_ALLOWED_ORIGINS`, `NEXT_PUBLIC_LEARNER_WEB_URL`, Supabase Auth
+  redirect URLs and the `EXPO_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` values must change
+  together.
 - A later ADR supersedes a row of the table when its trigger fires.
