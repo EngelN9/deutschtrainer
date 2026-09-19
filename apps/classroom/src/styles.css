@@ -1,39 +1,69 @@
 :root {
-  color: #1f2937;
-  background: var(--dt-background, #f7f8fa);
-  font-family:
-    Inter,
-    "Noto Sans TC",
-    system-ui,
+  color: var(--dt-text, #17233c);
+  background: var(--dt-background, #fbfaf7);
+  font-family: var(
+    --dt-font-sans,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
-    sans-serif;
+    "Noto Sans TC",
+    sans-serif
+  );
   font-synthesis: none;
 }
 
 * {
   box-sizing: border-box;
 }
+
+html {
+  background:
+    radial-gradient(circle at 10% 0%, rgb(79 70 229 / 7%), transparent 28rem),
+    var(--dt-background, #fbfaf7);
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
 }
-button {
+button,
+textarea {
   font: inherit;
+}
+
+button {
   min-height: 44px;
   border: 0;
-  border-radius: 10px;
-  padding: 10px 18px;
-  background: var(--dt-primary, #2563eb);
+  border-radius: var(--dt-radius-md, 12px);
+  padding: 11px 18px;
+  background: var(--dt-primary, #175cd3);
   color: white;
-  font-weight: 700;
+  font-weight: 750;
   cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
-button:focus-visible {
-  outline: 3px solid #f59e0b;
-  outline-offset: 2px;
+
+button:hover:not(:disabled) {
+  background: var(--dt-primary-dark, #174aa5);
+  box-shadow: 0 6px 16px rgb(23 92 211 / 18%);
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0);
+}
+button:focus-visible,
+summary:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--dt-focus, #175cd3);
+  outline-offset: 3px;
 }
 button:disabled {
   cursor: not-allowed;
@@ -41,8 +71,34 @@ button:disabled {
 }
 h1,
 h2,
+h3,
 p {
   margin-top: 0;
+}
+h1,
+h2,
+h3 {
+  color: var(--dt-text, #17233c);
+}
+
+h1 {
+  max-width: 760px;
+  margin-bottom: 14px;
+  font-family: var(--dt-font-serif, Georgia, serif);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+h3 {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
 }
 
 .centered-page {
@@ -52,196 +108,544 @@ p {
   padding: 24px;
 }
 .auth-card,
-.control-panel,
+.tutor-panel,
 .board-panel,
-.safety-panel {
+.safety-panel,
+.session-bar {
   background: var(--dt-surface, white);
-  border: 1px solid #d7dce2;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+  border: 1px solid var(--dt-border, #d7dfea);
+  border-radius: var(--dt-radius-lg, 16px);
+  box-shadow: var(--dt-shadow-card, 0 10px 30px rgb(23 35 60 / 8%));
 }
 .auth-card {
-  width: min(100%, 480px);
-  padding: 32px;
+  width: min(100%, 520px);
+  padding: 36px;
 }
-.eyebrow {
-  color: #0f766e;
-  font-size: 0.86rem;
+.eyebrow,
+.section-kicker {
+  color: var(--dt-ai, #4f46e5);
+  font-size: 0.76rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
+.section-kicker {
+  margin-bottom: 7px;
+}
 .privacy-note {
-  color: #4b5563;
+  color: var(--dt-muted-text, #526079);
   font-size: 0.9rem;
   margin: 20px 0 0;
 }
-.error-message {
-  color: #991b1b;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 12px;
+.error-message,
+.board-operation-error {
+  color: var(--dt-danger, #b42318);
+  background: var(--dt-danger-soft, #fdecec);
+  border: 1px solid #f5b7b1;
+  border-radius: var(--dt-radius-md, 12px);
+  padding: 12px 14px;
 }
 
 .classroom-shell {
-  width: min(100% - 32px, 1200px);
+  width: min(100% - 40px, 1440px);
   margin: 0 auto;
-  padding: 32px 0 64px;
+  padding: 36px 0 72px;
 }
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-.status-card {
-  min-height: 88px;
-  display: grid;
-  align-content: center;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid #d7dce2;
-  border-radius: 12px;
-  background: white;
-}
-.status-card span {
-  color: #4b5563;
-  font-size: 0.86rem;
-}
-.status-card strong {
-  line-height: 1.4;
-}
-.status-warning {
-  border-color: #f59e0b;
-  background: #fffbeb;
-}
-.status-error {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-.control-panel,
-.board-panel,
-.safety-panel {
-  padding: 24px;
-  margin-bottom: 20px;
-}
-.button-row {
+.classroom-hero {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 26px;
+  padding: 10px 4px 0;
 }
-.secondary-button {
-  color: #1d4ed8;
-  background: #eff6ff;
-  border: 1px solid #93c5fd;
+.hero-copy {
+  min-width: 0;
+}
+.hero-lead {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: var(--dt-muted-text, #526079);
+  font-size: 1.04rem;
+  line-height: 1.7;
+}
+
+.live-status {
+  display: flex;
+  align-items: center;
+  flex: 0 0 min(310px, 32vw);
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1px solid var(--dt-border, #d7dfea);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 8px 28px rgb(23 35 60 / 7%);
+  backdrop-filter: blur(12px);
+}
+.live-status span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.live-status small,
+.session-label {
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+.live-status strong {
+  overflow: hidden;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-dot {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--dt-muted-text, #526079);
+  box-shadow: 0 0 0 5px rgb(82 96 121 / 10%);
+}
+.live-status-active .status-dot {
+  background: var(--dt-ai, #4f46e5);
+  box-shadow: 0 0 0 5px rgb(79 70 229 / 12%);
+  animation: status-pulse 1.8s ease-out infinite;
+}
+.live-status-success .status-dot {
+  background: var(--dt-success, #147a4a);
+  box-shadow: 0 0 0 5px rgb(20 122 74 / 12%);
+}
+.live-status-error .status-dot {
+  background: var(--dt-danger, #b42318);
+  box-shadow: 0 0 0 5px rgb(180 35 24 / 12%);
+}
+
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(79 70 229 / 24%);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(79 70 229 / 0%);
+  }
+}
+
+.session-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 24px;
+  margin-bottom: 20px;
+  padding: 15px 18px;
+  box-shadow: none;
+}
+.session-eligibility,
+.timer-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.session-eligibility strong {
+  min-width: 0;
+  color: var(--dt-text, #17233c);
+  font-size: 0.86rem;
+  text-align: right;
+}
+.session-timer {
+  display: grid;
+  gap: 8px;
+}
+.timer-copy strong {
+  color: var(--dt-ai-dark, #3730a3);
+  font-variant-numeric: tabular-nums;
+}
+.timer-copy .timer-warning {
+  color: var(--dt-warning, #9a5b00);
+}
+.timer-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--dt-surface-muted, #f4f7fb);
+}
+.timer-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--dt-ai, #4f46e5);
+  transition: width 1s linear;
+}
+
+.classroom-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+.tutor-panel,
+.board-panel {
+  padding: 22px;
+}
+.tutor-panel {
+  position: sticky;
+  top: 20px;
+}
+.tutor-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 18px;
+}
+.tutor-heading h2,
+.tutor-heading p {
+  margin-bottom: 0;
+}
+.tutor-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--dt-ai-border, #c7d2fe);
+  border-radius: 15px;
+  background: var(--dt-ai-soft, #eef2ff);
+  color: var(--dt-ai-dark, #3730a3);
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+.tutor-intro {
+  margin-bottom: 14px;
+  color: var(--dt-muted-text, #526079);
+  line-height: 1.55;
+}
+.mode-list {
+  display: grid;
+  gap: 10px;
+}
+.mode-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 72px;
+  gap: 12px;
+  border: 1px solid var(--dt-border-strong, #b8c4d6);
+  background: var(--dt-surface, white);
+  color: var(--dt-text, #17233c);
+  text-align: left;
+}
+.mode-button:hover:not(:disabled) {
+  border-color: var(--dt-primary, #175cd3);
+  background: var(--dt-primary-soft, #eaf2ff);
+  color: var(--dt-text, #17233c);
+}
+.mode-button-primary {
+  border-color: var(--dt-ai-border, #c7d2fe);
+  background: var(--dt-ai-soft, #eef2ff);
+}
+.mode-button > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+.mode-button small {
+  color: var(--dt-muted-text, #526079);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.mode-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: rgb(79 70 229 / 10%);
+  color: var(--dt-ai-dark, #3730a3);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+.active-lesson {
+  padding: 16px;
+  border: 1px solid var(--dt-ai-border, #c7d2fe);
+  border-radius: var(--dt-radius-md, 12px);
+  background: var(--dt-ai-soft, #eef2ff);
+}
+.active-lesson-label {
+  color: var(--dt-ai-dark, #3730a3);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.active-lesson p {
+  margin: 8px 0 14px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.active-lesson button {
+  width: 100%;
+}
+.lesson-expectations {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--dt-border, #d7dfea);
+}
+.lesson-expectations ol {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.dev-button {
+  width: 100%;
+  margin-top: 16px;
+  border: 1px dashed var(--dt-border-strong, #b8c4d6);
+  background: transparent;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.8rem;
 }
 .danger-button {
-  background: #b91c1c;
+  background: var(--dt-danger, #b42318);
+}
+.danger-button:hover:not(:disabled) {
+  background: #912018;
+  box-shadow: 0 6px 16px rgb(180 35 24 / 18%);
+}
+.secondary-button {
+  border: 1px solid var(--dt-border-strong, #b8c4d6);
+  background: white;
+  color: var(--dt-primary-dark, #174aa5);
+}
+.secondary-button:hover:not(:disabled) {
+  border-color: var(--dt-primary, #175cd3);
+  background: var(--dt-primary-soft, #eaf2ff);
+  color: var(--dt-primary-dark, #174aa5);
+}
+
+.board-panel {
+  min-width: 0;
 }
 .board-heading {
   display: flex;
   justify-content: space-between;
   align-items: start;
-  gap: 16px;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+.board-heading p:last-child {
+  max-width: 680px;
+  margin-bottom: 0;
+  color: var(--dt-muted-text, #526079);
+  line-height: 1.55;
 }
 .operation-badge {
+  flex: 0 0 auto;
   white-space: nowrap;
-  padding: 8px 12px;
+  padding: 7px 11px;
+  border: 1px solid var(--dt-ai-border, #c7d2fe);
   border-radius: 999px;
-  background: #eef2f6;
-  color: #4b5563;
+  background: var(--dt-ai-soft, #eef2ff);
+  color: var(--dt-ai-dark, #3730a3);
+  font-size: 0.76rem;
+  font-weight: 750;
 }
-/* The send row is a sibling of .board-canvas, never a child: as a child it pushed Excalidraw's
-   height:100% root down and the overflow:hidden below clipped the editor's bottom edge, which is
-   where Excalidraw pins its tool island on touch layouts. */
+.board-operation-error {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 .board-area {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  grid-template-areas: "tools canvas" "send canvas";
+  align-items: start;
+  gap: 14px;
 }
 .board-input {
+  grid-area: tools;
   display: grid;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 11px;
+  padding: 15px;
+  border: 1px solid var(--dt-border, #d7dfea);
+  border-radius: var(--dt-radius-md, 12px);
+  background: var(--dt-surface-muted, #f4f7fb);
+}
+.board-input > label:first-child {
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 .board-input textarea {
   width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  font: inherit;
+  min-height: 118px;
+  padding: 11px 12px;
+  border: 1px solid var(--dt-border-strong, #b8c4d6);
+  border-radius: 10px;
+  background: white;
+  color: var(--dt-text, #17233c);
   font-size: 16px;
-  border: 1px solid #94a3b8;
-  border-radius: 8px;
+  line-height: 1.5;
   resize: vertical;
 }
+.board-input textarea::placeholder {
+  color: #69758a;
+}
 .board-input p {
-  color: #475569;
-  font-size: 14px;
   margin: 0;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.76rem;
+  line-height: 1.5;
 }
 .board-input-actions {
+  display: grid;
+  gap: 8px;
+}
+.board-input-actions button {
+  width: 100%;
+  padding-inline: 12px;
+  font-size: 0.82rem;
+}
+.finger-option {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 .board-input input {
   width: 20px;
   height: 20px;
-  vertical-align: middle;
+  flex: 0 0 auto;
+  margin: 0;
+}
+.board-send-row {
+  grid-area: send;
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.board-send-row button {
+  width: 100%;
+  padding-inline: 12px;
+  font-size: 0.8rem;
 }
 .board-canvas {
+  grid-area: canvas;
   width: 100%;
-  height: 460px;
+  height: clamp(520px, 66vh, 760px);
   overflow: hidden;
-  border: 1px solid #d7dce2;
-  border-radius: 12px;
-  /* Excalidraw already sets touch-action:none on its canvas; this stops a scroll that starts on
-     the surrounding chrome from chaining out into the host page's scroller. */
+  border: 1px solid var(--dt-border-strong, #b8c4d6);
+  border-radius: var(--dt-radius-md, 12px);
+  background: white;
   overscroll-behavior: contain;
 }
+
 .safety-panel {
-  border-left: 5px solid #b45309;
+  margin-top: 20px;
+  overflow: hidden;
+  box-shadow: none;
 }
-.safety-panel li {
-  margin: 8px 0;
-  line-height: 1.55;
+.safety-panel summary {
+  min-height: 48px;
+  padding: 14px 18px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.safety-content {
+  padding: 0 18px 18px;
+  color: var(--dt-muted-text, #526079);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+.safety-content p {
+  margin-bottom: 8px;
+}
+.safety-content ul {
+  margin: 0;
+  padding-left: 22px;
 }
 
-@media (max-width: 760px) {
-  .classroom-shell {
-    width: min(100% - 24px, 1200px);
-    padding-top: 20px;
+@media (max-width: 1080px) {
+  .classroom-layout {
+    grid-template-columns: 280px minmax(0, 1fr);
   }
-  .status-grid {
+  .board-area {
     grid-template-columns: 1fr;
-  }
-  .button-row {
-    flex-direction: column;
-  }
-  .button-row button {
-    width: 100%;
+    grid-template-areas: "tools" "send" "canvas";
   }
   .board-input-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .classroom-shell {
+    width: min(100% - 28px, 1440px);
+    padding-top: 24px;
+  }
+  .classroom-hero {
+    align-items: stretch;
     flex-direction: column;
+    gap: 18px;
   }
-  .board-input-actions button {
-    width: 100%;
+  .live-status {
+    flex-basis: auto;
+    max-width: 100%;
   }
-  .board-heading {
+  .session-bar,
+  .classroom-layout {
+    grid-template-columns: 1fr;
+  }
+  .session-eligibility {
+    align-items: start;
     flex-direction: column;
+    gap: 5px;
   }
-  .board-canvas {
-    /* Excalidraw's touch layout needs room for the tool island plus a usable drawing area. 400px
-       flat left almost nothing to draw on once the chrome is accounted for. vh here is the iframe's
-       height, not the phone's. */
-    height: 62vh;
-    min-height: 420px;
+  .session-eligibility strong {
+    text-align: left;
+  }
+  .tutor-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .classroom-shell {
+    width: min(100% - 20px, 1440px);
+    padding-top: 18px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 10vw, 2.5rem);
+  }
+  .hero-lead {
+    font-size: 0.96rem;
   }
   .auth-card,
-  .control-panel,
-  .board-panel,
-  .safety-panel {
-    padding: 20px;
+  .tutor-panel,
+  .board-panel {
+    padding: 18px;
+  }
+  .board-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .board-input-actions {
+    grid-template-columns: 1fr;
+  }
+  .board-canvas {
+    height: 64vh;
+    min-height: 460px;
   }
 }
 
@@ -253,24 +657,4 @@ p {
     transition: none !important;
     animation: none !important;
   }
-}
-
-.board-operation-error {
-  margin: 0 0 12px;
-  padding: 10px 14px;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 14px;
-}
-
-.board-send-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  font-size: 14px;
-  color: #475569;
 }

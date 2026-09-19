@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicDocument } from "../../src/components/PublicDocument";
+import { getLearnerWebUrl } from "../../src/lib/learnerWebUrl";
 
 export const metadata: Metadata = {
   title: "AI 德語家教",
@@ -9,30 +10,55 @@ export const metadata: Metadata = {
 };
 
 export default function AiTutorPage() {
+  const learnerWebUrl = getLearnerWebUrl();
+
   return (
     <PublicDocument
+      category="AI Tutor · 受限公開測試"
       title="AI 德語家教"
-      lead="以繁體中文理解德語輸出練習；AI 回饋是學習輔助，不取代教師或考試認證。"
+      lead="不只是聊天視窗：從開口、看懂修正，到在白板重組句型，AI 導師陪你完成一輪真正的德語輸出練習。"
     >
-      <section>
-        <h2>適用的學習情境</h2>
+      <section className="product-status-callout" aria-labelledby="tutor-status-title">
+        <p className="public-eyebrow">目前可用範圍</p>
+        <h2 id="tutor-status-title">已驗證帳號可進入受限 AI 測試</h2>
         <p>
-          已連線的帳號可在支援的練習中取得寫作評量、聽力輔助或口說逐字稿相關回饋。每項功能都有資料格式、逾時與使用額度限制，服務可能暫停或調整。
+          功能、個人額度與平台每日上限均由伺服器控制；服務關閉或額度用完時，介面會清楚說明下一步。
         </p>
       </section>
       <section>
-        <h2>帳號與使用資格</h2>
-        <p>
-          匿名試用可使用非 AI 的固定題課程。AI 功能只提供給已登入、完成 Email 驗證的 learner
-          帳號，且仍受伺服器端功能開關、個人額度與平台每日 provider 呼叫上限保護。
-        </p>
+        <h2>三種回饋方式，一個學習目標</h2>
+        <div className="product-capability-grid">
+          <article>
+            <span>01</span>
+            <h3>寫作診斷</h3>
+            <p>保留原文，逐項看出文法、用字與表達問題，再用重寫確認進步。</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>口說與逐字稿</h3>
+            <p>檢查內容是否完整、節奏是否清楚；不把逐字稿冒充精確發音評分。</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>語音教室與白板</h3>
+            <p>即時練習一句德語，讓導師把句型、修正與繁中提示整理到白板。</p>
+          </article>
+        </div>
       </section>
       <section>
-        <h2>目前狀態</h2>
-        <p>AI 功能目前屬於受限測試範圍。不要將 AI 回饋視為教師認證、精確發音分數或絕對正確答案。</p>
-        <Link className="inline-action-link" href="/privacy">
-          查看隱私說明
-        </Link>
+        <h2>先試課程，再決定是否建立帳號</h2>
+        <p>
+          不註冊也能先使用固定題課程。AI 功能目前要求登入並完成 Email
+          驗證；建立帳號時，試用期間的學習紀錄會保留。
+        </p>
+        <div className="document-action-row">
+          <a className="button button-primary" href={learnerWebUrl}>
+            開始使用 DeutschTrainer
+          </a>
+          <Link className="inline-action-link" href="/privacy">
+            了解 AI 與隱私邊界
+          </Link>
+        </div>
       </section>
     </PublicDocument>
   );

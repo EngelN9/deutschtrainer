@@ -660,6 +660,120 @@ a {
   min-height: var(--touch-target);
 }
 
+.product-status-callout {
+  background: var(--ai-soft);
+  border: 1px solid var(--ai-border) !important;
+  border-radius: var(--radius-lg);
+  margin-top: 0 !important;
+  padding: var(--space-lg) !important;
+}
+
+.product-status-callout .public-eyebrow {
+  color: var(--ai-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.product-status-callout p:last-child {
+  margin-bottom: 0;
+}
+
+.product-capability-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--space-lg);
+}
+
+.product-capability-grid article {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.product-capability-grid article > span,
+.classroom-journey > li > span {
+  align-items: center;
+  background: var(--ai-soft);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-sm);
+  color: var(--ai-dark);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  letter-spacing: 0.05em;
+  width: 34px;
+}
+
+.product-capability-grid h3 {
+  font-size: 17px;
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.product-capability-grid p {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.classroom-journey {
+  display: grid;
+  gap: var(--space-md);
+  list-style: none;
+  margin: var(--space-lg) 0 0;
+  padding: 0;
+}
+
+.classroom-journey li {
+  align-items: start;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: 34px minmax(0, 1fr);
+  padding: var(--space-lg);
+}
+
+.classroom-journey strong {
+  color: var(--ink);
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.classroom-journey p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.document-action-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md) var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 720px) {
+  .product-capability-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .document-action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .document-action-row .button,
+  .document-action-row .inline-action-link {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
+}
+
 .public-footer-wrap {
   background: var(--ink);
   color: var(--surface);
