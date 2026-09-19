@@ -95,6 +95,7 @@ function ClassroomSession({
   const [status, setStatus] = useState<ClassroomConnectionStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("尚未開始");
   const [remainingSeconds, setRemainingSeconds] = useState(SESSION_SECONDS);
+  const [sessionMode, setSessionMode] = useState<ClassroomInputMode>("voice");
   const [eligibility, setEligibility] = useState<"checking" | "eligible" | "ineligible">(
     "checking",
   );
@@ -177,6 +178,7 @@ function ClassroomSession({
 
   async function startClassroom(inputMode: ClassroomInputMode) {
     if (!audioRef.current || eligibility !== "eligible") return;
+    setSessionMode(inputMode);
     setRemainingSeconds(SESSION_SECONDS);
     teardownClassroom();
     const controller = new AbortController();
@@ -233,107 +235,161 @@ function ClassroomSession({
   const seconds = String(remainingSeconds % 60).padStart(2, "0");
   const active =
     status === "connecting" || status === "connected" || status === "requesting_microphone";
+  const connected = status === "connected";
+  const sessionProgress = Math.max(0, Math.min(100, (remainingSeconds / SESSION_SECONDS) * 100));
+  const statusTone =
+    status === "error" ? "error" : connected ? "success" : active ? "active" : "neutral";
 
   return (
     <main className="classroom-shell">
-      <section className="status-grid" aria-label="教室狀態">
-        <StatusCard
-          label="帳號"
-          value={eligibilityMessage}
-          tone={eligibility === "ineligible" ? "error" : "normal"}
-        />
-        <StatusCard
-          label="連線"
-          value={statusMessage}
-          tone={status === "error" ? "error" : "normal"}
-        />
-        <StatusCard
-          label="剩餘時間"
-          value={`${minutes}:${seconds}`}
-          tone={remainingSeconds < 60 ? "warning" : "normal"}
-        />
+      <header className="classroom-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">DeutschTrainer AI · 5 分鐘練習</p>
+          <h1>和 AI 導師一起，把德語說清楚</h1>
+          <p className="hero-lead">
+            用語音或文字練習真實情境；導師會把句型、修正與繁中提示整理到共享白板。
+          </p>
+        </div>
+        <div className={`live-status live-status-${statusTone}`} role="status" aria-live="polite">
+          <span className="status-dot" aria-hidden="true" />
+          <span>
+            <small>課堂狀態</small>
+            <strong>{statusMessage}</strong>
+          </span>
+        </div>
+      </header>
+
+      <section className="session-bar" aria-label="教室狀態">
+        <div className="session-eligibility">
+          <span className="session-label">使用資格</span>
+          <strong>{eligibilityMessage}</strong>
+        </div>
+        <div className="session-timer">
+          <div className="timer-copy">
+            <span className="session-label">本堂剩餘時間</span>
+            <strong className={remainingSeconds < 60 ? "timer-warning" : undefined}>
+              {minutes}:{seconds}
+            </strong>
+          </div>
+          <div className="timer-track" aria-hidden="true">
+            <span style={{ width: `${sessionProgress}%` }} />
+          </div>
+        </div>
       </section>
 
-      <section className="control-panel" aria-labelledby="controls-title">
-        <div>
-          <h2 id="controls-title">AI 導師連線</h2>
-          <p>可使用麥克風進行語音課程，或在無法使用麥克風時改用文字。每次上限為 5 分鐘。</p>
-        </div>
-        <div className="button-row">
-          <button
-            disabled={active || eligibility !== "eligible"}
-            onClick={() => void startClassroom("voice")}
-          >
-            開始語音課程
-          </button>
-          <button
-            className="secondary-button"
-            disabled={active || eligibility !== "eligible"}
-            onClick={() => void startClassroom("typed")}
-          >
-            不用麥克風，改用文字
-          </button>
-          <button className="danger-button" disabled={!active} onClick={stopClassroom}>
-            停止 AI 導師
-          </button>
+      <div className="classroom-layout">
+        <aside className="tutor-panel" aria-labelledby="controls-title">
+          <div className="tutor-heading">
+            <span className="tutor-mark" aria-hidden="true">
+              AI
+            </span>
+            <div>
+              <p className="section-kicker">你的練習夥伴</p>
+              <h2 id="controls-title">AI 德語導師</h2>
+            </div>
+          </div>
+
+          {active ? (
+            <div className="active-lesson">
+              <span className="active-lesson-label">
+                {sessionMode === "voice" ? "語音課程進行中" : "文字課程進行中"}
+              </span>
+              <p>專注完成一句話即可。需要結束時，請使用下方按鈕讓伺服器停止連線。</p>
+              <button className="danger-button" onClick={stopClassroom}>
+                結束這堂課
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="tutor-intro">選擇最適合你現在環境的練習方式。</p>
+              <div className="mode-list">
+                <button
+                  className="mode-button mode-button-primary"
+                  disabled={eligibility !== "eligible"}
+                  onClick={() => void startClassroom("voice")}
+                >
+                  <span className="mode-icon" aria-hidden="true">
+                    01
+                  </span>
+                  <span>
+                    <strong>開始語音練習</strong>
+                    <small>使用麥克風和導師即時對話</small>
+                  </span>
+                </button>
+                <button
+                  className="mode-button"
+                  disabled={eligibility !== "eligible"}
+                  onClick={() => void startClassroom("typed")}
+                >
+                  <span className="mode-icon" aria-hidden="true">
+                    02
+                  </span>
+                  <span>
+                    <strong>改用文字練習</strong>
+                    <small>不用麥克風，安靜環境也能學</small>
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
+
+          <div className="lesson-expectations">
+            <h3>這堂課會怎麼進行</h3>
+            <ol>
+              <li>先用一句德語回答導師</li>
+              <li>在白板查看句型與修正</li>
+              <li>重說一次，確認你真的會了</li>
+            </ol>
+          </div>
+
           {import.meta.env.DEV ? (
-            <button className="secondary-button" onClick={runSimulator}>
-              執行 deterministic 白板模擬
+            <button className="dev-button" onClick={runSimulator}>
+              執行白板開發模擬
             </button>
           ) : null}
-        </div>
-        <audio ref={audioRef} autoPlay aria-label="AI 導師語音" />
-      </section>
+          <audio ref={audioRef} autoPlay aria-label="AI 導師語音" />
+        </aside>
 
-      <section className="board-panel" aria-labelledby="board-title">
-        <div className="board-heading">
-          <div>
-            <h2 id="board-title">共享白板</h2>
-            <p>模型輸出必須先通過 versioned schema 與 reducer，永遠不直接插入 HTML。</p>
+        <section className="board-panel" aria-labelledby="board-title">
+          <div className="board-heading">
+            <div>
+              <p className="section-kicker">Tutor × Whiteboard</p>
+              <h2 id="board-title">共享學習白板</h2>
+              <p>導師的重點和你的文字會留在這一堂課的白板上；你也可以直接打字或手寫。</p>
+            </div>
+            <span className="operation-badge">
+              {board.processedOperationIds.length > 0
+                ? `${board.processedOperationIds.length} 項重點`
+                : "等待課堂內容"}
+            </span>
           </div>
-          <span className="operation-badge">{board.processedOperationIds.length} operations</span>
+          {board.lastOperationResult && !board.lastOperationResult.success ? (
+            // A rejected operation used to be reported only back to the model, so the board simply
+            // stayed blank with no way to tell a silent model from a malformed one.
+            <p className="board-operation-error" role="status">
+              白板暫時無法顯示導師的最新內容（{board.lastOperationResult.code}
+              ）。請繼續對話或稍後重試。
+            </p>
+          ) : null}
+          <ClassroomBoard
+            onSendBoardText={(text) => connectionRef.current?.sendLearnerText(text) ?? false}
+            state={board}
+          />
+        </section>
+      </div>
+
+      <details className="safety-panel">
+        <summary>隱私、AI 限制與課堂結束方式</summary>
+        <div className="safety-content">
+          <p>你的語音與白板內容不會成為正式學習紀錄；AI 回饋也不等同教師認證或精確發音評分。</p>
+          <ul>
+            <li>頁面倒數提供進度提示，伺服器仍負責最終到期與中止連線。</li>
+            <li>網路或服務中斷時，課程可能提前結束；請保留你想記下的內容。</li>
+            <li>AI 可能出錯。重要文法與考試準備仍應查閱可信教材或請教師確認。</li>
+          </ul>
         </div>
-        {board.lastOperationResult && !board.lastOperationResult.success ? (
-          // A rejected operation used to be reported only back to the model, so the board simply
-          // stayed blank with no way to tell a silent model from a malformed one.
-          <p className="board-operation-error" role="status">
-            最後一個白板操作被拒絕（{board.lastOperationResult.code}）：
-            {board.lastOperationResult.message}
-          </p>
-        ) : null}
-        <ClassroomBoard
-          onSendBoardText={(text) => connectionRef.current?.sendLearnerText(text) ?? false}
-          state={board}
-        />
-      </section>
-
-      <aside className="safety-panel">
-        <h2>安全與證據邊界</h2>
-        <ul>
-          <li>不保存語音、白板或學習紀錄。</li>
-          <li>5 分鐘瀏覽器計時器會關閉本機資源，但不是惡意 client 下的伺服器成本上限。</li>
-          <li>沒有真實 provider、真人德語教學與低延遲證據前，不代表 Realtime AI 已驗收。</li>
-          <li>不提供 CEFR 認證或精確發音分數。</li>
-        </ul>
-      </aside>
+      </details>
     </main>
-  );
-}
-
-function StatusCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "normal" | "warning" | "error";
-}) {
-  return (
-    <div className={`status-card status-${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }
 

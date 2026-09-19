@@ -169,13 +169,13 @@ export function ClassroomBoard({
   return (
     <div className="board-area">
       <div className="board-input">
-        <label htmlFor="board-draft">輸入白板文字</label>
+        <label htmlFor="board-draft">寫下你想練習的句子</label>
         <textarea
           id="board-draft"
           value={draft}
           maxLength={4000}
           rows={3}
-          placeholder="使用鍵盤、系統手寫輸入或語音輸入，再加入白板。"
+          placeholder="例如：Ich interessiere mich für deutsche Literatur."
           onChange={(event) => setDraft(event.target.value)}
           onCompositionStart={() => setComposing(true)}
           onCompositionEnd={() => setComposing(false)}
@@ -186,7 +186,7 @@ export function ClassroomBoard({
             disabled={!api || composing || !draft.trim()}
             onClick={() => addDraft(false)}
           >
-            只加入白板
+            放到白板
           </button>
           <button
             className="secondary-button"
@@ -194,10 +194,10 @@ export function ClassroomBoard({
             disabled={!api || composing || !draft.trim()}
             onClick={() => addDraft(true)}
           >
-            加入白板並傳給老師
+            放到白板並請導師回應
           </button>
         </div>
-        <label>
+        <label className="finger-option">
           <input
             type="checkbox"
             checked={fingerDrawing}
@@ -207,17 +207,17 @@ export function ClassroomBoard({
               api?.updateScene({ appState: { penMode: !enabled } });
             }}
           />
-          允許手指繪圖（使用觸控筆時可關閉，減少手掌誤畫）
+          <span>允許手指繪圖；使用觸控筆時可關閉，減少手掌誤畫。</span>
         </label>
-        <p>畫筆可留下手寫筆跡；筆跡不會自動辨識為文字。只有文字會在你按下傳送後交給老師。</p>
+        <p>手寫筆跡只留在白板上，不會自動辨識或傳送。你主動送出的文字才會交給導師。</p>
       </div>
       {onSendBoardText ? (
         <div className="board-send-row">
           <button className="secondary-button" onClick={sendLearnerText} type="button">
-            把白板上的文字傳給老師
+            將我的白板文字送給導師
           </button>
-          {sendState === "empty" ? <span>白板上沒有你輸入的文字。</span> : null}
-          {sendState === "sent" ? <span>已傳送，老師會回應。</span> : null}
+          {sendState === "empty" ? <span>白板上還沒有你輸入的文字。</span> : null}
+          {sendState === "sent" ? <span>已傳送，導師會在下一輪回應。</span> : null}
           {sendState === "failed" ? <span>目前沒有連線，無法傳送。</span> : null}
         </div>
       ) : null}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicDocument } from "../../src/components/PublicDocument";
+import { getLearnerWebUrl } from "../../src/lib/learnerWebUrl";
 
 export const metadata: Metadata = {
   title: "Virtual Classroom 虛擬教室",
@@ -10,33 +11,59 @@ export const metadata: Metadata = {
 };
 
 export default function VirtualClassroomPage() {
+  const learnerWebUrl = getLearnerWebUrl();
+
   return (
     <PublicDocument
+      category="AI Tutor · Virtual Classroom"
       title="Virtual Classroom 虛擬教室"
-      lead="在受限測試下進行即時德語練習，並以伺服器端時長、個人額度與平台上限控制成本。"
+      lead="用五分鐘完成一輪德語輸出：開口回答、在共享白板看懂修正，再重說一次。"
     >
-      <section>
-        <h2>即時練習的邊界</h2>
-        <p>
-          虛擬教室會建立一個可被伺服器結束的即時連線。客戶端倒數只提供使用者提示；真正的 session
-          到期、供應商 hang-up 與重試清理都在伺服器端執行。
-        </p>
+      <section className="product-status-callout" aria-labelledby="classroom-status-title">
+        <p className="public-eyebrow">受限公開測試</p>
+        <h2 id="classroom-status-title">瀏覽器即可使用，不需安裝 App</h2>
+        <p>目前先開放給已登入並完成 Email 驗證的 learner。麥克風不方便時，也可以選擇文字練習。</p>
       </section>
       <section>
-        <h2>資格與額度</h2>
-        <p>
-          匿名身份不能使用即時教室。公開測試目標是已完成 Email 驗證的 learner，每位 learner 在滾動
-          24 小時內最多一堂五分鐘課程，平台每日最多三堂；實際開放仍由伺服器設定決定。
-        </p>
+        <h2>一堂課的三個步驟</h2>
+        <ol className="classroom-journey">
+          <li>
+            <span>01</span>
+            <div>
+              <strong>選擇語音或文字</strong>
+              <p>依照當下環境開始，不讓麥克風成為學習阻礙。</p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <strong>看懂共享白板</strong>
+              <p>德語句型、修正與必要的繁中提示集中在同一個工作區。</p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <strong>重說一次</strong>
+              <p>把看懂的內容重新輸出，從「知道」走到「真的會用」。</p>
+            </div>
+          </li>
+        </ol>
       </section>
       <section>
-        <h2>目前狀態</h2>
+        <h2>時間、額度與安全邊界</h2>
         <p>
-          此功能仍在受限測試階段，尚未宣稱為公開、無限制的正式教室服務。網路中斷、供應商逾時或全域額度用盡時，系統會拒絕或結束連線。
+          頁面倒數讓你掌握進度；真正的 session
+          到期與供應商連線中止由伺服器執行。個人或平台額度用完、服務暫停、網路中斷時，系統會拒絕或結束連線。
         </p>
-        <Link className="inline-action-link" href="/support">
-          取得支援資訊
-        </Link>
+        <div className="document-action-row">
+          <a className="button button-primary" href={`${learnerWebUrl}/classroom`}>
+            前往虛擬教室
+          </a>
+          <Link className="inline-action-link" href="/support">
+            查看使用支援
+          </Link>
+        </div>
       </section>
     </PublicDocument>
   );
