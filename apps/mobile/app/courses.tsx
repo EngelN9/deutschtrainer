@@ -4,8 +4,8 @@ import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Download, HardDriveDownload, RefreshCw, Trash2 } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
+import { Pressable, StyleSheet, View } from "react-native";
+import { colorTokens, radiusTokens, spacingTokens } from "@deutschtrainer/ui";
 import { AuthGate } from "../src/features/auth/AuthGate";
 import { useAuthStore } from "../src/features/auth/useAuthStore";
 import { getLessonExercises } from "../src/features/courses/courseRepository";
@@ -15,20 +15,40 @@ import { OfflineStatusBand } from "../src/features/offline/OfflineStatusBand";
 import { useOfflineStore } from "../src/features/offline/useOfflineStore";
 import { useProgressStore } from "../src/features/progress/useProgressStore";
 import { ContentScreen } from "../src/components/ContentScreen";
+import { AppText } from "../src/components/AppText";
 import { IconButton } from "../src/components/IconButton";
 import { LevelSelector } from "../src/components/LevelSelector";
 import { MessageBanner } from "../src/components/MessageBanner";
 import { ProgressBar } from "../src/components/ProgressBar";
+import { PrimaryButton } from "../src/components/PrimaryButton";
 import { StatePanel } from "../src/components/StatePanel";
+import { StatusChip } from "../src/components/StatusChip";
+import { useLearningRecords } from "../src/features/learning-records/useLearningRecords";
+import { useConnectivityStore } from "../src/features/offline/connectivityStore";
+import {
+  findContinueLesson,
+  resolveCourseLearningStatus,
+  resolveLessonLearningStatus,
+  resolveOfflineAvailability,
+} from "../src/features/learner-ui/coursePresentation";
+import { useBrowseStateStore } from "../src/features/learner-ui/useBrowseStateStore";
+import { useLearningSetupStore } from "../src/state/useLearningSetupStore";
 
 export default function CoursesScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const profile = useAuthStore((state) => state.profile);
-  const [level, setLevel] = useState<CefrLevel>("B1");
+  const currentLevel = useLearningSetupStore((state) => state.currentLevel);
+  const storedLevel = useBrowseStateStore((state) => state.courseLevel);
+  const scrollOffset = useBrowseStateStore((state) => state.courseScrollOffset);
+  const setLevel = useBrowseStateStore((state) => state.setCourseLevel);
+  const setScrollOffset = useBrowseStateStore((state) => state.setCourseScrollOffset);
+  const level: CefrLevel = storedLevel ?? currentLevel;
   const [workingCourseId, setWorkingCourseId] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const catalogQuery = useCourseCatalog();
+  const recordsQuery = useLearningRecords();
+  const offline = useConnectivityStore((state) => state.status === "offline");
   const offlineProfile = useOfflineStore((state) =>
     profile ? state.profiles[profile.id] : undefined,
   );
@@ -86,6 +106,8 @@ export default function CoursesScreen() {
         }
         description="依程度探索主題單元，下載後可離線閱讀並完成固定題。"
         eyebrow="課程地圖"
+        initialScrollOffset={scrollOffset}
+        onScrollOffsetChange={setScrollOffset}
         showMainNavigation
         title="德語能力路徑"
       >
@@ -113,22 +135,81 @@ export default function CoursesScreen() {
               const working = workingCourseId === course.id;
               const lessons = course.units.flatMap((unit) => unit.lessons);
               const completedLessons = lessons.filter(
-                (lesson) => userProgress?.lessons[lesson.id]?.completedAt,
+                (lesson) =>
+                  recordsQuery.data?.lessonProgress.some(
+                    (progress) =>
+                      progress.lessonId === lesson.id && progress.status === "completed",
+                  ) || userProgress?.lessons[lesson.id]?.completedAt,
               ).length;
               const percent = Math.round((completedLessons / Math.max(lessons.length, 1)) * 100);
+              const learningStatus = resolveCourseLearningStatus(
+                course,
+                recordsQuery.data?.lessonProgress ?? [],
+                userProgress?.lessons,
+              );
+              const offlineAvailability = resolveOfflineAvailability({
+                downloaded: Boolean(downloaded),
+                offline,
+                updateAvailable,
+              });
+              const nextLesson = findContinueLesson(
+                course,
+                recordsQuery.data?.lessonProgress ?? [],
+                userProgress?.lessons,
+              );
 
               return (
                 <View key={course.id} style={styles.courseBlock}>
                   <View style={styles.courseHeading}>
                     <View style={[styles.levelMark, levelStyle(course.level)]}>
-                      <Text style={styles.levelText}>{course.level}</Text>
+                      <AppText style={styles.levelText} variant="label">
+                        {course.level}
+                      </AppText>
                     </View>
                     <View style={styles.courseCopy}>
-                      <Text style={styles.courseTitle}>{course.titleZhTw}</Text>
-                      <Text style={styles.courseTitleDe}>{course.titleDe}</Text>
+                      <AppText headingLevel={2} variant="heading">
+                        {course.titleZhTw}
+                      </AppText>
+                      <AppText tone="muted">{course.titleDe}</AppText>
                     </View>
                   </View>
-                  <Text style={styles.description}>{course.descriptionZhTw}</Text>
+                  <AppText tone="muted">{course.descriptionZhTw}</AppText>
+                  <View style={styles.statusRow}>
+                    <StatusChip
+                      tone={
+                        learningStatus === "completed"
+                          ? "success"
+                          : learningStatus === "in_progress"
+                            ? "primary"
+                            : "neutral"
+                      }
+                    >
+                      {learningStatus === "completed"
+                        ? "已完成"
+                        : learningStatus === "in_progress"
+                          ? "進行中"
+                          : "尚未開始"}
+                    </StatusChip>
+                    <StatusChip
+                      tone={
+                        offlineAvailability === "downloaded"
+                          ? "success"
+                          : offlineAvailability === "update_available"
+                            ? "warning"
+                            : offlineAvailability === "offline_unavailable"
+                              ? "danger"
+                              : "neutral"
+                      }
+                    >
+                      {offlineAvailability === "downloaded"
+                        ? "可離線使用"
+                        : offlineAvailability === "update_available"
+                          ? "有新版本"
+                          : offlineAvailability === "offline_unavailable"
+                            ? "離線時無法使用"
+                            : "僅線上"}
+                    </StatusChip>
+                  </View>
                   <View style={styles.downloadRow}>
                     <Pressable
                       accessibilityLabel={
@@ -137,12 +218,13 @@ export default function CoursesScreen() {
                           : `下載 ${course.titleZhTw} 離線課程`
                       }
                       accessibilityRole="button"
-                      accessibilityState={{ disabled: working }}
-                      disabled={working}
+                      accessibilityHint={offline ? "連線後才能下載課程" : undefined}
+                      accessibilityState={{ disabled: working || offline }}
+                      disabled={working || offline}
                       onPress={() => void handleDownload(course)}
                       style={({ pressed }) => [
                         styles.downloadButton,
-                        working ? styles.disabled : null,
+                        working || offline ? styles.disabled : null,
                         pressed ? styles.pressed : null,
                       ]}
                     >
@@ -151,7 +233,7 @@ export default function CoursesScreen() {
                       ) : (
                         <Download color={colorTokens.primary} size={18} />
                       )}
-                      <Text style={styles.downloadButtonText}>
+                      <AppText style={styles.downloadButtonText} variant="label">
                         {working
                           ? "處理中"
                           : updateAvailable
@@ -159,7 +241,7 @@ export default function CoursesScreen() {
                             : downloaded
                               ? "重新下載"
                               : "下載課程"}
-                      </Text>
+                      </AppText>
                     </Pressable>
                     {downloaded ? (
                       <IconButton
@@ -170,15 +252,17 @@ export default function CoursesScreen() {
                         tone="danger"
                       />
                     ) : null}
-                    <Text style={styles.downloadStatus}>
+                    <AppText tone="muted" variant="caption">
                       {updateAvailable ? "有新版本" : downloaded ? "已下載" : "僅線上"}
-                    </Text>
+                    </AppText>
                   </View>
                   <View style={styles.progressCopy}>
-                    <Text style={styles.meta}>
+                    <AppText tone="muted" variant="caption">
                       {course.units.length} 個單元 · {lessons.length} 堂課
-                    </Text>
-                    <Text style={styles.progressText}>{percent}%</Text>
+                    </AppText>
+                    <AppText tone="primary" variant="label">
+                      {percent}%
+                    </AppText>
                   </View>
                   <ProgressBar accessibilityLabel={`${course.level} 課程進度`} percent={percent} />
                   <View style={styles.unitList}>
@@ -187,10 +271,30 @@ export default function CoursesScreen() {
                         (total, lesson) => total + getLessonExercises(lesson).length,
                         0,
                       );
+                      const unitStatuses = unit.lessons.map((lesson) =>
+                        resolveLessonLearningStatus(
+                          lesson.id,
+                          recordsQuery.data?.lessonProgress.find(
+                            (progress) => progress.lessonId === lesson.id,
+                          ),
+                          userProgress?.lessons[lesson.id],
+                        ),
+                      );
+                      const unitStatus = unitStatuses.every((status) => status === "completed")
+                        ? "completed"
+                        : unitStatuses.some(
+                              (status) => status === "in_progress" || status === "completed",
+                            )
+                          ? "in_progress"
+                          : "not_started";
                       return (
                         <Pressable
                           accessibilityLabel={`查看 ${unit.titleZhTw}`}
                           accessibilityRole="button"
+                          accessibilityState={{
+                            disabled: offlineAvailability === "offline_unavailable",
+                          }}
+                          disabled={offlineAvailability === "offline_unavailable"}
                           key={unit.id}
                           onPress={() =>
                             router.push({
@@ -198,19 +302,51 @@ export default function CoursesScreen() {
                               params: { unitId: unit.id },
                             } as Href)
                           }
-                          style={({ pressed }) => [styles.unitRow, pressed ? styles.pressed : null]}
+                          style={({ pressed }) => [
+                            styles.unitRow,
+                            offlineAvailability === "offline_unavailable" ? styles.disabled : null,
+                            pressed ? styles.pressed : null,
+                          ]}
                         >
                           <View style={styles.unitCopy}>
-                            <Text style={styles.unitTitle}>{unit.titleZhTw}</Text>
-                            <Text style={styles.meta}>
+                            <AppText variant="subheading">{unit.titleZhTw}</AppText>
+                            <AppText tone="muted" variant="caption">
                               {unit.lessons.length} 堂課 · {exerciseCount} 題
-                            </Text>
+                            </AppText>
                           </View>
+                          <AppText
+                            tone={unitStatus === "completed" ? "teal" : "muted"}
+                            variant="caption"
+                          >
+                            {unitStatus === "completed"
+                              ? "已完成"
+                              : unitStatus === "in_progress"
+                                ? "進行中"
+                                : "尚未開始"}
+                          </AppText>
                           <ChevronRight color={colorTokens.mutedText} size={20} />
                         </Pressable>
                       );
                     })}
                   </View>
+                  {nextLesson ? (
+                    <PrimaryButton
+                      accessibilityLabel={`${learningStatus === "not_started" ? "開始" : "繼續"} ${course.titleZhTw}`}
+                      disabled={offlineAvailability === "offline_unavailable"}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/lesson/[lessonId]",
+                          params: { lessonId: nextLesson.id },
+                        } as Href)
+                      }
+                    >
+                      {learningStatus === "not_started"
+                        ? "開始第一堂課"
+                        : learningStatus === "completed"
+                          ? "再次練習"
+                          : "繼續課程"}
+                    </PrimaryButton>
+                  ) : null}
                 </View>
               );
             })}
@@ -253,29 +389,13 @@ const styles = StyleSheet.create({
   courseList: {
     gap: spacingTokens.xl,
   },
-  courseTitle: {
-    color: colorTokens.text,
-    fontSize: 22,
-    fontWeight: "800",
-    lineHeight: 29,
-  },
-  courseTitleDe: {
-    color: colorTokens.mutedText,
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  description: {
-    color: colorTokens.mutedText,
-    fontSize: 15,
-    lineHeight: 23,
-  },
   disabled: {
     opacity: 0.45,
   },
   downloadButton: {
     alignItems: "center",
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.sm,
@@ -293,30 +413,19 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacingTokens.sm,
   },
-  downloadStatus: {
-    color: colorTokens.mutedText,
-    fontSize: 13,
-  },
   levelB1: { backgroundColor: colorTokens.teal },
   levelB2: { backgroundColor: colorTokens.primary },
   levelC1: { backgroundColor: colorTokens.accent },
   levelC2: { backgroundColor: colorTokens.danger },
   levelMark: {
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     height: 46,
     justifyContent: "center",
     width: 46,
   },
   levelText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  meta: {
-    color: colorTokens.mutedText,
-    fontSize: 13,
-    lineHeight: 18,
+    color: colorTokens.onStrong,
   },
   pressed: {
     opacity: 0.72,
@@ -326,10 +435,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  progressText: {
-    color: colorTokens.primary,
-    fontSize: 13,
-    fontWeight: "800",
+  statusRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacingTokens.sm,
   },
   unitCopy: {
     flex: 1,
@@ -342,17 +451,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colorTokens.surface,
     borderColor: colorTokens.border,
-    borderRadius: 8,
+    borderRadius: radiusTokens.sm,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacingTokens.md,
     minHeight: 72,
     padding: spacingTokens.md,
-  },
-  unitTitle: {
-    color: colorTokens.text,
-    fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 23,
   },
 });

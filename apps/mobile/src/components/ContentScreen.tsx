@@ -1,8 +1,15 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import { useRef, type PropsWithChildren, type ReactNode } from "react";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
-import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 import { colorTokens, spacingTokens } from "@deutschtrainer/ui";
 import { useResponsiveLayout } from "../layout/useResponsiveLayout";
 import { AppText } from "./AppText";
@@ -15,6 +22,8 @@ interface ContentScreenProps extends PropsWithChildren {
   description?: string;
   eyebrow?: string;
   onBack?: () => void;
+  initialScrollOffset?: number;
+  onScrollOffsetChange?: (offset: number) => void;
   showBack?: boolean;
   showMainNavigation?: boolean;
   title: string;
@@ -25,11 +34,15 @@ export function ContentScreen({
   children,
   description,
   eyebrow,
+  initialScrollOffset = 0,
   onBack,
+  onScrollOffsetChange,
   showBack = false,
   showMainNavigation = false,
   title,
 }: ContentScreenProps) {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const restoredScrollRef = useRef(false);
   const router = useRouter();
   const { isCompact, isMedium, isWide } = useResponsiveLayout();
   const { activeGroup, pathname } = useMainNavigation();
@@ -48,6 +61,21 @@ export function ContentScreen({
             styles.scrollContent,
             isCompact ? styles.compactScrollContent : null,
           ]}
+          onContentSizeChange={() => {
+            if (restoredScrollRef.current || initialScrollOffset <= 0) {
+              return;
+            }
+            scrollViewRef.current?.scrollTo({ animated: false, y: initialScrollOffset });
+            restoredScrollRef.current = true;
+          }}
+          onScroll={
+            onScrollOffsetChange
+              ? (event: NativeSyntheticEvent<NativeScrollEvent>) =>
+                  onScrollOffsetChange(event.nativeEvent.contentOffset.y)
+              : undefined
+          }
+          ref={scrollViewRef}
+          scrollEventThrottle={100}
           style={styles.screen}
         >
           <View
