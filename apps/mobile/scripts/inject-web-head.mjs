@@ -31,10 +31,10 @@ const HEAD_TAGS = `
     <meta ${MARKER} property="og:title" content="${TITLE}" />
     <meta ${MARKER} property="og:description" content="${DESCRIPTION}" />
     <meta ${MARKER} property="og:locale" content="zh_TW" />
-    <meta ${MARKER} property="og:image" content="/icon-512.png" />
+    <meta ${MARKER} property="og:image" content="/logo-rounded-512.png" />
     <meta ${MARKER} name="twitter:card" content="summary" />
     <link ${MARKER} rel="manifest" href="/manifest.json" />
-    <link ${MARKER} rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link ${MARKER} rel="apple-touch-icon" href="/apple-touch-icon-rounded.png" />
     <meta ${MARKER} name="apple-mobile-web-app-capable" content="yes" />
     <meta ${MARKER} name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta ${MARKER} name="apple-mobile-web-app-title" content="DeutschTrainer" />
